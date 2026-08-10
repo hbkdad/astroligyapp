@@ -4,7 +4,7 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 13 complete; the immutable combined personal-context fact aggregate is implemented and verified.
+Status: Goal 14 complete; deterministic interpretation projection and claim-safe library contracts are implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -92,6 +92,17 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 14: project every combined-context fact exactly once into a stable
+      specific interpretation key, template family, source fact ID, tradition,
+      and unchanged structured parameters.
+- [x] Add a versioned English-Canada deterministic template library with
+      separate factual and tradition-framed interpretation sections.
+- [x] Validate unsafe deterministic, medical, financial, legal, safety, and
+      relationship directives plus malformed placeholders and custom-library
+      bypass attempts.
+- [x] Return structured supported/unsupported render data without composing
+      prose, selecting AI, scoring categories, persisting content, or delivering
+      a reading.
 - [x] Goal 13: compose the natal chart, current transit snapshot, personal lunar
       snapshot, and all nine deterministic numerology results into one
       deep-cloned, deep-frozen fact aggregate.
@@ -148,33 +159,33 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 14 — build the deterministic interpretation-key projection and library contract.
+Goal 15 — build the deterministic safe template renderer.
 
 Deliverables:
 
-1. Map validated context facts to versioned interpretation keys without
-   changing, inventing, or recalculating any astronomical/numerological value.
-2. Define a deterministic template-library contract with explicit factual and
-   tradition-framed interpretation sections plus unsupported-key behavior.
-3. Add claim-safety rules that prohibit medical, legal, financial, safety, or
-   deterministic relationship directives and keep AI entirely optional.
-4. Return structured render data before prose composition; do not add category
+1. Render validated fact and interpretation templates using only their declared
+   structured parameters and a deterministic number/label formatting policy.
+2. Fail closed on missing, extra, malformed, non-finite, or unsupported values;
+   never interpolate HTML or recalculate a fact.
+3. Preserve source fact, projection, library, locale, and renderer versions in
+   each output section and keep fact text visibly separate from tradition copy.
+4. Provide deterministic fallback behavior without AI; do not add category
    scoring, persistence, entitlements, or delivery yet.
 
 ## Phase queue
 
-| Phase | Scope                                                    | State    |
-| ----- | -------------------------------------------------------- | -------- |
-| 1     | Infrastructure, architecture, database, auth, standards  | Complete |
-| 2     | Ephemeris abstraction, zodiac, aspects, Moon, numerology | Complete |
-| 3     | Natal charts, transits, personal context, fixtures       | Complete |
-| 4     | Interpretation and personal dashboard foundation         | Next     |
-| 5     | Interpretation library, daily reading, public horoscopes | Pending  |
-| 6     | Compatibility and privacy-safe sharing                   | Pending  |
-| 7     | Subscriptions, entitlements, notifications               | Pending  |
-| 8     | SEO and useful public content                            | Pending  |
-| 9     | Security, privacy, performance, accessibility, QA        | Pending  |
-| 10    | Deployment and production verification                   | Pending  |
+| Phase | Scope                                                    | State       |
+| ----- | -------------------------------------------------------- | ----------- |
+| 1     | Infrastructure, architecture, database, auth, standards  | Complete    |
+| 2     | Ephemeris abstraction, zodiac, aspects, Moon, numerology | Complete    |
+| 3     | Natal charts, transits, personal context, fixtures       | Complete    |
+| 4     | Interpretation and personal dashboard foundation         | In progress |
+| 5     | Interpretation library, daily reading, public horoscopes | Pending     |
+| 6     | Compatibility and privacy-safe sharing                   | Pending     |
+| 7     | Subscriptions, entitlements, notifications               | Pending     |
+| 8     | SEO and useful public content                            | Pending     |
+| 9     | Security, privacy, performance, accessibility, QA        | Pending     |
+| 10    | Deployment and production verification                   | Pending     |
 
 ## Decisions
 
@@ -232,6 +243,10 @@ Deliverables:
 | 2026-08-09 | `npm run check`                                    | Passed formatting, ESLint, strict TypeScript, 2 unit/contract tests, and production build     |
 | 2026-08-09 | `npm run test:coverage`                            | Passed; scoped baseline application/domain coverage remains 100%                              |
 | 2026-08-09 | `npm audit --audit-level=high`                     | No high or critical findings; four accepted moderate Drizzle Kit development-tool findings    |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | Interpretation focused suite                       | 14/14 projection, library, unsupported, and claim-safety tests passed                         |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 211 tests, and production build                   |
+| 2026-08-09 | `npm run test:coverage`                            | 95.75% statements, 92.32% branches, 100% functions, and 95.59% lines                          |
 | 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
 | 2026-08-09 | Personal context focused suite                     | 6/6 composition, immutability, timezone, mismatch, ID, and numerology validation tests passed |
 | 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 197 tests, and production build                   |
@@ -454,6 +469,33 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
 - Scope: the IDs have no embedded meaning. Interpretation, explanation keys,
   categories, heuristic scores, AI, persistence, entitlements, and delivery
   remain absent.
+
+## Goal 14 interpretation and claim-safety record
+
+- Commands: `npx vitest run tests/interpretation.test.ts`, `npm run check`,
+  `npm run test:coverage`, and `npm audit --omit=dev`.
+- Projection: every ordered immutable context fact produces exactly one stable
+  specific key, generic template-family key, original source fact ID,
+  astrology/numerology tradition, and raw structured parameters. Coverage or
+  key duplication fails closed; no fact is recalculated, rounded, or altered.
+- Library: `personal-reflection-en-ca` 1.0.0 supplies six generic template
+  families for natal placements, natal aspects, transits, lunar phase,
+  personal-lunar aspects, and numerology values. Fact and interpretation fields
+  remain distinct single-line plain-text templates with declared placeholders.
+- Unsupported policy: absent templates return structured `unsupported-key`
+  results. Unknown/malformed placeholders, undeclared or unused fact
+  parameters, HTML-like characters, duplicate keys, invalid identifiers,
+  mismatched template/tradition responses, and unsafe custom-library responses
+  fail validation.
+- Claim safety: factual templates reject meaning/prediction language.
+  Interpretation templates require explicit astrology or numerology tradition
+  framing and reject certainty plus medical, financial, legal, safety, and
+  deterministic relationship directives. The checked examples include the
+  prohibited claims in the master specification. Rules and AI boundaries are
+  recorded in `docs/CONTENT_SAFETY.md`.
+- Output: projection/library/context/locale versions and a preparation timestamp
+  accompany deep-frozen structured render items. Prose interpolation, AI,
+  category scoring, persistence, entitlements, and delivery remain absent.
 
 ## Goal 2 migration and security review
 

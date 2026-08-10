@@ -113,9 +113,17 @@ tests/
   from the current UTC instant in the natal IANA timezone. Stable fact IDs are
   calculation references only; interpretation, category weighting, AI,
   entitlements, persistence, and delivery remain downstream concerns.
+- Interpretation projection: every context fact maps exactly once to a stable,
+  specific interpretation key, a generic template-family key, and raw
+  structured parameters. The versioned deterministic library keeps factual and
+  tradition-framed sections separate, validates claim safety even for custom
+  library implementations, and returns explicit unsupported-key results. It
+  does not render prose or invoke AI. See `docs/CONTENT_SAFETY.md`.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
-- `InterpretationRenderer`: deterministic template rendering with optional AI adapter behind validated input/output schemas.
+- `InterpretationRenderer`: next-stage deterministic plain-text rendering from
+  validated projection/template pairs; an optional AI adapter remains deferred
+  behind future validated input/output schemas.
 - `EntitlementPolicy`: centralized server-side capability checks independent of billing provider plan names.
 
 ## Data and cache principles
