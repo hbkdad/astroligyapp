@@ -5,6 +5,8 @@ export const INTERPRETATION_TEMPLATE_KEYS = [
   "lunar-phase",
   "personal-lunar-aspect",
   "numerology-value",
+  "public-sun-sign-transit",
+  "public-lunar-context",
 ] as const;
 
 export type InterpretationTemplateKey =

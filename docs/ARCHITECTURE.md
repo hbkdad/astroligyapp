@@ -119,6 +119,15 @@ tests/
   refines entry/peak/exit with provider evaluations only. All evaluated instants
   and calculation versions remain in the result; incomplete, ambiguous,
   inconsistent, or under-refined searches fail explicitly.
+- `PublicDailyReadingEngine`: application-level composition of one canonical
+  UTC-noon geocentric tropical sky for a strict Gregorian plain date into twelve
+  ordered sign-model readings. Each sign uses its tropical midpoint as an
+  explicitly declared non-personal comparison target, reuses the same lunar
+  geometry, and maps facts to a separate versioned public interpretation
+  library. Only a date is accepted; birth, profile, observer, account, scoring,
+  AI, persistence, routing, and delivery concerns are excluded. Provider,
+  calculation, aspect, projection, library, locale, and sampling conventions
+  remain in the deeply frozen result.
 - `composeTimelineFacts`: provider-free, deep-frozen composition of validated
   personal transit windows, lunar events, planetary stations, and explicit
   numerology year/month/day boundaries over one half-open UTC display interval.

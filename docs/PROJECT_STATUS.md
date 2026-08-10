@@ -4,7 +4,7 @@ Last updated: 2026-08-10
 
 ## Current position
 
-Status: Goal 27 complete; the deterministic Today timeline preview and next-event foundation is implemented and verified.
+Status: Goal 28 complete; the privacy-safe public daily-reading fact foundation is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,13 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 28: compose one canonical UTC-noon geocentric tropical sky for a
+      strict plain date into twelve immutable, ordered public Sun-sign models.
+- [x] Use explicit tropical sign midpoints, shared lunar geometry, stable
+      sign-scoped fact IDs, and separate deterministic fact/reflection templates.
+- [x] Reject every non-date input before provider dispatch, preserve complete
+      provider/calculation/aspect/library provenance, and fail on version drift,
+      malformed provider output, unsupported templates, or unsafe claims.
 - [x] Goal 27: extend the Today source/read model with Goal 24 timeline records,
       preserving stable IDs, source versions, chronology, and instant/window shape.
 - [x] Feature the first event after the reading instant and show the following
@@ -281,20 +288,20 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 28 — build the privacy-safe public daily-reading fact foundation.
+Goal 29 — build the public daily-reading presentation foundation.
 
 Deliverables:
 
-1. Define one versioned immutable public daily-fact aggregate for a plain date and
-   each of the twelve tropical Sun signs using only shared sky/lunar facts and
-   deterministic, non-personal interpretation keys. Include no birth/profile data.
-2. Separate factual astronomy from tradition-framed public prompts, preserve all
-   provider/calculation/library versions, and prohibit deterministic predictions,
-   individualized claims, scores presented as science, or invented event dates.
-3. Verify all twelve signs, date boundaries, stable ordering/IDs, complete fact
-   coverage, unsupported templates, unsafe claims, and cross-version failures.
-4. Add no public route, SEO metadata, persistence, analytics, AI, entitlement,
-   notification, production provider, or deployment behavior yet.
+1. Map only the Goal 28 aggregate into a versioned, immutable public read model;
+   React must receive no provider, calculation engine, library, or private input.
+2. Add a no-index local-demo horoscope presentation for all twelve signs with a
+   direct sign route, clearly separated calculated facts and tradition-framed
+   reflections, canonical-date/sampling disclosure, and complete source trace.
+3. Verify invalid signs, all twelve route variants, fact coverage/order, loading,
+   unavailable, error, and ready states, keyboard flow, 390px/200% text, reduced
+   motion, semantic structure, claims language, and zero browser console errors.
+4. Add no persistence, account/profile input, analytics, AI, entitlement,
+   notification, production provider call, SEO indexing/schema, or deployment.
 
 ## Phase queue
 
@@ -333,7 +340,8 @@ Deliverables:
 - Rise/set, altitude/azimuth, and personal lunar aspect windows remain deferred
   until validated location-aware capabilities exist. Primary phase and Moon-sign
   ingress searches now use positional provider evaluations; mean-cycle age is
-  not used as an event ephemeris. Timeline aggregation remains pending.
+  not used as an event ephemeris. Public production-date generation and routing
+  remain pending.
 - Authentication, managed database, payment, AI, email, monitoring, and
   deployment providers remain intentionally undecided.
 - Authentication-provider selection still requires sign-in methods, MFA or
@@ -734,6 +742,47 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 28 public daily-reading fact record
+
+- Commands: `npx vitest run tests/zodiac-aspects.test.ts
+tests/lunar-phase.test.ts tests/public-daily-readings.test.ts`;
+  interpretation and renderer regressions; `npm run check`;
+  `npm run test:coverage`; `npm audit --omit=dev`; and `git diff --check`.
+- Contract: public aggregate 1.0.0 accepts exactly one strict proleptic Gregorian
+  `YYYY-MM-DD` value and deterministically samples `12:00:00Z`. It requests all
+  ten bodies once in the geocentric tropical ecliptic-of-date frame and retains
+  provider/data/calculation, aspect-policy, projection, library, locale, and
+  sampling versions. No observer or location is supplied.
+- Sign model: all twelve canonical signs retain zodiac order and use the
+  midpoint at `15 + 30n` degrees as an explicit non-personal comparison target.
+  Current bodies are compared through major-aspects 1.0.0. One shared
+  Moon-minus-Sun phase result is cloned under sign-scoped IDs; no birth chart,
+  individualized transit, score, or event date is inferred.
+- Content boundary: public-reflection-en-ca 1.0.0 renders factual astronomy and
+  tradition-framed general reflection as distinct sections. Missing templates
+  return the fixed unsupported fallback. Unsafe deterministic, medical, legal,
+  financial, relationship, or safety claims fail through the existing template
+  validator; library metadata drift during composition also fails closed.
+- Astro/lunar validation: exact sign-midpoint conjunction identity, declared
+  major-aspect provenance, normalized provider longitudes, all-sign ordering,
+  shared 36-degree lunar geometry, and the selected Astronomy Engine 2.1.19
+  adapter passed. Existing boundary suites cover every 30-degree edge, angular
+  wraparound, exact/inside/outside orbs, all eight lunar sectors, illumination,
+  and cycle wrap. Existing JPL Horizons and USNO records remain the independent
+  adapter/event regressions; no AI-derived astronomical expected value was added.
+- Security/privacy: the allowlist rejects effective instants, birth date/time/
+  location, names, observer coordinates, account/profile IDs, and unknown fields
+  before dispatch. Output inspection found no private field, influence score,
+  prediction, route, log, storage, analytics, or account boundary. No critical
+  or high security finding remains; a future public HTTP route still requires
+  deliberate caching, rate limiting, generic errors, and indexing policy.
+- Evidence: 27 files and 404 tests passed; coverage was 94.36% statements,
+  90.86% branches, 99.55% functions, and 95.07% lines. The optimized build
+  passed and the production dependency audit found zero vulnerabilities.
+- Scope: no route, SEO metadata, persistence, analytics, AI, entitlement,
+  notification, production provider call, managed service, or deployment was
+  added.
 
 ## Goal 27 Today timeline preview record
 

@@ -60,6 +60,8 @@ const TEMPLATE_PARAMETER_KEYS: Readonly<
     "strategyId",
     "strategyVersion",
   ],
+  "public-sun-sign-transit": [],
+  "public-lunar-context": [],
 };
 
 export function calculatePersonalCategoryScores(
