@@ -173,6 +173,13 @@ tests/
   and synchronized table are equivalent representations. The `/timeline` route
   uses explicitly labeled local calculated demo data and performs no calculation
   in React.
+- Moon presentation: `toMoonReadModel` accepts one validated personal-lunar
+  snapshot plus Goal 23 lunar facts, rechecks lunar ranges, Moon-only personal
+  aspects, chronology, identity, and source versions, then produces immutable
+  current/aspect/upcoming display records. The `/moon` route calculates only its
+  explicit local demo before presentation. Approximate illumination and
+  mean-cycle age stay labeled, provider-refined event times remain distinct, and
+  location-dependent rise/set is unavailable rather than inferred.
 - Natal-chart presentation: `toNatalChartReadModel` accepts only a validated
   `NatalChart`, rechecks normalized facts and trace completeness, and maps them
   into a versioned immutable SVG/table model. `pointAtLongitude` owns only the

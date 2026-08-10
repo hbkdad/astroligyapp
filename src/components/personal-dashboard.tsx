@@ -24,6 +24,7 @@ export function PersonalDashboard({ state }: { state: DashboardState }) {
         </a>
         <nav aria-label="Dashboard sections">
           <a href="#today">Today</a>
+          <Link href="/moon">Moon</Link>
           <a href="#signals">Signals</a>
           <a href="#categories">Categories</a>
           <Link href="/timeline">Timeline</Link>

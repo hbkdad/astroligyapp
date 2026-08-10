@@ -811,6 +811,104 @@ tbody tr:target {
 .timeline-trace {
   margin-top: 1rem;
 }
+.moon-shell {
+  width: min(1080px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 4rem 0 3rem;
+}
+.moon-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(24rem, 0.8fr);
+  gap: 3rem;
+  align-items: center;
+  padding-bottom: 3rem;
+}
+.moon-effective {
+  color: var(--muted);
+}
+.moon-now-card {
+  display: grid;
+  grid-template-columns: 8rem minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: center;
+  padding: 1.5rem;
+  border: 1px solid #40554e;
+  border-radius: 1.5rem;
+  background: linear-gradient(145deg, rgb(34 61 54 / 78%), rgb(11 26 23 / 95%));
+}
+.moon-phase-visual {
+  width: 8rem;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgb(139 203 184 / 28%);
+  border-radius: 50%;
+}
+.moon-phase-visual span {
+  width: 5.3rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 36% 30%,
+    #f8efd2,
+    #b9b08f 52%,
+    #24312e 55%,
+    #0b1715 70%
+  );
+  box-shadow: 0 0 2rem rgb(228 184 102 / 18%);
+}
+.moon-now-card dl {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+}
+.moon-now-card dl div {
+  display: grid;
+  gap: 0.1rem;
+}
+.moon-panel,
+.moon-unavailable {
+  margin-bottom: 1rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: rgb(12 25 23 / 82%);
+}
+.moon-aspects {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.moon-aspects li {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: var(--surface-raised);
+}
+.moon-aspects p {
+  margin-bottom: 0.5rem;
+  color: var(--muted);
+}
+.moon-aspects code,
+.moon-panel td code {
+  overflow-wrap: anywhere;
+  color: var(--mint);
+  white-space: normal;
+}
+.moon-unavailable {
+  border-style: dashed;
+}
+.moon-unavailable p:last-child {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+.moon-trace {
+  margin-top: 1rem;
+}
 
 @media (max-width: 850px) {
   .site-header {
@@ -841,6 +939,10 @@ tbody tr:target {
     display: block;
   }
   .timeline-intro {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .moon-hero {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
@@ -886,6 +988,23 @@ tbody tr:target {
   .timeline-shell {
     width: min(100% - 1.25rem, 1080px);
     padding-top: 2.5rem;
+  }
+  .moon-shell {
+    width: min(100% - 1.25rem, 1080px);
+    padding-top: 2.5rem;
+  }
+  .moon-now-card {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+  .moon-phase-visual {
+    width: min(5.5rem, 96px);
+  }
+  .moon-phase-visual span {
+    width: min(3.8rem, 66px);
+  }
+  .moon-aspects {
+    grid-template-columns: 1fr;
   }
   .timeline-panel {
     padding: 1rem;

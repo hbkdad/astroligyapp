@@ -4,7 +4,7 @@ Last updated: 2026-08-10
 
 ## Current position
 
-Status: Goal 24 complete; the accessible timeline presentation and read-model foundation is implemented and verified.
+Status: Goal 25 complete; the personal Moon presentation and read-model foundation is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,17 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 25: map a validated personal-lunar snapshot and Goal 23 lunar facts
+      into one immutable Moon read model without calculation in React.
+- [x] Add `/moon` with current phase/sign, explicitly approximate illumination
+      and mean-cycle age, exact positional geometry, personal lunar aspects, the
+      next sign ingress, four refined primary phases, and full source trace.
+- [x] Represent loading, unavailable, locked, error, empty, and ready states;
+      explicitly omit rise/set until a location-aware provider exists instead of
+      substituting plausible times.
+- [x] Verify JPL/USNO-backed lunar regressions, keyboard skip flow, semantic
+      table, mobile/desktop, 200% text, reduced motion, and zero console errors;
+      browser review found and fixed enlarged-text Moon-card overflow.
 - [x] Goal 24: map only the validated Goal 23 aggregate into a versioned,
       immutable timeline read model with unchanged source IDs, occurrence shapes,
       deterministic ordering, and calculation/search version references.
@@ -256,22 +267,22 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 25 — build the personal Moon presentation/read-model foundation.
+Goal 26 — build the personal numerology presentation/read-model foundation.
 
 Deliverables:
 
-1. Map the existing validated personal-lunar snapshot plus Goal 23 lunar facts
-   into one versioned immutable presentation model without Moon, zodiac, aspect,
-   event-time, rise/set, score, or interpretation calculation in components.
-2. Render current phase/sign, approximate illumination/age labels, personal lunar
-   aspects, and a chronologically ordered upcoming phase/ingress section with a
-   complete semantic text/table equivalent and visible calculation trace.
-3. Provide deliberate loading, unavailable, locked, error, empty, and success
-   states; verify keyboard, mobile, 200% text, reduced motion, and long trace data
-   through `lunar-validation` followed by `ui-quality`.
-4. Use only explicit local demo data and label approximations. Defer moonrise/set
-   until a location-aware provider exists; add no persistence, notification,
-   entitlement decision, production provider, public sharing, or deployment.
+1. Map the existing validated Pythagorean core/profile results plus Goal 23
+   personal year/month/day boundary facts into one versioned immutable read model;
+   preserve values, master-number flags, normalized tokens, operations, strategy,
+   date, timezone, and source IDs without reduction in components.
+2. Render core numbers, current personal cycles, and upcoming boundary records
+   with complete semantic text/table equivalents and expandable calculation trace.
+   Keep traditional meaning copy outside this presentation goal.
+3. Provide loading, unavailable, locked, error, empty, and ready states; verify
+   keyboard, mobile, 200% text, reduced motion, long names, and trace readability
+   through `numerology-validation` followed by `ui-quality`.
+4. Use only explicit local demo data. Add no persistence, interpretation, AI,
+   entitlement decision, notification, public sharing, or deployment behavior.
 
 ## Phase queue
 
@@ -710,6 +721,42 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   then rule ID. Each signal retains its complete contribution trace and category
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
+  behavior was added.
+
+## Goal 25 personal Moon presentation record
+
+- Commands: Moon read-model, personal-lunar, lunar-event, lunar-phase, and Goal 23
+  timeline focused suites; `npm run check`; `npm run test:coverage`;
+  `npm audit --omit=dev`; `git diff --check`; and real Chromium checks through
+  `lunar-validation`, `ui-quality`, and Playwright.
+- Boundary: Moon read model 1.0.0 consumes one personal-lunar snapshot 1.0.0 and
+  lunar facts from timeline composition 1.0.0. It rechecks phase/illumination/age
+  ranges, Moon-only personal aspects, provenance versions, upcoming chronology,
+  unique event IDs, and event-search versions before immutable display mapping.
+- Current facts: the local J2000 demo displays provider-supplied tropical Moon
+  longitude plus derived Moon-minus-Sun phase geometry, Moon sign, illumination
+  trend, approximate geometric illumination, and estimated mean-cycle age. The
+  latter two remain visibly qualified and never supply an event instant.
+- Upcoming facts: the page derives the next requested sign target from the
+  validated current Moon sign, then uses `LunarEventSearch` provider observations
+  for that ingress and January 2000 New, First Quarter, Full, and Third Quarter.
+  The existing USNO v4.0.1 fixed 10-minute acceptance suite and stored JPL J2000
+  positional tolerance suite remained green; no calendar estimate replaced them.
+- Personal facts and omission: three current Moon-to-natal aspects reuse the
+  transit engine and existing stable personal-lunar IDs without natal
+  recalculation. Moonrise/set is explicitly unavailable because no location-aware
+  provider, atmosphere convention, or high-latitude failure boundary is selected.
+- Accessibility/browser: loading, unavailable, locked, error, empty, and ready
+  states are explicit; the decorative phase graphic is hidden from accessibility
+  APIs and complete facts appear in text/list/table form. Skip-link keyboard flow
+  focused `main`; 390px had no overflow; 200% text initially exposed Moon-card
+  overflow, which was fixed and reverified at 390px. Reduced motion resolved to
+  `auto`; desktop/mobile visuals were inspected; Chromium had zero console errors.
+- Evidence: 25 files and 370 tests passed; coverage was 94.56% statements,
+  91.11% branches, 99.50% functions, and 95.37% lines. The static `/moon` route
+  passed the optimized build and the dependency audit found zero vulnerabilities.
+- Scope: no rise/set fabrication, interpretation, score, persistence, entitlement
+  decision, notification, public sharing, production provider, AI, or deployment
   behavior was added.
 
 ## Goal 24 timeline presentation record
