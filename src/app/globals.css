@@ -909,6 +909,75 @@ tbody tr:target {
 .moon-trace {
   margin-top: 1rem;
 }
+.numerology-shell {
+  width: min(1080px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 4rem 0 3rem;
+}
+.numerology-intro {
+  max-width: 52rem;
+  padding-bottom: 3rem;
+}
+.numerology-convention {
+  max-width: 68ch;
+  padding: 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  color: var(--muted);
+}
+.numerology-panel {
+  margin-bottom: 1rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: rgb(12 25 23 / 82%);
+}
+.number-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.number-card-grid > li {
+  min-width: 0;
+  padding: 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--surface-raised);
+}
+.number-value {
+  margin-bottom: 0.2rem;
+  color: var(--accent);
+  font-family: Georgia, serif;
+  font-size: 3rem;
+  line-height: 1;
+}
+.number-card-grid small {
+  color: var(--mint);
+  font-weight: 400;
+}
+.number-card-grid details {
+  margin-top: 1rem;
+}
+.number-card-grid details p,
+.number-card-grid details ol {
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.number-card-grid details ol {
+  padding-left: 1.25rem;
+}
+.numerology-panel td code {
+  overflow-wrap: anywhere;
+  color: var(--mint);
+  white-space: normal;
+}
+.numerology-trace {
+  margin-top: 1rem;
+}
 
 @media (max-width: 850px) {
   .site-header {
@@ -1005,6 +1074,20 @@ tbody tr:target {
   }
   .moon-aspects {
     grid-template-columns: 1fr;
+  }
+  .numerology-shell {
+    width: min(100% - 1.25rem, 1080px);
+    padding-top: 2.5rem;
+  }
+  .number-card-grid {
+    grid-template-columns: 1fr;
+  }
+  .numerology-panel .section-heading {
+    display: block;
+  }
+  .numerology-panel .section-heading > span {
+    display: block;
+    margin-top: 0.5rem;
   }
   .timeline-panel {
     padding: 1rem;

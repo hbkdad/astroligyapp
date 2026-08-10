@@ -4,7 +4,7 @@ Last updated: 2026-08-10
 
 ## Current position
 
-Status: Goal 25 complete; the personal Moon presentation and read-model foundation is implemented and verified.
+Status: Goal 26 complete; the personal numerology presentation and read-model foundation is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,14 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 26: map six traced Pythagorean core results and three explicit
+      personal-cycle boundaries into an immutable numerology read model and page.
+- [x] Preserve master-number policy, normalized tokens, reduction operations,
+      strategy/version, local date/timezone, and stable source IDs without adding
+      traditional meaning or arithmetic in React.
+- [x] Verify deterministic numerology regressions, states, keyboard-expandable
+      traces, semantic cycle table, mobile/200% text, reduced motion, and console;
+      browser review found and fixed enlarged-text section-heading overflow.
 - [x] Goal 25: map a validated personal-lunar snapshot and Goal 23 lunar facts
       into one immutable Moon read model without calculation in React.
 - [x] Add `/moon` with current phase/sign, explicitly approximate illumination
@@ -267,22 +275,18 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 26 — build the personal numerology presentation/read-model foundation.
+Goal 27 — add the deterministic timeline preview and next-event foundation to Today.
 
 Deliverables:
 
-1. Map the existing validated Pythagorean core/profile results plus Goal 23
-   personal year/month/day boundary facts into one versioned immutable read model;
-   preserve values, master-number flags, normalized tokens, operations, strategy,
-   date, timezone, and source IDs without reduction in components.
-2. Render core numbers, current personal cycles, and upcoming boundary records
-   with complete semantic text/table equivalents and expandable calculation trace.
-   Keep traditional meaning copy outside this presentation goal.
-3. Provide loading, unavailable, locked, error, empty, and ready states; verify
-   keyboard, mobile, 200% text, reduced motion, long names, and trace readability
-   through `numerology-validation` followed by `ui-quality`.
-4. Use only explicit local demo data. Add no persistence, interpretation, AI,
-   entitlement decision, notification, public sharing, or deployment behavior.
+1. Extend the immutable Today read model from Goal 18 with a small ordered preview
+   sourced only from Goal 23/24 facts and one explicit next-event record.
+2. Preserve IDs, instant/window shape, source version, and ordering; link to the
+   complete timeline without recalculation, scoring, or interpretation.
+3. Cover empty/single/dense previews and all dashboard states, then verify mobile,
+   keyboard, 200% text, reduced motion, and production hydration via `ui-quality`.
+4. Add no persistence, notification, entitlement decision, public sharing, AI,
+   production provider, or deployment behavior.
 
 ## Phase queue
 
@@ -722,6 +726,26 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 26 personal numerology presentation record
+
+- Boundary: numerology read model 1.0.0 consumes six Pythagorean 1.0.0 core
+  results and Goal 23 personal year/month/day boundary facts, rechecking strategy,
+  values, tokens, operations, chronology, identity, and timezone-bearing sources.
+- Convention: component reduction preserves 11, 22, and 33; Y is a consonant;
+  strict Gregorian plain dates and caller-proven Toronto midnights define cycles.
+  Unknown Unicode remains an explicit strategy failure. No meaning copy is mixed
+  into the arithmetic presentation.
+- UI/browser: `/numerology` exposes six expandable token/operation traces and a
+  complete cycle table with loading/unavailable/locked/error/empty/ready states.
+  Keyboard trace expansion passed. At 390px, 200% text with a seven-step trace
+  initially exposed heading overflow; the stacked fix passed with no page
+  overflow. Reduced motion resolved to auto and Chromium had zero console errors.
+- Evidence: 26 files and 378 tests passed; coverage was 94.22% statements,
+  90.80% branches, 99.52% functions, and 94.97% lines. The static route passed
+  the optimized build; production dependency audit found zero vulnerabilities.
+- Scope: no interpretation, AI, persistence, entitlement, notification, public
+  sharing, production provider, or deployment behavior was added.
 
 ## Goal 25 personal Moon presentation record
 

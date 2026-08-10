@@ -24,6 +24,7 @@ export function NatalChartView({ state }: { state: NatalChartViewState }) {
         <nav aria-label="Chart navigation">
           <Link href="/">Today</Link>
           <Link href="/moon">Moon</Link>
+          <Link href="/numerology">Numerology</Link>
           <Link href="/timeline">Timeline</Link>
           <a href="#placements">Placements</a>
           <a href="#aspects">Aspects</a>

@@ -43,6 +43,7 @@ function ReadyTimeline({
         <nav aria-label="Timeline navigation">
           <Link href="/">Today</Link>
           <Link href="/moon">Moon</Link>
+          <Link href="/numerology">Numerology</Link>
           <a href="#events">Events</a>
           <a href="#event-table">Table</a>
           <a href="#timeline-trace">Trace</a>

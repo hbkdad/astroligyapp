@@ -23,6 +23,7 @@ export function MoonView({ state }: { state: MoonViewState }) {
         </Link>
         <nav aria-label="Moon navigation">
           <Link href="/">Today</Link>
+          <Link href="/numerology">Numerology</Link>
           <a href="#current-moon">Moon now</a>
           <a href="#upcoming-moon">Upcoming</a>
           <Link href="/timeline">Timeline</Link>

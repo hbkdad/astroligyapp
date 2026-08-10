@@ -180,6 +180,11 @@ tests/
   explicit local demo before presentation. Approximate illumination and
   mean-cycle age stay labeled, provider-refined event times remain distinct, and
   location-dependent rise/set is unavailable rather than inferred.
+- Numerology presentation: `toNumerologyReadModel` accepts only version-matched,
+  traced Pythagorean core results plus Goal 23 cycle-boundary facts. It preserves
+  normalized tokens, operations, master-number flags, local dates/timezones, and
+  stable IDs in immutable display records; React performs no reduction and adds
+  no traditional meaning.
 - Natal-chart presentation: `toNatalChartReadModel` accepts only a validated
   `NatalChart`, rechecks normalized facts and trace completeness, and maps them
   into a versioned immutable SVG/table model. `pointAtLongitude` owns only the
