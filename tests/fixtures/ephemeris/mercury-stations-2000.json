@@ -1,0 +1,45 @@
+{
+  "source": {
+    "name": "Richard Nolle 3000-Year Mercury Retrograde Tables",
+    "url": "https://astropro.com/features/tables/geo/me-sta/me-sta26.html",
+    "retrievedAt": "2026-08-09",
+    "timeScale": "GMT",
+    "coordinateOrigin": "geocentric",
+    "zodiacReference": "tropical",
+    "notes": "SR denotes station retrograde and SD denotes station direct. Exact acceptance values are transcribed from the named GMT table."
+  },
+  "toleranceSeconds": 1800,
+  "longitudeToleranceDegrees": 0.2,
+  "events": [
+    {
+      "eventType": "station-retrograde",
+      "expectedInstant": "2000-02-21T12:39:00Z",
+      "expectedLongitudeDegrees": 347.18333333333334
+    },
+    {
+      "eventType": "station-direct",
+      "expectedInstant": "2000-03-14T20:28:00Z",
+      "expectedLongitudeDegrees": 332.78333333333336
+    },
+    {
+      "eventType": "station-retrograde",
+      "expectedInstant": "2000-06-23T08:32:00Z",
+      "expectedLongitudeDegrees": 109.96666666666667
+    },
+    {
+      "eventType": "station-direct",
+      "expectedInstant": "2000-07-17T13:09:00Z",
+      "expectedLongitudeDegrees": 100.38333333333334
+    },
+    {
+      "eventType": "station-retrograde",
+      "expectedInstant": "2000-10-18T13:39:00Z",
+      "expectedLongitudeDegrees": 225.8
+    },
+    {
+      "eventType": "station-direct",
+      "expectedInstant": "2000-11-08T02:32:00Z",
+      "expectedLongitudeDegrees": 209.95
+    }
+  ]
+}

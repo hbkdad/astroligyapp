@@ -95,6 +95,12 @@ tests/
   refines only through further provider observations. Mean-cycle age never
   supplies an event time; incomplete, reverse, ambiguous, inconsistent, or
   under-refined searches fail explicitly with every evaluation retained.
+- `StationEventSearch`: provider-neutral application service for one requested
+  direct-to-retrograde or retrograde-to-direct longitudinal-speed crossing. It
+  requires provider-supplied degrees/day, refines a signed bracket through
+  provider observations, and retains the complete bracket/evaluation trace.
+  Longitude differences never replace absent speed; wrong-direction, incomplete,
+  ambiguous, inconsistent, and under-refined searches fail explicitly.
 - `NatalChartEngine`: application-level deterministic composition of all ten
   validated positions, Whole Sign angles/cusps, zodiac placements,
   planet-in-house assignments, and unique major aspects. The result retains the

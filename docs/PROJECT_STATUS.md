@@ -4,7 +4,7 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 21 complete; the provider-neutral lunar event-search foundation is implemented and verified.
+Status: Goal 22 complete; the provider-neutral station and retrograde event-search foundation is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -92,6 +92,17 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 22: define bounded, versioned station-retrograde and station-direct
+      searches for Mercury through Pluto from provider-supplied longitude speed.
+- [x] Require the requested positive-to-negative or negative-to-positive speed
+      crossing, refine it to a declared time tolerance, and retain before/after
+      motion plus every provider evaluation and version.
+- [x] Fail before dispatch for Sun/Moon, malformed intervals, invalid sampling,
+      and missing provenance; fail explicitly for absent speed, wrong/incomplete/
+      multiple crossings, provider failure, trace changes, and under-refinement.
+- [x] Match all six independently tabulated 2000 Mercury retrograde/direct
+      stations through Astronomy Engine 2.1.19 within fixed 30-minute and
+      0.2-degree tolerances.
 - [x] Goal 21: define bounded, versioned searches for Moon sign ingress and the
       four primary Moon-minus-Sun longitude phase anchors.
 - [x] Refine only increasing crossings through validated provider observations,
@@ -226,20 +237,21 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 22 — build the provider-neutral station and retrograde event-search foundation.
+Goal 23 — build the unified deterministic timeline-fact composition foundation.
 
 Deliverables:
 
-1. Define versioned searches for station-retrograde and station-direct events
-   from provider-supplied longitudinal speed over explicit bounded UTC ranges.
-2. Require a signed speed crossing in the requested direction, refine the
-   station to a declared time tolerance, and retain all provider/search traces.
-3. Fail explicitly for missing speed capability, incomplete or multiple
-   crossings, trace changes, provider failures, and insufficient refinement;
-   never infer station times from sampled longitude direction alone.
-4. Apply `astro-validation` with hand-checkable motion and independently sourced
-   Mercury event fixtures. Add no interpretation, timeline UI, persistence,
-   entitlement, notification, or production provider behavior.
+1. Define one versioned immutable timeline fact contract for validated personal
+   transit windows, lunar ingresses/phases, planetary stations, and deterministic
+   numerology year/month/day boundaries over one explicit display interval.
+2. Preserve each source event and complete provenance without recalculation;
+   normalize instant versus start/peak/end shape, stable IDs, and deterministic
+   chronological/tie ordering.
+3. Reject out-of-range, duplicate, malformed, cross-version, or internally
+   inconsistent events and boundaries. Do not invent missing dates or traces.
+4. Add complete empty/single/mixed/boundary/failure tests. Add no scoring,
+   interpretation, timeline UI, persistence, entitlement, notification, or
+   production provider behavior.
 
 ## Phase queue
 
@@ -296,6 +308,12 @@ Deliverables:
 
 | Date       | Evidence                                           | Result                                                                                        |
 | ---------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 2026-08-09 | Station-event focused/cross-layer suite            | 71/71 motion, provider, transit-window, source, trace, direction, and failure tests passed    |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 330 tests, and production build                   |
+| 2026-08-09 | `npm run test:coverage`                            | 95.64% statements, 92.07% branches, 100% functions, and 96.47% lines                          |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | `astro-validation` station gate                    | Direct/retrograde hand crossings refined within 1 second; direction/speed failures passed     |
+| 2026-08-09 | Independent Mercury station acceptance             | 6/6 2000 stations matched within fixed 1,800-second and 0.2-degree tolerances                 |
 | 2026-08-09 | Lunar-event focused/cross-layer suite              | 109/109 ingress, phase, lunar, zodiac, provider, trace, source, and failure tests passed      |
 | 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 314 tests, and production build                   |
 | 2026-08-09 | `npm run test:coverage`                            | 95.77% statements, 92.09% branches, 100% functions, and 96.48% lines                          |
@@ -673,6 +691,37 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 22 station and retrograde event-search record
+
+- Commands: station-event, Astronomy Engine provider, ephemeris-conformance,
+  and transit-event focused suites; `npm run check`;
+  `npm run test:coverage`; and `npm audit --omit=dev`.
+- Contract: station search 1.0.0 supports Mercury, Venus, Mars, Jupiter, Saturn,
+  Uranus, Neptune, and Pluto. Input declares station-retrograde or station-direct,
+  bounded UTC interval, coordinate provenance, integer sampling/refinement, and
+  iteration cap. Searches allow at most 400 days, seven-day-or-finer steps, and
+  2,048 initial samples. Sun and Moon fail before dispatch.
+- Motion boundary: station-retrograde requires provider speed above zero before
+  and below zero after; station-direct requires the inverse. Bisection asks the
+  provider for every midpoint until the time tolerance is met, then reports the
+  observed point with smallest absolute speed plus its signed bracket. Longitude
+  sampling is never substituted for missing provider speed.
+- Provider convention: Astronomy Engine 2.1.19 supplies tropical ecliptic-of-date
+  longitude speed in degrees/day from a one-minute forward coordinate difference.
+  Existing JPL fixture coverage accepts that speed within 0.001 degrees/day.
+- Trace/failure policy: output retains direction, longitude/zodiac, speed,
+  before/after bracket, provider/data versions, search policy, and every evaluated
+  instant, longitude, speed, and calculation timestamp. Missing speed, incomplete,
+  reverse, endpoint, multiple, inconsistent-provider, unavailable, and
+  under-refined searches return explicit non-success results. Output is frozen.
+- Independent source: Richard Nolle's GMT 1901-2000 Mercury station table supplies
+  all six 2000 SR/SD instants and tropical longitudes. Astronomy Engine matched
+  each within fixed 1,800-second and 0.2-degree tolerances. Source retrieved
+  2026-08-09; fixture preserves the URL, convention, values, and tolerances.
+- Scope: no inferred-speed fallback, interpretation, category, score, timeline
+  composition/UI, persistence, entitlement, notification, production provider
+  call, or deployment was added.
 
 ## Goal 21 lunar event-search record
 
