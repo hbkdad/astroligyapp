@@ -56,7 +56,7 @@ export function findClosestAspect(
   definitions: readonly AspectDefinition[] = DEFAULT_ASPECT_DEFINITIONS,
   motion?: AspectMotion,
 ): AspectMatch | null {
-  validateDefinitions(definitions);
+  validateAspectDefinitions(definitions);
   const actualAngleDegrees = minimalAngularSeparation(
     firstLongitudeDegrees,
     secondLongitudeDegrees,
@@ -139,7 +139,9 @@ function classifyPhase(
   return futureOrb < currentOrb ? "applying" : "separating";
 }
 
-function validateDefinitions(definitions: readonly AspectDefinition[]): void {
+export function validateAspectDefinitions(
+  definitions: readonly AspectDefinition[],
+): void {
   if (definitions.length === 0) {
     throw new RangeError("At least one aspect definition is required");
   }

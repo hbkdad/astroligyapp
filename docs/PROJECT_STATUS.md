@@ -4,7 +4,7 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 9 complete; tropical positions and composed Whole Sign houses are selected and verified.
+Status: Goal 10 complete; the deterministic natal-chart aggregate is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -13,7 +13,9 @@ verified-session boundary, identity-scoped transactions, account bootstrap,
 deterministic zodiac/aspect primitives, lunar phase geometry, a traceable
 Pythagorean numerology strategy, and a strict ephemeris adapter validation
 boundary. Astronomy Engine 2.1.19 plus Whole Sign strategy 1.0.0 is selected for
-the launch ephemeris boundary. No production data, managed database,
+the launch ephemeris boundary, and the natal engine now composes validated
+placements, houses, and aspects with complete calculation provenance. No
+production data, managed database,
 authentication, billing, AI, notification, location-resolution, or deployment
 provider is selected.
 
@@ -90,6 +92,16 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 10: build a provider-neutral natal-chart aggregate for all ten
+      supported celestial bodies, Whole Sign houses, zodiac placements,
+      planet-house placements, and unique major aspects.
+- [x] Preserve the resolved UTC instant, IANA timezone and resolution source,
+      geodetic observer and coordinate source, coordinate origin, house system,
+      provider/data metadata, and chart/house/aspect policy versions.
+- [x] Add one combined Zollikon acceptance case with JPL Horizons positions and
+      independently published Swiss Ephemeris 2.10.3.5 house angles/cusps.
+- [x] Keep interpretations, AI, scoring, database access, and persistence out of
+      the natal calculation path.
 - [x] Goal 9: select tropical positions plus composed Whole Sign houses as the
       first-release ephemeris capability boundary.
 - [x] Derive Ascendant and Midheaven through Astronomy Engine 2.1.19 local
@@ -107,33 +119,33 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 10 — build the deterministic natal-chart aggregate.
+Goal 11 — build the deterministic natal-to-current transit comparison engine.
 
 Deliverables:
 
-1. Define a provider-neutral natal-chart result that composes validated
-   positions, Whole Sign houses, zodiac placements, and aspects.
-2. Preserve normalized birth inputs plus calculation, provider, house-strategy,
-   and aspect-policy versions needed for reproduction.
-3. Add sourced UTC/location fixtures and deterministic boundary/failure tests;
-   do not persist natal results yet.
-4. Keep interpretations, AI prose, product scoring, and persistence outside the
-   calculation aggregate.
+1. Compare a validated current position set against natal planets plus ASC and
+   MC, returning structured aspect facts with stable target identifiers.
+2. Preserve current UTC input, natal provenance, provider versions, aspect
+   policy version, orb, strength, and applying/separating state.
+3. Define only instantaneous transit facts in this goal; defer start/peak/end
+   event searches until a separately validated time-series capability exists.
+4. Keep category weights, interpretation keys, notifications, persistence, and
+   AI outside the calculation engine.
 
 ## Phase queue
 
-| Phase | Scope                                                    | State    |
-| ----- | -------------------------------------------------------- | -------- |
-| 1     | Infrastructure, architecture, database, auth, standards  | Complete |
-| 2     | Ephemeris abstraction, zodiac, aspects, Moon, numerology | Complete |
-| 3     | Natal charts, transits, personal context, fixtures       | Next     |
-| 4     | Dashboard, Moon, numerology, chart, timeline UI          | Pending  |
-| 5     | Interpretation library, daily reading, public horoscopes | Pending  |
-| 6     | Compatibility and privacy-safe sharing                   | Pending  |
-| 7     | Subscriptions, entitlements, notifications               | Pending  |
-| 8     | SEO and useful public content                            | Pending  |
-| 9     | Security, privacy, performance, accessibility, QA        | Pending  |
-| 10    | Deployment and production verification                   | Pending  |
+| Phase | Scope                                                    | State       |
+| ----- | -------------------------------------------------------- | ----------- |
+| 1     | Infrastructure, architecture, database, auth, standards  | Complete    |
+| 2     | Ephemeris abstraction, zodiac, aspects, Moon, numerology | Complete    |
+| 3     | Natal charts, transits, personal context, fixtures       | In progress |
+| 4     | Dashboard, Moon, numerology, chart, timeline UI          | Pending     |
+| 5     | Interpretation library, daily reading, public horoscopes | Pending     |
+| 6     | Compatibility and privacy-safe sharing                   | Pending     |
+| 7     | Subscriptions, entitlements, notifications               | Pending     |
+| 8     | SEO and useful public content                            | Pending     |
+| 9     | Security, privacy, performance, accessibility, QA        | Pending     |
+| 10    | Deployment and production verification                   | Pending     |
 
 ## Decisions
 
@@ -191,6 +203,11 @@ Deliverables:
 | 2026-08-09 | `npm run check`                                    | Passed formatting, ESLint, strict TypeScript, 2 unit/contract tests, and production build     |
 | 2026-08-09 | `npm run test:coverage`                            | Passed; scoped baseline application/domain coverage remains 100%                              |
 | 2026-08-09 | `npm audit --audit-level=high`                     | No high or critical findings; four accepted moderate Drizzle Kit development-tool findings    |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | JPL Horizons natal fixture capture                 | 10/10 Zollikon topocentric body rows stored with URLs, raw one-minute rows, UTC, and observer |
+| 2026-08-09 | `npx vitest run tests/natal-chart.test.ts`         | 9/9 composition, provenance, dual-source fixture, no-speed, and provider-failure tests passed |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 177 tests, and production build                   |
+| 2026-08-09 | `npm run test:coverage`                            | 94.24% statements, 89.27% branches, 100% functions, and 94.01% lines                          |
 | 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
 | 2026-08-09 | Whole Sign focused deterministic suite             | 46/46 strategy, conformance, reference-angle, polar, and explicit-failure tests passed        |
 | 2026-08-09 | pysweph / Swiss Ephemeris 2.10.3.5 reference       | ASC and MC matched the published two-decimal values within the fixed 0.01 degree tolerance    |
@@ -279,6 +296,32 @@ Deliverables:
 - Decision: ADR 0006 selects composed Astronomy Engine positions/local angles
   plus a provider-neutral Whole Sign strategy. Swiss installation and licensing
   are not required for the launch boundary.
+
+## Goal 10 astro-validation record
+
+- Contract: input retains a strict UTC instant, valid IANA timezone and its
+  resolution source, east-positive geodetic observer and coordinate source,
+  selected geocentric/topocentric position origin, tropical zodiac, and Whole
+  Sign system. Output degrees remain normalized to `[0, 360)`.
+- Composition: all ten provider-validated bodies are restored to canonical
+  order, mapped to zodiac positions and houses, then compared once per unique
+  body pair using the versioned major-aspect policy. Applying/separating state
+  uses provider speeds when both exist and is explicitly `unknown` otherwise.
+- Reproducibility: output retains chart engine 1.0.0, Whole Sign strategy 1.0.0,
+  major-aspect policy 1.0.0 with its complete definitions, both provider
+  metadata records, the normalized birth inputs, and a calculation timestamp.
+- Reference: 1997-09-30 14:00 UTC at 47.33 N, 8.58 E combines ten newly captured
+  JPL Horizons API 1.3 topocentric ecliptic-of-date position rows with the
+  published Swiss Ephemeris 2.10.3.5 Ascendant 290.44 degrees, Midheaven 230.38
+  degrees, and exact Whole Sign cusps. Fixed tolerances remain 0.02 degrees for
+  planetary longitude and 0.01 degrees for the two-decimal house angles.
+- Boundaries and failures: house assignment covers cusp equality, values just
+  below cusps, zero wraparound, negative input, more than one revolution,
+  unequal cusp arcs, invalid cusp order, invalid timezone/source provenance,
+  invalid aspect configuration, missing speeds, and both position and house
+  provider failures. No partial or fabricated chart is returned.
+- Scope: no natal persistence, interpretation, AI, product weighting, or score
+  calculation was introduced.
 
 ## Goal 2 migration and security review
 

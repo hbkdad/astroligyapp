@@ -56,6 +56,15 @@
         "longitudeDegrees": -21.9426,
         "elevationMeters": 61
       }
+    },
+    {
+      "id": "swiss-whole-sign-zollikon",
+      "instant": "1997-09-30T14:00:00Z",
+      "observer": {
+        "latitudeDegrees": 47.33,
+        "longitudeDegrees": 8.58,
+        "elevationMeters": 0
+      }
     }
   ]
 }

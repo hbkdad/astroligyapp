@@ -28,3 +28,30 @@ export class WholeSignHouseStrategy implements HouseStrategy {
     );
   }
 }
+
+export function findHouseNumber(
+  longitudeDegrees: number,
+  cuspsLongitudeDegrees: readonly number[],
+): number {
+  if (cuspsLongitudeDegrees.length !== 12) {
+    throw new RangeError("Exactly 12 house cusps are required");
+  }
+
+  const firstCusp = normalizeLongitude(cuspsLongitudeDegrees[0]!);
+  const offsets = cuspsLongitudeDegrees.map((cusp) =>
+    normalizeLongitude(cusp - firstCusp),
+  );
+  for (let index = 1; index < offsets.length; index += 1) {
+    if (offsets[index]! <= offsets[index - 1]!) {
+      throw new RangeError("House cusps must advance in zodiac order");
+    }
+  }
+
+  const longitudeOffset = normalizeLongitude(longitudeDegrees - firstCusp);
+  let houseNumber = 1;
+  for (let index = 1; index < offsets.length; index += 1) {
+    if (longitudeOffset < offsets[index]!) break;
+    houseNumber = index + 1;
+  }
+  return houseNumber;
+}

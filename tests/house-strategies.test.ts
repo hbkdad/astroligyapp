@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { WholeSignHouseStrategy } from "@/domain/astro/house-strategies";
+import {
+  findHouseNumber,
+  WholeSignHouseStrategy,
+} from "@/domain/astro/house-strategies";
 
 const strategy = new WholeSignHouseStrategy();
 
@@ -62,4 +65,43 @@ describe("WholeSignHouseStrategy", () => {
       ).toThrow(RangeError);
     },
   );
+});
+
+describe("findHouseNumber", () => {
+  const wrappedCusps = [330, 0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300];
+
+  it.each([
+    [330, 1],
+    [359.999999, 1],
+    [0, 2],
+    [29.999999, 2],
+    [30, 3],
+    [329.999999, 12],
+    [-0.001, 1],
+    [720, 2],
+  ])("places longitude %s in house %s across zero", (longitude, house) => {
+    expect(findHouseNumber(longitude, wrappedCusps)).toBe(house);
+  });
+
+  it("supports unequal but zodiac-ordered cusp arcs", () => {
+    expect(
+      findHouseNumber(
+        45,
+        [10, 40, 70, 100, 130, 160, 190, 220, 250, 280, 310, 340],
+      ),
+    ).toBe(2);
+  });
+
+  it("rejects missing, duplicate, and out-of-order cusps", () => {
+    expect(() => findHouseNumber(0, [0, 30])).toThrow(RangeError);
+    expect(() =>
+      findHouseNumber(0, [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 0]),
+    ).toThrow(RangeError);
+    expect(() =>
+      findHouseNumber(
+        0,
+        [0, 60, 30, 90, 120, 150, 180, 210, 240, 270, 300, 330],
+      ),
+    ).toThrow(RangeError);
+  });
 });

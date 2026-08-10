@@ -4,7 +4,7 @@
     "name": "JPL Horizons API",
     "apiVersion": "1.3 (2025 June)",
     "documentation": "https://ssd-api.jpl.nasa.gov/doc/horizons.html",
-    "retrievedAt": "2026-08-10T00:33:39.918Z",
+    "retrievedAt": "2026-08-10T00:59:35.308Z",
     "quantities": [
       "20 apparent range and range-rate",
       "31 observer ecliptic longitude and latitude"
@@ -593,6 +593,152 @@
             "eclipticLatitudeDegrees": -4.254118,
             "distanceAu": 36.4715741149791,
             "speedLongitudeDegreesPerDay": 0.027360000094631687
+          }
+        }
+      }
+    },
+    {
+      "id": "swiss-whole-sign-zollikon",
+      "instant": "1997-09-30T14:00:00Z",
+      "bodies": {
+        "sun": {
+          "targetId": "10",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%2710%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%278.58%2C47.33%2C0%27&START_TIME=%271997-09-30+14%3A00%3A00%27&STOP_TIME=%271997-09-30+14%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "1997-Sep-30 14:00,*,m, 1.00132030884691, -0.2857554,  187.4418191, -0.0021482,",
+            "1997-Sep-30 14:01,*,m, 1.00132019444431, -0.2847248,  187.4424967, -0.0021502,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 187.4418191,
+            "eclipticLatitudeDegrees": -0.0021482,
+            "distanceAu": 1.00132030884691,
+            "speedLongitudeDegreesPerDay": 0.9757440000248607
+          }
+        },
+        "moon": {
+          "targetId": "301",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27301%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%278.58%2C47.33%2C0%27&START_TIME=%271997-09-30+14%3A00%3A00%27&STOP_TIME=%271997-09-30+14%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "1997-Sep-30 14:00,*,m, 0.00269643029286,  0.2412911,  175.1220787, -0.2765732,",
+            "1997-Sep-30 14:01,*,m, 0.00269652722452,  0.2420782,  175.1288513, -0.2765216,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 175.1220787,
+            "eclipticLatitudeDegrees": -0.2765732,
+            "distanceAu": 0.00269643029286,
+            "speedLongitudeDegreesPerDay": 9.752543999966292
+          }
+        },
+        "mercury": {
+          "targetId": "199",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27199%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%278.58%2C47.33%2C0%27&START_TIME=%271997-09-30+14%3A00%3A00%27&STOP_TIME=%271997-09-30+14%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "1997-Sep-30 14:00,*,m, 1.27483934660248, 30.2465458,  177.0342056,  1.8699170,",
+            "1997-Sep-30 14:01,*,m, 1.27485147618730, 30.2460254,  177.0354459,  1.8699045,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 177.0342056,
+            "eclipticLatitudeDegrees": 1.869917,
+            "distanceAu": 1.27483934660248,
+            "speedLongitudeDegreesPerDay": 1.7860320000909269
+          }
+        },
+        "venus": {
+          "targetId": "299",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27299%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%278.58%2C47.33%2C0%27&START_TIME=%271997-09-30+14%3A00%3A00%27&STOP_TIME=%271997-09-30+14%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "1997-Sep-30 14:00,*,m, 0.94399076513042,-12.8322797,  231.2523573, -1.9159297,",
+            "1997-Sep-30 14:01,*,m, 0.94398561810933,-12.8310044,  231.2531376, -1.9159766,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 231.2523573,
+            "eclipticLatitudeDegrees": -1.9159297,
+            "distanceAu": 0.94399076513042,
+            "speedLongitudeDegreesPerDay": 1.1236319999625266
+          }
+        },
+        "mars": {
+          "targetId": "499",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27499%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%278.58%2C47.33%2C0%27&START_TIME=%271997-09-30+14%3A00%3A00%27&STOP_TIME=%271997-09-30+14%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "1997-Sep-30 14:00,*,m, 1.79072552849063,  7.8372082,  241.1550295, -1.0674882,",
+            "1997-Sep-30 14:01,*,m, 1.79072867221242,  7.8384365,  241.1555122, -1.0674942,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 241.1550295,
+            "eclipticLatitudeDegrees": -1.0674882,
+            "distanceAu": 1.79072552849063,
+            "speedLongitudeDegreesPerDay": 0.6950880000295001
+          }
+        },
+        "jupiter": {
+          "targetId": "599",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27599%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%278.58%2C47.33%2C0%27&START_TIME=%271997-09-30+14%3A00%3A00%27&STOP_TIME=%271997-09-30+14%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "1997-Sep-30 14:00,*,m, 4.40886452565163, 21.7280293,  312.1892659, -0.9828645,",
+            "1997-Sep-30 14:01,*,m, 4.40887324035716, 21.7282941,  312.1892484, -0.9828643,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 312.1892659,
+            "eclipticLatitudeDegrees": -0.9828645,
+            "distanceAu": 4.40886452565163,
+            "speedLongitudeDegreesPerDay": -0.02520000001823064
+          }
+        },
+        "saturn": {
+          "targetId": "699",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27699%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%278.58%2C47.33%2C0%27&START_TIME=%271997-09-30+14%3A00%3A00%27&STOP_TIME=%271997-09-30+14%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "1997-Sep-30 14:00,*,m, 8.40649793559881, -5.2467235,   17.6599271, -2.7564429,",
+            "1997-Sep-30 14:01,*,m, 8.40649583110119, -5.2475436,   17.6598743, -2.7564440,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 17.6599271,
+            "eclipticLatitudeDegrees": -2.7564429,
+            "distanceAu": 8.40649793559881,
+            "speedLongitudeDegreesPerDay": -0.07603200006997213
+          }
+        },
+        "uranus": {
+          "targetId": "799",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27799%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%278.58%2C47.33%2C0%27&START_TIME=%271997-09-30+14%3A00%3A00%27&STOP_TIME=%271997-09-30+14%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "1997-Sep-30 14:00,*,m, 19.3524257930920, 26.2765603,  304.8163888, -0.6356417,",
+            "1997-Sep-30 14:01,*,m, 19.3524363320533, 26.2769668,  304.8163810, -0.6356416,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 304.8163888,
+            "eclipticLatitudeDegrees": -0.6356417,
+            "distanceAu": 19.352425793092,
+            "speedLongitudeDegreesPerDay": -0.011232000069867354
+          }
+        },
+        "neptune": {
+          "targetId": "899",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27899%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%278.58%2C47.33%2C0%27&START_TIME=%271997-09-30+14%3A00%3A00%27&STOP_TIME=%271997-09-30+14%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "1997-Sep-30 14:00,*,m, 29.7950139333371, 27.6664128,  297.2003734,  0.3957847,",
+            "1997-Sep-30 14:01,*,m, 29.7950250297659, 27.6669526,  297.2003703,  0.3957843,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 297.2003734,
+            "eclipticLatitudeDegrees": 0.3957847,
+            "distanceAu": 29.7950139333371,
+            "speedLongitudeDegreesPerDay": -0.0044639999396167696
+          }
+        },
+        "pluto": {
+          "targetId": "999",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27999%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%278.58%2C47.33%2C0%27&START_TIME=%271997-09-30+14%3A00%3A00%27&STOP_TIME=%271997-09-30+14%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "1997-Sep-30 14:00,*,m, 30.5429886751891, 24.0076270,  243.4608409, 12.1246769,",
+            "1997-Sep-30 14:01,*,m, 30.5429983042744, 24.0087690,  243.4608584, 12.1246720,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 243.4608409,
+            "eclipticLatitudeDegrees": 12.1246769,
+            "distanceAu": 30.5429886751891,
+            "speedLongitudeDegreesPerDay": 0.02520000001823064
           }
         }
       }

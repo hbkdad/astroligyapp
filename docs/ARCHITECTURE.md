@@ -89,6 +89,12 @@ tests/
 - Lunar phase primitives: Moon-minus-Sun ecliptic longitude geometry, explicit
   eight-sector labels, approximate illuminated fraction, mean-cycle age, and
   Moon zodiac position without calendar-based event prediction.
+- `NatalChartEngine`: application-level deterministic composition of all ten
+  validated positions, Whole Sign angles/cusps, zodiac placements,
+  planet-in-house assignments, and unique major aspects. The result retains the
+  resolved UTC instant, IANA timezone and source, coordinates and source,
+  coordinate origin, provider metadata, and calculation-policy versions; it
+  contains no interpretation, score, AI, or persistence behavior.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
 - `InterpretationRenderer`: deterministic template rendering with optional AI adapter behind validated input/output schemas.
