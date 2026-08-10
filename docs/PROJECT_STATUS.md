@@ -4,7 +4,7 @@ Last updated: 2026-08-10
 
 ## Current position
 
-Status: Goal 29 complete; the no-index public daily-reading presentation foundation is implemented and verified.
+Status: Goal 30 complete; the trusted-clock public daily loader and bounded cache contract are implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,14 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 30: add a server-only public loader that derives the UTC plain date
+      from an injected clock and accepts no browser date, observer, account, or profile.
+- [x] Define a version-complete bounded cache key/entry contract with 15-minute
+      default TTL, UTC rollover, strict cached-aggregate revalidation, miss
+      coalescing, FIFO eviction, and explicit hit/miss/expiry/invalidation/write states.
+- [x] Verify concurrent calls, date rollover, content-version isolation, poisoned
+      entries, cache failures, provider version drift, generic errors, deep
+      immutability, all twelve models, and absence of private output/logging.
 - [x] Goal 29: map only the complete Goal 28 aggregate into a versioned,
       immutable public horoscope read model with no provider or calculation in React.
 - [x] Statically generate twelve allowlisted `/horoscope/[sign]` local-demo paths
@@ -296,22 +304,22 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 30 — build the current public daily-reading loader and cache contract.
+Goal 31 — integrate the current public loader behind the no-index sign routes.
 
 Deliverables:
 
-1. Define a server-only, provider-neutral loader that derives one strict UTC plain
-   date from an injected clock, composes Goal 28 once, and returns Goal 29 models
-   without accepting browser-supplied dates, observers, accounts, or profiles.
-2. Add an abstract bounded daily cache/coalescing contract whose key includes the
-   date and every calculation/content/provider configuration version; represent
-   expiry, date rollover, provider failure, and invalid cached data explicitly.
-3. Verify concurrency, cache hit/miss, all twelve sign projections, midnight UTC
-   rollover, version-key isolation, malformed entries, generic public errors, and
-   absence of private fields or routine sensitive logging.
-4. Do not switch the routes from the fixed historical demo, enable indexing or
-   schema, select managed storage, add analytics/AI/entitlements/notifications,
-   call a production service, or deploy yet.
+1. Add one server-only loader factory for the selected local Astronomy Engine
+   adapter with explicit expected provider/data versions and a process-bounded
+   cache; keep clock, provider, and cache injection available to tests.
+2. Replace the fixed historical route source with the current UTC loader under a
+   declared regeneration policy, mapping generic loader failures into deliberate
+   unavailable/error UI without exposing internal details.
+3. Verify all twelve current-date paths, one calculation under concurrent route
+   loads, cache/ISR behavior, midnight rollover, invalid signs, noindex metadata,
+   valid-route consoles/network, timezone disclosure, and response privacy.
+4. Keep routes noindex/nofollow/noarchive. Add no managed cache/storage, browser
+   date input, user data, analytics, AI, entitlement, notification, schema/
+   canonical metadata, production deployment, or external network provider.
 
 ## Phase queue
 
@@ -752,6 +760,43 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 30 current public loader and cache record
+
+- Commands: `npx vitest run tests/public-daily-loader.test.ts`; focused public
+  aggregate/read-model regressions; `npm run check`; `npm run test:coverage`;
+  `npm audit --omit=dev`; and `git diff --check` through the `security-audit`
+  procedure.
+- Loader: version 1.0.0 has a zero-argument `loadCurrent` boundary. It derives a
+  strict plain date only from an injected valid `Date`, requests the canonical
+  Goal 28 UTC-noon sky, validates declared provider ID/version/data version, and
+  returns the complete aggregate plus all twelve Goal 29 models. No browser date,
+  observer, user, account, profile, cookie, header, URL, or log enters the path.
+- Cache: entry 1.0.0 is keyed by UTC date, bounded TTL, loader/entry/aggregate/
+  read-model/projection/lunar versions, sampling/target conventions, exact aspect
+  configuration/policy, public library ID/version/locale, and expected provider/
+  data versions. The in-memory implementation accepts 1–64 entries (default 8),
+  evicts oldest entries, and stores no secret or personal discriminator.
+- Integrity/concurrency: every cache hit rechecks exact entry fields/timestamps
+  and passes the aggregate through all twelve strict read-model validators.
+  Malformed entries are deleted then regenerated; expired entries regenerate;
+  simultaneous identical misses share one provider calculation. Keys isolate
+  library changes and UTC rollover. Results and cache-hit aggregates are deeply
+  frozen.
+- Failure/security: invalid clocks and provider metadata fail closed. Provider,
+  cache-read, and cache-delete details map to one generic public message. A cache
+  write failure returns fresh data with explicit `write-skipped` status. Tests
+  injected private cache/upstream markers and confirmed none reached output.
+  No critical or high finding remains; future route integration must preserve
+  noindex, generic errors, bounded process state, and zero browser-controlled date.
+- Evidence: 29 files and 423 tests passed; coverage was 94.06% statements,
+  91.13% branches, 99.60% functions, and 94.89% lines. The optimized build still
+  prerendered only the existing fixed demo routes, and the production dependency
+  audit found zero vulnerabilities.
+- Scope: the loader is not wired to HTTP. No route behavior, managed cache,
+  persistence, indexing/schema/canonical, analytics, AI, entitlement,
+  notification, external network provider, production service, or deployment
+  was added.
 
 ## Goal 29 public daily-reading presentation record
 

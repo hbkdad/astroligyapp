@@ -128,6 +128,13 @@ tests/
   AI, persistence, routing, and delivery concerns are excluded. Provider,
   calculation, aspect, projection, library, locale, and sampling conventions
   remain in the deeply frozen result.
+- `PublicDailyReadingLoader`: server-only orchestration over an injected trusted
+  UTC clock, provider expectation, public engine, and bounded cache contract. It
+  accepts no request data, builds a version-complete date/configuration key,
+  validates cached aggregates through all twelve read models, coalesces identical
+  misses, and expires entries by bounded TTL or UTC rollover. Source and cache
+  details map to generic public failures; cache write failure is an explicit
+  fresh-result status. Routes remain outside this boundary.
 - `composeTimelineFacts`: provider-free, deep-frozen composition of validated
   personal transit windows, lunar events, planetary stations, and explicit
   numerology year/month/day boundaries over one half-open UTC display interval.
