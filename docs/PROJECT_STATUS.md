@@ -4,7 +4,7 @@ Last updated: 2026-08-10
 
 ## Current position
 
-Status: Goal 31 complete; current UTC public readings are integrated behind the twelve no-index sign routes and verified.
+Status: Goal 32 complete; the deterministic phase-one zodiac and numerology compatibility fact engine is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,13 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 32: define a provider-neutral, versioned compatibility strategy over
+      validated zodiac signs and traced deterministic numerology results.
+- [x] Produce only canonical sign/element/modality and Life Path/Expression pair
+      facts, equality flags, master-number counts, versions, and operation trace.
+- [x] Verify every ordered sign and supported numerology-value pair, reverse-input
+      symmetry, exact classification tables, malformed/version-drift failures,
+      immutability, provenance, claims boundaries, and private-token exclusion.
 - [x] Goal 31: instantiate the selected local Astronomy Engine adapter behind a
       server-only current-reading factory with exact provider/data expectations,
       trusted system UTC clock, injected test seams, and a two-entry process cache.
@@ -312,21 +319,19 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 32 — implement the deterministic phase-one compatibility fact engine.
+Goal 33 — implement deterministic cross-chart synastry aspect facts.
 
 Deliverables:
 
-1. Define a versioned provider-neutral compatibility strategy that accepts only
-   validated zodiac signs and deterministic numerology results, with explicit
-   symmetry, ordering, units, and failure behavior.
-2. Implement phase-one zodiac element/modality and numerology pair facts through
-   declared data tables and reconstructable operations; keep facts separate from
-   relationship interpretation or outcome claims.
-3. Verify all sign/value combinations, reversed-input symmetry, identical and
-   boundary pairs, malformed/version-drift inputs, deterministic ordering,
-   immutability, and complete provenance.
-4. Add no birth/profile loading, persistence, sharing token, weighted synastry,
-   house overlay, UI, relationship advice, AI, entitlement, or deployment.
+1. Accept two already validated natal-chart results and a declared aspect policy;
+   do not call an ephemeris provider or accept browser-owned chart facts.
+2. Derive versioned cross-chart body-aspect facts with stable symmetric identity,
+   canonical ordering, exact orb/strength geometry, and complete source trace.
+3. Verify all body pairs, exact/inside/outside orbs, zero wraparound, reversed
+   chart symmetry, malformed/incomplete/version-drift charts, duplicate identity,
+   deterministic ordering, immutability, and absence of raw birth inputs.
+4. Add no house overlays, compatibility category weights, interpretation,
+   persistence, sharing URL, UI, AI, entitlement, or deployment.
 
 ## Phase queue
 
@@ -767,6 +772,39 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 32 phase-one compatibility fact record
+
+- Commands: `npx vitest run tests/compatibility.test.ts tests/numerology.test.ts`;
+  `npm run check`; `npm run test:coverage`; `npm audit --omit=dev`; and
+  `git diff --check` through the `astro-validation`, `numerology-validation`, and
+  `security-audit` procedures.
+- Contract: `CompatibilityStrategy` accepts two facts-only subjects with one
+  canonical tropical sign plus traced Life Path and Expression results. The
+  phase-one strategy/result and zodiac classification policy are independently
+  identified and versioned. Pythagorean source ID/version expectations are
+  configurable and validated before comparison.
+- Zodiac facts: the declared twelve-sign element/modality table is complete.
+  Output canonicalizes signs by zodiac order and elements/modalities by stable
+  text order, then reports equality only. It performs no longitude, coordinate,
+  time, ephemeris, aspect, house, score, or interpretation calculation.
+- Numerology facts: supported values are ordinary reductions 1–9 and configured
+  masters 11/22/33. Input value/master consistency, source strategy/version,
+  token shape, trace shape, and final trace result are validated. The comparison
+  reports sorted Life Path/Expression value pairs, equality, and master count;
+  it performs no reduction and changes no Pythagorean convention.
+- Symmetry/privacy/claims: all 144 ordered sign pairs and 144 ordered supported
+  value pairs produce exactly equal output when inputs reverse. Results are
+  deeply frozen and contain versions plus five reconstructable comparison steps.
+  Raw numerology tokens/traces, names, dates, subject labels, and input order are
+  not copied. The output explicitly states it is not a relationship score,
+  prediction, or advice. No critical or high security finding remains.
+- Evidence: 31 test files and 445 tests passed; coverage was 94.22% statements,
+  91.36% branches, 99.61% functions, and 95.04% lines. The optimized build passed
+  and the production dependency audit found zero vulnerabilities.
+- Scope: no profile/birth loading, persistence, share token/URL, synastry aspect,
+  house overlay, category weight, interpretation, UI, AI, entitlement,
+  notification, provider call, or deployment was added.
 
 ## Goal 31 current public route integration record
 
