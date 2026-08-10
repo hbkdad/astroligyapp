@@ -27,6 +27,15 @@ fact section, unsafe claims, duplicate keys, and mismatched tradition/template
 responses fail validation. Unsupported keys return a structured
 `unsupported-key` result rather than generic or invented copy.
 
+The renderer requires supplied parameters to match the declared parameter set
+exactly. It accepts only safe plain-text strings, finite numbers, and booleans;
+uses an invariant six-decimal-maximum number policy; and never evaluates HTML,
+templates, or executable content from a parameter. Raw source parameters remain
+available unchanged beside the rendered text. Fact and interpretation sections
+each retain their source fact, projection, context, library, locale, and
+renderer versions. Unsupported templates produce one fixed, provenance-bearing
+fallback record without attempting to reconstruct a fact.
+
 ## Prohibited content
 
 Interpretation content must not:

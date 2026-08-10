@@ -4,7 +4,7 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 14 complete; deterministic interpretation projection and claim-safe library contracts are implemented and verified.
+Status: Goal 15 complete; deterministic claim-safe template rendering is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -92,6 +92,16 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 15: render validated projection/template pairs into visibly separate
+      factual and tradition-framed plain-text sections without recalculating or
+      inventing facts.
+- [x] Apply an invariant label, boolean, and six-decimal-maximum number policy
+      while preserving raw structured parameters unchanged.
+- [x] Reject missing, extra, non-finite, unsupported, unsafe-markup, mismatched,
+      duplicate, and inconsistent runtime data before interpolation.
+- [x] Preserve source fact, projection, context, library, locale, and renderer
+      versions in every section and return a fixed deterministic fallback for
+      unsupported templates without AI.
 - [x] Goal 14: project every combined-context fact exactly once into a stable
       specific interpretation key, template family, source fact ID, tradition,
       and unchanged structured parameters.
@@ -159,18 +169,19 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 15 — build the deterministic safe template renderer.
+Goal 16 — build the explainable deterministic category-engine foundation.
 
 Deliverables:
 
-1. Render validated fact and interpretation templates using only their declared
-   structured parameters and a deterministic number/label formatting policy.
-2. Fail closed on missing, extra, malformed, non-finite, or unsupported values;
-   never interpolate HTML or recalculate a fact.
-3. Preserve source fact, projection, library, locale, and renderer versions in
-   each output section and keep fact text visibly separate from tradition copy.
-4. Provide deterministic fallback behavior without AI; do not add category
-   scoring, persistence, entitlements, or delivery yet.
+1. Define a versioned, product-owned category and contribution configuration
+   separate from astronomical/numerological calculations and interpretation
+   prose.
+2. Derive bounded 0-100 heuristic scores with confidence, source fact IDs, and
+   reconstructable contributing factors; expose no unexplained number.
+3. Fail closed on duplicate categories/rules, invalid weights or bounds,
+   unknown fact references, and non-finite arithmetic.
+4. Label every result as an interpretive product heuristic; do not add AI,
+   persistence, entitlements, notifications, or UI yet.
 
 ## Phase queue
 
@@ -243,6 +254,10 @@ Deliverables:
 | 2026-08-09 | `npm run check`                                    | Passed formatting, ESLint, strict TypeScript, 2 unit/contract tests, and production build     |
 | 2026-08-09 | `npm run test:coverage`                            | Passed; scoped baseline application/domain coverage remains 100%                              |
 | 2026-08-09 | `npm audit --audit-level=high`                     | No high or critical findings; four accepted moderate Drizzle Kit development-tool findings    |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | Interpretation renderer focused suite              | 16/16 formatting, provenance, fallback, and fail-closed tests passed                          |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 227 tests, and production build                   |
+| 2026-08-09 | `npm run test:coverage`                            | 95.95% statements, 92.5% branches, 100% functions, and 95.78% lines                           |
 | 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
 | 2026-08-09 | Interpretation focused suite                       | 14/14 projection, library, unsupported, and claim-safety tests passed                         |
 | 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 211 tests, and production build                   |
@@ -496,6 +511,31 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
 - Output: projection/library/context/locale versions and a preparation timestamp
   accompany deep-frozen structured render items. Prose interpolation, AI,
   category scoring, persistence, entitlements, and delivery remain absent.
+
+## Goal 15 deterministic renderer record
+
+- Commands: `npx vitest run tests/interpretation-renderer.test.ts`,
+  `npm run check`, `npm run test:coverage`, and `npm audit --omit=dev`.
+- Input boundary: rendering consumes only validated Goal 14 structured render
+  data. It revalidates templates, projection/template/tradition matching,
+  unsupported results, unique projection keys, the unsupported-key index, and
+  provenance metadata before interpolation.
+- Formatting policy: numbers use invariant decimal notation with at most six
+  fractional digits and normalize negative zero; booleans render as yes/no;
+  identifier labels are deterministically title-cased while version values are
+  preserved. The raw primitive parameter map is copied unchanged into output.
+- Failure policy: missing, extra, non-finite, unsupported runtime types, control
+  characters, markup-significant characters, malformed provenance, duplicate
+  items, inconsistent unsupported indexes, unsafe templates, and mismatched
+  resolutions fail closed. The renderer evaluates no HTML or executable input.
+- Output: every fact, interpretation, or unsupported fallback section carries
+  its source fact, projection key/version, template key, context version,
+  library ID/version, locale, and renderer 1.0.0. Facts and tradition-framed
+  copy remain separate deep-frozen fields.
+- Fallback and scope: an unsupported template emits the fixed sentence “No
+  deterministic interpretation is available for this item.” with provenance.
+  No AI adapter, category score, persistence, entitlement, notification,
+  delivery, or UI behavior was added.
 
 ## Goal 2 migration and security review
 

@@ -119,11 +119,16 @@ tests/
   tradition-framed sections separate, validates claim safety even for custom
   library implementations, and returns explicit unsupported-key results. It
   does not render prose or invoke AI. See `docs/CONTENT_SAFETY.md`.
+- `renderInterpretations`: application-level, versioned, deterministic
+  plain-text rendering from validated projection/template pairs. It requires an
+  exact declared-parameter match, uses invariant primitive formatting, rejects
+  unsafe markup and malformed values, and emits fact and tradition sections
+  with complete source/library/locale/renderer provenance. Unsupported
+  templates return a fixed non-AI fallback record instead of invented content.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
-- `InterpretationRenderer`: next-stage deterministic plain-text rendering from
-  validated projection/template pairs; an optional AI adapter remains deferred
-  behind future validated input/output schemas.
+- Optional AI explanation remains deferred behind future validated input/output
+  schemas and cannot replace the deterministic renderer.
 - `EntitlementPolicy`: centralized server-side capability checks independent of billing provider plan names.
 
 ## Data and cache principles
