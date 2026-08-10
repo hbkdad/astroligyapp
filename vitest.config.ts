@@ -9,7 +9,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.{ts,tsx}"],
     exclude: [
       "tests/database.integration.test.ts",
       "**/node_modules/**",
@@ -18,7 +18,12 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json-summary"],
-      include: ["src/application/**/*.ts", "src/domain/**/*.ts"],
+      include: [
+        "src/application/**/*.ts",
+        "src/domain/**/*.ts",
+        "src/presentation/**/*.ts",
+        "src/components/**/*.tsx",
+      ],
     },
   },
 });

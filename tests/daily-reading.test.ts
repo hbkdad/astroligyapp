@@ -22,7 +22,7 @@ describe("daily reading composition", () => {
         contextVersion: "1.0.0",
         projectionVersion: "1.0.0",
         libraryId: "personal-reflection-en-ca",
-        libraryVersion: "1.0.0",
+        libraryVersion: "1.1.0",
         locale: "en-CA",
         rendererVersion: "1.0.0",
         scoreModelId: "personal-category-baseline",

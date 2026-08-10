@@ -134,7 +134,7 @@ describe("interpretation projection", () => {
       projectionVersion: INTERPRETATION_PROJECTION_VERSION,
       contextVersion: context.metadata.contextVersion,
       libraryId: "personal-reflection-en-ca",
-      libraryVersion: "1.0.0",
+      libraryVersion: "1.1.0",
       locale: "en-CA",
     });
     expect(result.items.every((item) => item.resolution.supported)).toBe(true);

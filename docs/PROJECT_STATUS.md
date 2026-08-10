@@ -4,7 +4,7 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 17 complete; the versioned deterministic daily-reading payload is implemented and verified.
+Status: Goal 18 complete; the accessible personal-dashboard foundation is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -92,6 +92,18 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 18: map the Goal 17 payload boundary into a versioned, immutable
+      presentation model with no calculation, scoring, or interpretation in
+      React components.
+- [x] Replace the architecture placeholder with responsive Today, Moon,
+      strongest-signal, category, numerology, fact/reflection, and trace panels.
+- [x] Add explicit loading, locked, error, empty, and success states plus score
+      text equivalents, claims disclaimers, keyboard skip/details operation,
+      visible focus, and reduced-motion behavior.
+- [x] Use only explicitly labeled synthetic local demo data; no private birth,
+      account, persistence, entitlement, or production provider data is loaded.
+- [x] Correct duplicated “natal Natal” renderer copy and bump the deterministic
+      interpretation library to 1.1.0 with focused regression coverage.
 - [x] Goal 17: compose immutable context, deterministic interpretation output,
       explainable categories, and strongest signals into one versioned payload.
 - [x] Recheck effective time, ordered fact coverage, child provenance versions,
@@ -183,18 +195,18 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 18 — build the accessible personal-dashboard foundation.
+Goal 19 — build the accessible natal-chart visualization foundation.
 
 Deliverables:
 
-1. Define a presentation-only dashboard read model from the Goal 17 payload;
-   do not perform calculations, scoring, or interpretation in components.
-2. Implement the initial Today, Moon, strongest signals, category heuristics,
-   numerology, and trace/disclaimer sections with responsive semantic markup.
-3. Apply `ui-quality`, inspect desktop and mobile in a real browser, and verify
-   keyboard focus, reduced motion, contrast, and text equivalents.
-4. Use deterministic local fixture data only until authenticated private-data
-   loading is selected; add no production persistence or public birth data.
+1. Map only a validated natal-chart aggregate into a versioned presentation
+   model; retain body, sign, degree, house, aspect, orb, and source versions.
+2. Render a responsive Whole Sign chart graphic with planet/house/aspect layers
+   and a complete nonvisual placement/aspect table; do no astronomy in UI code.
+3. Support keyboard-readable details, long labels, missing birth time/house
+   capability, mobile layout, 200% text scaling, and reduced motion.
+4. Apply `astro-validation` and `ui-quality`, use sourced local fixture data,
+   and add no persistence, sharing, entitlement, or production provider calls.
 
 ## Phase queue
 
@@ -268,6 +280,13 @@ Deliverables:
 | 2026-08-09 | `npm run test:coverage`                            | Passed; scoped baseline application/domain coverage remains 100%                              |
 | 2026-08-09 | `npm audit --audit-level=high`                     | No high or critical findings; four accepted moderate Drizzle Kit development-tool findings    |
 | 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | Dashboard focused suite                            | 8/8 Goal 17 adapter, mapper, semantic, state, empty, and fail-closed UI tests passed          |
+| 2026-08-09 | UI cross-layer regression suite                    | 45/45 dashboard, renderer, projection, and reading tests passed                               |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 256 tests, and production build                   |
+| 2026-08-09 | `npm run test:coverage`                            | 95.94% statements, 91.91% branches, 100% functions, and 96.01% lines                          |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | `ui-quality` browser gate                          | Desktop/mobile visuals, keyboard, 200% text, reduced motion, and zero-overflow passed         |
+| 2026-08-09 | Optimized production browser                       | 200 response, local icon, nine resources, zero console errors or warnings                     |
 | 2026-08-09 | Daily-reading focused suite                        | 6/6 composition, ordering, coverage, version, and duplicate tests passed                      |
 | 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 246 tests, and production build                   |
 | 2026-08-09 | `npm run test:coverage`                            | 95.77% statements, 91.83% branches, 100% functions, and 95.71% lines                          |
@@ -601,6 +620,42 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 18 dashboard and UI-quality record
+
+- Commands: `npx vitest run tests/dashboard-read-model.test.tsx`, focused
+  interpretation/daily-reading regression suites, `npm run check`,
+  `npm run test:coverage`, `npm audit --omit=dev`, and Playwright CLI browser
+  inspection against both dev and optimized production servers.
+- Presentation boundary: dashboard read model 1.0.0 accepts the Goal 17 payload
+  through `sourceFromDailyReading`, performs display-only date/label/number
+  formatting, and deep-freezes the result. React receives no calculation engine,
+  provider, score model, interpretation library, birth input, or private account
+  data.
+- UI: the responsive server-rendered dashboard contains Today, Moon, strongest
+  signals, numerology, category meters, visibly separated calculated facts and
+  tradition reflections, version trace, claims disclaimer, and a local-demo
+  badge. Native headings, landmarks, lists, definition lists, meters, details,
+  and text alternatives preserve meaning without color or the Moon graphic.
+- State/accessibility coverage: ready, loading, locked, error, and empty states
+  are deliberate. At 390px there was zero horizontal overflow; 200% root text
+  scaling also had zero overflow. Keyboard testing focused the skip link, moved
+  focus to `main`, and opened the version trace. Reduced-motion emulation changed
+  root scrolling to `auto`; focus indicators and 44px interactive targets are
+  explicit. Core foreground, muted, accent, and mint contrast ratios against the
+  dark background were 17.18:1, 9.16:1, 10.41:1, and 10.40:1 respectively;
+  muted text against raised surfaces was 8.55:1.
+- Visual/performance review: desktop 1440x1000 and mobile 390x844 full-page
+  screenshots were inspected. The page uses CSS only, no remote font/image or
+  blocking visualization library. The final optimized production browser loaded
+  nine resources with zero console errors/warnings and a local SVG icon.
+- Content correction: UI inspection exposed duplicated “natal Natal” copy in
+  transit and personal-lunar facts. The templates now rely on the already
+  qualified target label, interpretation library version is 1.1.0, and focused
+  regressions cover both template families.
+- Scope: all displayed values are explicitly synthetic local demo data. No
+  production persistence, auth loading, public birth data, entitlement, AI,
+  notification, or deployment behavior was added.
 
 ## Goal 2 migration and security review
 

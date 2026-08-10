@@ -7,7 +7,7 @@ import {
 } from "./contracts";
 
 export const DEFAULT_INTERPRETATION_LIBRARY_ID = "personal-reflection-en-ca";
-export const DEFAULT_INTERPRETATION_LIBRARY_VERSION = "1.0.0";
+export const DEFAULT_INTERPRETATION_LIBRARY_VERSION = "1.1.0";
 
 const FACTUAL_INFERENCE_PATTERN =
   /\b(?:means?|suggests?|indicates?|predicts?|lucky|unlucky|destined)\b/i;
@@ -104,7 +104,7 @@ export const DEFAULT_INTERPRETATION_LIBRARY =
           "phase",
         ],
         factTemplate:
-          "{transitingBody} is {aspectType} natal {targetLabel} with an orb of {orbDegrees} degrees and is {phase}.",
+          "{transitingBody} is {aspectType} {targetLabel} with an orb of {orbDegrees} degrees and is {phase}.",
         interpretationTemplate:
           "Within astrology traditions, this transit is used as a prompt to reflect on the themes associated with {transitingBody} and {targetLabel}.",
       },
@@ -127,7 +127,7 @@ export const DEFAULT_INTERPRETATION_LIBRARY =
         tradition: "astrology",
         parameters: ["aspectType", "targetLabel", "orbDegrees", "phase"],
         factTemplate:
-          "The Moon is {aspectType} natal {targetLabel} with an orb of {orbDegrees} degrees and is {phase}.",
+          "The Moon is {aspectType} {targetLabel} with an orb of {orbDegrees} degrees and is {phase}.",
         interpretationTemplate:
           "Within astrology traditions, this Moon-to-natal aspect is used as a short-term reflection prompt.",
       },

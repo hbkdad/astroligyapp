@@ -135,6 +135,11 @@ tests/
   context, deterministic rendered sections, category traces, and a stable
   top-five signal ordering. It rechecks fact coverage and all child versions;
   no persistence, delivery, AI, or UI concern enters the composition boundary.
+- Dashboard presentation: `sourceFromDailyReading` narrows the Goal 17 payload
+  into a versioned, immutable read model before React rendering. Components
+  perform no calculations, scoring, or interpretation. The current page uses
+  explicitly labeled synthetic local data only and provides semantic text
+  equivalents for category meters and the decorative Moon graphic.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
 - Optional AI explanation remains deferred behind future validated input/output

@@ -115,6 +115,55 @@ describe("deterministic interpretation renderer", () => {
     });
   });
 
+  it.each([
+    {
+      projection: {
+        key: "transit.jupiter.trine.natal.sun",
+        templateKey: "transit-aspect" as const,
+        sourceFactId: "transit:jupiter:body:sun:trine",
+        tradition: "astrology" as const,
+        parameters: {
+          transitingBody: "jupiter",
+          aspectType: "trine",
+          targetLabel: "natal.sun",
+          orbDegrees: 0.8,
+          phase: "applying",
+        },
+      },
+      expected:
+        "Jupiter is Trine Natal Sun with an orb of 0.8 degrees and is Applying.",
+    },
+    {
+      projection: {
+        key: "personal-lunar.trine.natal.sun",
+        templateKey: "personal-lunar-aspect" as const,
+        sourceFactId: "personal-lunar:body:sun:trine",
+        tradition: "astrology" as const,
+        parameters: {
+          aspectType: "trine",
+          targetLabel: "natal.sun",
+          orbDegrees: 1.2,
+          phase: "separating",
+        },
+      },
+      expected:
+        "The Moon is Trine Natal Sun with an orb of 1.2 degrees and is Separating.",
+    },
+  ])(
+    "does not duplicate the natal qualifier in $projection.templateKey",
+    ({ projection, expected }) => {
+      const resolution = DEFAULT_INTERPRETATION_LIBRARY.resolve(
+        projection.templateKey,
+      );
+      const output = renderInterpretations(
+        preparedData(projection, resolution),
+      );
+      const item = output.items[0]!;
+      if (item.status !== "rendered") throw new Error("Expected rendered item");
+      expect(item.fact.text).toBe(expected);
+    },
+  );
+
   it("fails closed on missing and extra parameters", () => {
     const missing = placementProjection();
     delete (missing.parameters as Record<string, unknown>).houseNumber;
