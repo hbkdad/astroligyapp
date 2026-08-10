@@ -28,7 +28,7 @@ export const CONFORMANCE_HOUSE_REQUEST: HouseRequest = {
     longitudeDegrees: -75.6972,
     elevationMeters: 70,
   },
-  houseSystem: "fixture-system",
+  houseSystem: "whole-sign",
   zodiacReference: "tropical",
 };
 

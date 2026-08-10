@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CelestialBody } from "@/domain/astro/contracts";
 import {
+  getValidatedHouseCusps,
   getValidatedPositions,
   validatePositionResult,
 } from "@/domain/astro/provider-validation";
@@ -12,11 +13,11 @@ import {
 } from "./support/ephemeris-provider-conformance";
 import manifest from "./fixtures/ephemeris/reference-cases.json";
 import referenceValues from "./fixtures/ephemeris/reference-values.json";
+import houseReference from "./fixtures/ephemeris/whole-sign-house-reference.json";
 
 describeEphemerisProviderConformance(
   "Astronomy Engine 2.1.19",
   () => new AstronomyEngineProvider(),
-  { houses: "unsupported" },
 );
 
 describe("AstronomyEngineProvider", () => {
@@ -75,6 +76,76 @@ describe("AstronomyEngineProvider", () => {
     ).resolves.toMatchObject({
       ok: false,
       error: { code: "unsupported-capability", retryable: false },
+    });
+  });
+
+  it("matches independently sourced Swiss house angles and Whole Sign cusps", async () => {
+    const provider = new AstronomyEngineProvider();
+    const referenceCase = houseReference.case;
+    const result = await getValidatedHouseCusps(provider, {
+      instant: referenceCase.instant,
+      observer: referenceCase.observer,
+      zodiacReference: "tropical",
+      houseSystem: "whole-sign",
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(
+      circularDifference(
+        result.value.ascendantLongitudeDegrees,
+        referenceCase.expected.ascendantLongitudeDegrees,
+      ),
+    ).toBeLessThanOrEqual(houseReference.toleranceDegrees);
+    expect(
+      circularDifference(
+        result.value.midheavenLongitudeDegrees,
+        referenceCase.expected.midheavenLongitudeDegrees,
+      ),
+    ).toBeLessThanOrEqual(houseReference.toleranceDegrees);
+    expect(result.value.cuspsLongitudeDegrees).toEqual(
+      referenceCase.expected.cuspsLongitudeDegrees,
+    );
+  });
+
+  it.each([
+    { houseSystem: "placidus", zodiacReference: "tropical" as const },
+    { houseSystem: "whole-sign", zodiacReference: "sidereal" as const },
+  ])("explicitly rejects unsupported house capability %#", async (override) => {
+    const provider = new AstronomyEngineProvider();
+    await expect(
+      getValidatedHouseCusps(provider, {
+        instant: "2026-01-01T00:00:00Z",
+        observer: { latitudeDegrees: 45, longitudeDegrees: -75 },
+        ...override,
+      }),
+    ).resolves.toMatchObject({
+      ok: false,
+      error: { code: "unsupported-capability", retryable: false },
+    });
+  });
+
+  it("supports high latitudes but fails explicitly at a geographic pole", async () => {
+    const provider = new AstronomyEngineProvider();
+    const request = {
+      instant: "2026-01-01T00:00:00Z",
+      observer: { latitudeDegrees: 89, longitudeDegrees: 0 },
+      houseSystem: "whole-sign",
+      zodiacReference: "tropical" as const,
+    };
+    await expect(
+      getValidatedHouseCusps(provider, request),
+    ).resolves.toMatchObject({
+      ok: true,
+      value: { cuspsLongitudeDegrees: expect.any(Array) },
+    });
+    await expect(
+      getValidatedHouseCusps(provider, {
+        ...request,
+        observer: { latitudeDegrees: 90, longitudeDegrees: 0 },
+      }),
+    ).resolves.toMatchObject({
+      ok: false,
+      error: { code: "data-unavailable", retryable: false },
     });
   });
 

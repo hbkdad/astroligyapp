@@ -4,7 +4,7 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 8 complete; independent JPL fixtures and a positions-only candidate spike verified.
+Status: Goal 9 complete; tropical positions and composed Whole Sign houses are selected and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -12,9 +12,10 @@ migrations, forced row-level security on 19 private tables, a server-only
 verified-session boundary, identity-scoped transactions, account bootstrap,
 deterministic zodiac/aspect primitives, lunar phase geometry, a traceable
 Pythagorean numerology strategy, and a strict ephemeris adapter validation
-boundary. No production data, managed database,
-authentication, billing, AI, notification, ephemeris, or deployment provider is
-selected.
+boundary. Astronomy Engine 2.1.19 plus Whole Sign strategy 1.0.0 is selected for
+the launch ephemeris boundary. No production data, managed database,
+authentication, billing, AI, notification, location-resolution, or deployment
+provider is selected.
 
 ## Completed
 
@@ -87,42 +88,52 @@ selected.
 - [x] Prove explicit sidereal and house capability failures, topocentric observer
       handling, package metadata, and shared conformance behavior.
 
+## Recently completed
+
+- [x] Goal 9: select tropical positions plus composed Whole Sign houses as the
+      first-release ephemeris capability boundary.
+- [x] Derive Ascendant and Midheaven through Astronomy Engine 2.1.19 local
+      coordinate rotations and keep cusp derivation in a versioned,
+      provider-neutral strategy.
+- [x] Match the published Swiss Ephemeris 2.10.3.5 angle fixture within the
+      fixed 0.01° tolerance and cover all sign boundaries and wraparound.
+- [x] Reject sidereal and unimplemented house systems explicitly; support high
+      latitudes but return `data-unavailable` at exact geographic poles without
+      substituting a different system.
+
 ## In progress
 
 None. Start only the next goal below.
 
 ## Next goal
 
-Goal 9 — complete ephemeris capability and house-system decision.
+Goal 10 — build the deterministic natal-chart aggregate.
 
 Deliverables:
 
-1. Define the exact tropical/sidereal product requirement and supported house
-   systems, including polar-location failure behavior.
-2. Compare a separately validated house implementation or full-provider
-   candidate against sourced cusp/angle fixtures; do not use JPL as a house
-   oracle.
-3. Decide whether a composed positions-plus-houses architecture is acceptable or
-   whether one full provider is required.
-4. Resolve the Swiss commercial-versus-AGPL approval only if Swiss remains the
-   preferred complete candidate.
-5. Record the selected capability boundary and fallback policy before natal or
-   transit persistence begins.
+1. Define a provider-neutral natal-chart result that composes validated
+   positions, Whole Sign houses, zodiac placements, and aspects.
+2. Preserve normalized birth inputs plus calculation, provider, house-strategy,
+   and aspect-policy versions needed for reproduction.
+3. Add sourced UTC/location fixtures and deterministic boundary/failure tests;
+   do not persist natal results yet.
+4. Keep interpretations, AI prose, product scoring, and persistence outside the
+   calculation aggregate.
 
 ## Phase queue
 
-| Phase | Scope                                                    | State       |
-| ----- | -------------------------------------------------------- | ----------- |
-| 1     | Infrastructure, architecture, database, auth, standards  | Complete    |
-| 2     | Ephemeris abstraction, zodiac, aspects, Moon, numerology | In progress |
-| 3     | Natal charts, transits, personal context, fixtures       | Pending     |
-| 4     | Dashboard, Moon, numerology, chart, timeline UI          | Pending     |
-| 5     | Interpretation library, daily reading, public horoscopes | Pending     |
-| 6     | Compatibility and privacy-safe sharing                   | Pending     |
-| 7     | Subscriptions, entitlements, notifications               | Pending     |
-| 8     | SEO and useful public content                            | Pending     |
-| 9     | Security, privacy, performance, accessibility, QA        | Pending     |
-| 10    | Deployment and production verification                   | Pending     |
+| Phase | Scope                                                    | State    |
+| ----- | -------------------------------------------------------- | -------- |
+| 1     | Infrastructure, architecture, database, auth, standards  | Complete |
+| 2     | Ephemeris abstraction, zodiac, aspects, Moon, numerology | Complete |
+| 3     | Natal charts, transits, personal context, fixtures       | Next     |
+| 4     | Dashboard, Moon, numerology, chart, timeline UI          | Pending  |
+| 5     | Interpretation library, daily reading, public horoscopes | Pending  |
+| 6     | Compatibility and privacy-safe sharing                   | Pending  |
+| 7     | Subscriptions, entitlements, notifications               | Pending  |
+| 8     | SEO and useful public content                            | Pending  |
+| 9     | Security, privacy, performance, accessibility, QA        | Pending  |
+| 10    | Deployment and production verification                   | Pending  |
 
 ## Decisions
 
@@ -141,7 +152,8 @@ Deliverables:
 
 ## Blockers and risks
 
-- Ephemeris provider selection remains blocked on final licensing approval, comparative fixtures, deployment fit, and operating-cost validation.
+- Production-host deployment fit and performance for the selected composed
+  ephemeris provider remain release gates.
 - Next New/Full Moon times, rise/set, altitude/azimuth, and personal lunar
   transits remain deferred until validated time-series and location-aware
   provider capabilities exist. Mean-cycle age must not be used as an ephemeris.
@@ -179,6 +191,11 @@ Deliverables:
 | 2026-08-09 | `npm run check`                                    | Passed formatting, ESLint, strict TypeScript, 2 unit/contract tests, and production build     |
 | 2026-08-09 | `npm run test:coverage`                            | Passed; scoped baseline application/domain coverage remains 100%                              |
 | 2026-08-09 | `npm audit --audit-level=high`                     | No high or critical findings; four accepted moderate Drizzle Kit development-tool findings    |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | Whole Sign focused deterministic suite             | 46/46 strategy, conformance, reference-angle, polar, and explicit-failure tests passed        |
+| 2026-08-09 | pysweph / Swiss Ephemeris 2.10.3.5 reference       | ASC and MC matched the published two-decimal values within the fixed 0.01 degree tolerance    |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 158 tests, and production build                   |
+| 2026-08-09 | `npm run test:coverage`                            | 93.2% statements, 88.09% branches, 100% functions, and 93.04% lines                           |
 | 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
 | 2026-08-09 | JPL Horizons API 1.3 fixture capture               | 40 topocentric body/case results stored with request URLs and raw rows                        |
 | 2026-08-09 | Astronomy Engine 2.1.19 focused suite              | 14/14 conformance, JPL tolerance, capability, and failure tests passed                        |
@@ -242,6 +259,26 @@ Deliverables:
 - Capability: tropical geocentric/topocentric positions pass. Sidereal output
   and house cusps fail explicitly as unsupported. The package is not selected
   as the complete provider; Goal 9 must resolve house and sidereal requirements.
+
+## Goal 9 astro-validation record
+
+- Contract: UTC instants, geodetic longitude east-positive, degrees, tropical
+  ecliptic-of-date longitudes normalized to `[0, 360)`, topocentric local
+  angles, Whole Sign cusps, Astronomy Engine 2.1.19, and strategy 1.0.0.
+- Reference: published pysweph tutorial output backed by Swiss Ephemeris
+  2.10.3.5 for 1997-09-30 14:00 UTC at 47.33 N, 8.58 E. Expected Ascendant
+  290.44° and Midheaven 230.38° use a fixed 0.01° tolerance because the source
+  is rounded to two decimals. Cusp one begins at 270° and advances by exact
+  30° increments.
+- Boundaries: every exact 30° sign boundary, each boundary minus 1e-9°, zero,
+  359.999999°, negative input, and more than one revolution are covered. All
+  output cusps remain normalized.
+- Failure policy: sidereal output and every non-Whole-Sign system fail as
+  unsupported. Whole Sign works at tested latitude 89°; exact +/-90° returns
+  `data-unavailable`. No Porphyry or other silent fallback exists.
+- Decision: ADR 0006 selects composed Astronomy Engine positions/local angles
+  plus a provider-neutral Whole Sign strategy. Swiss installation and licensing
+  are not required for the launch boundary.
 
 ## Goal 2 migration and security review
 

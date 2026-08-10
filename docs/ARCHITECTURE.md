@@ -73,6 +73,9 @@ tests/
 ## Core interfaces
 
 - `EphemerisProvider`: normalized celestial positions, houses, and provider metadata; no interpretation.
+- House calculation: Astronomy Engine supplies local geometric angles and a
+  provider-neutral, versioned strategy derives cusps. Tropical Whole Sign is
+  the only launch strategy; unsupported systems fail explicitly. See ADR 0006.
 - `SessionVerifier`: provider-neutral server verification returning explicit
   active, unauthenticated, expired, revoked, or invalid session state.
 - `withIdentityTransaction`: maps an internal account UUID into a constrained,
@@ -109,9 +112,10 @@ tests/
 
 ## Open decisions
 
-- Runtime and deployment constraints for ephemeris adapters beyond the default Node.js application runtime.
+- Runtime and deployment verification for the selected composed ephemeris
+  adapter on the eventual production host.
 - Authentication and managed PostgreSQL providers.
-- Initial house system and coordinate/timezone resolution providers.
+- Coordinate and timezone resolution providers for user-entered locations.
 - Browser end-to-end runner and observability stack.
 
 ## Baseline decisions
@@ -125,3 +129,6 @@ tests/
 - Persistence: PostgreSQL 18 contract, Drizzle ORM/Kit, `pg`, checked-in SQL
   migrations, forced row-level security, and real disposable PostgreSQL tests.
   See ADR 0003.
+- Ephemeris: exact Astronomy Engine 2.1.19 for tropical positions and local
+  angles, composed with Whole Sign strategy 1.0.0. No silent house-system
+  fallback; exact poles fail explicitly. See ADR 0006.

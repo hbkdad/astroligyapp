@@ -5,6 +5,9 @@ import {
   GeoVector,
   Observer,
   ObserverVector,
+  RotateVector,
+  Rotation_ECT_EQJ,
+  Rotation_EQJ_HOR,
   Vector,
 } from "astronomy-engine";
 
@@ -13,11 +16,18 @@ import {
   type CelestialPosition,
   type EphemerisProvider,
   type EphemerisProviderResult,
+  type HouseRequest,
   type HouseResult,
   type ObserverLocation,
   type PositionRequest,
   type PositionResult,
 } from "@/domain/astro/contracts";
+import {
+  type HouseAngles,
+  type HouseStrategy,
+  WholeSignHouseStrategy,
+  WHOLE_SIGN_HOUSE_SYSTEM,
+} from "@/domain/astro/house-strategies";
 
 const PACKAGE_VERSION = "2.1.19";
 const SPEED_STEP_DAYS = 1 / 1440;
@@ -37,6 +47,10 @@ const BODY_MAP: Readonly<Record<CelestialBody, Body>> = {
 
 export class AstronomyEngineProvider implements EphemerisProvider {
   readonly id = "astronomy-engine";
+
+  constructor(
+    private readonly houseStrategy: HouseStrategy = new WholeSignHouseStrategy(),
+  ) {}
 
   async getPositions(
     request: PositionRequest,
@@ -85,9 +99,117 @@ export class AstronomyEngineProvider implements EphemerisProvider {
     }
   }
 
-  async getHouseCusps(): Promise<EphemerisProviderResult<HouseResult>> {
-    return unsupported("Astrological house cusps are not supported");
+  async getHouseCusps(
+    request: HouseRequest,
+  ): Promise<EphemerisProviderResult<HouseResult>> {
+    if (request.zodiacReference !== "tropical") {
+      return unsupported("Sidereal houses are not supported");
+    }
+    if (
+      request.houseSystem !== WHOLE_SIGN_HOUSE_SYSTEM ||
+      this.houseStrategy.id !== WHOLE_SIGN_HOUSE_SYSTEM
+    ) {
+      return unsupported(
+        `House system ${request.houseSystem} is not supported`,
+      );
+    }
+    if (Math.abs(request.observer.latitudeDegrees) === 90) {
+      return {
+        ok: false,
+        error: {
+          code: "data-unavailable",
+          message: "House angles are undefined at the geographic poles",
+          retryable: false,
+        },
+      };
+    }
+
+    try {
+      const angles = calculateHouseAngles(
+        new Date(request.instant),
+        request.observer,
+      );
+      return {
+        ok: true,
+        value: {
+          instant: request.instant,
+          cuspsLongitudeDegrees: this.houseStrategy.calculateCusps(angles),
+          ...angles,
+          metadata: {
+            providerId: this.id,
+            providerVersion: PACKAGE_VERSION,
+            dataVersion: `astronomy-engine-model-${PACKAGE_VERSION}+${this.houseStrategy.id}-${this.houseStrategy.version}`,
+            calculatedAt: new Date().toISOString(),
+            timeScale: "utc",
+            referenceFrame: "ecliptic-of-date",
+            zodiacReference: request.zodiacReference,
+            coordinateOrigin: "topocentric",
+          },
+        },
+      };
+    } catch {
+      return {
+        ok: false,
+        error: {
+          code: "data-unavailable",
+          message: "Astronomy Engine could not calculate the house angles",
+          retryable: false,
+        },
+      };
+    }
   }
+}
+
+function calculateHouseAngles(
+  date: Date,
+  location: ObserverLocation,
+): HouseAngles {
+  const time = new AstroTime(date);
+  const observer = new Observer(
+    location.latitudeDegrees,
+    location.longitudeDegrees,
+    location.elevationMeters ?? 0,
+  );
+  const toEquatorial = Rotation_ECT_EQJ(time);
+  const toHorizontal = Rotation_EQJ_HOR(time, observer);
+
+  const horizontalVector = (longitudeDegrees: number): Vector => {
+    const radians = (longitudeDegrees * Math.PI) / 180;
+    const ecliptic = new Vector(Math.cos(radians), Math.sin(radians), 0, time);
+    return RotateVector(toHorizontal, RotateVector(toEquatorial, ecliptic));
+  };
+
+  const horizonRoots = componentRoots(horizontalVector, "z");
+  const meridianRoots = componentRoots(horizontalVector, "y");
+  const ascendant = horizonRoots.find(
+    (longitude) => horizontalVector(longitude).y < 0,
+  );
+  const midheaven = meridianRoots.find(
+    (longitude) => horizontalVector(longitude).z > 0,
+  );
+  if (ascendant === undefined || midheaven === undefined) {
+    throw new RangeError("House angles are geometrically undefined");
+  }
+
+  return {
+    ascendantLongitudeDegrees: normalizeLongitude(ascendant),
+    midheavenLongitudeDegrees: normalizeLongitude(midheaven),
+  };
+}
+
+function componentRoots(
+  horizontalVector: (longitudeDegrees: number) => Vector,
+  component: "y" | "z",
+): readonly [number, number] {
+  const cosineCoefficient = horizontalVector(0)[component];
+  const sineCoefficient = horizontalVector(90)[component];
+  if (Math.hypot(cosineCoefficient, sineCoefficient) < 1e-12) {
+    throw new RangeError("Ecliptic intersection is undefined");
+  }
+  const first = normalizeLongitude(
+    (Math.atan2(-cosineCoefficient, sineCoefficient) * 180) / Math.PI,
+  );
+  return [first, normalizeLongitude(first + 180)];
 }
 
 function calculatePosition(

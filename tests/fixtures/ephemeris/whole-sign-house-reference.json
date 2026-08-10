@@ -1,0 +1,27 @@
+{
+  "source": {
+    "name": "pysweph angles and houses tutorial",
+    "url": "https://sailorfe.github.io/pysweph/tutorials/angles_and_houses.html",
+    "underlyingProvider": "Swiss Ephemeris",
+    "providerVersion": "2.10.3.5",
+    "capturedAt": "2026-08-09"
+  },
+  "toleranceDegrees": 0.01,
+  "case": {
+    "instant": "1997-09-30T14:00:00Z",
+    "observer": {
+      "latitudeDegrees": 47.33,
+      "longitudeDegrees": 8.58,
+      "elevationMeters": 0
+    },
+    "zodiacReference": "tropical",
+    "houseSystem": "whole-sign",
+    "expected": {
+      "ascendantLongitudeDegrees": 290.44,
+      "midheavenLongitudeDegrees": 230.38,
+      "cuspsLongitudeDegrees": [
+        270, 300, 330, 0, 30, 60, 90, 120, 150, 180, 210, 240
+      ]
+    }
+  }
+}
