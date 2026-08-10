@@ -131,6 +131,10 @@ tests/
   confidence formula, source fact IDs, and complete contributing-rule trace.
   Model changes cannot affect calculation facts or interpretation prose. See
   `docs/CATEGORY_MODEL.md`.
+- `composeDailyReading`: versioned application payload combining the immutable
+  context, deterministic rendered sections, category traces, and a stable
+  top-five signal ordering. It rechecks fact coverage and all child versions;
+  no persistence, delivery, AI, or UI concern enters the composition boundary.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
 - Optional AI explanation remains deferred behind future validated input/output

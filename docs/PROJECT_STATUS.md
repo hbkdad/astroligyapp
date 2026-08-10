@@ -4,7 +4,7 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 16 complete; explainable deterministic category heuristics are implemented and verified.
+Status: Goal 17 complete; the versioned deterministic daily-reading payload is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -92,6 +92,12 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 17: compose immutable context, deterministic interpretation output,
+      explainable categories, and strongest signals into one versioned payload.
+- [x] Recheck effective time, ordered fact coverage, child provenance versions,
+      unknown references, duplicate contributions, and split-section versions.
+- [x] Select at most five existing contributions by documented absolute impact,
+      confidence, category, source-fact, and rule ordering.
 - [x] Goal 16: add a separately versioned, deeply frozen product configuration
       for ten initial interpretive categories and deterministic fact selectors.
 - [x] Derive bounded 0-100 scores while retaining configured baseline, raw
@@ -177,18 +183,18 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 17 — compose the versioned deterministic daily-reading payload.
+Goal 18 — build the accessible personal-dashboard foundation.
 
 Deliverables:
 
-1. Compose the immutable personal context, deterministic rendered sections, and
-   explainable category scores into one versioned application payload.
-2. Verify effective time, source fact coverage, and every context, projection,
-   library, renderer, score-model, and formula version across components.
-3. Select strongest signals only through a documented deterministic ordering
-   over existing category contributions; preserve their complete traces.
-4. Fail closed on mismatches or duplicates and add no AI, persistence,
-   entitlements, notifications, delivery, or UI yet.
+1. Define a presentation-only dashboard read model from the Goal 17 payload;
+   do not perform calculations, scoring, or interpretation in components.
+2. Implement the initial Today, Moon, strongest signals, category heuristics,
+   numerology, and trace/disclaimer sections with responsive semantic markup.
+3. Apply `ui-quality`, inspect desktop and mobile in a real browser, and verify
+   keyboard focus, reduced motion, contrast, and text equivalents.
+4. Use deterministic local fixture data only until authenticated private-data
+   loading is selected; add no production persistence or public birth data.
 
 ## Phase queue
 
@@ -261,6 +267,10 @@ Deliverables:
 | 2026-08-09 | `npm run check`                                    | Passed formatting, ESLint, strict TypeScript, 2 unit/contract tests, and production build     |
 | 2026-08-09 | `npm run test:coverage`                            | Passed; scoped baseline application/domain coverage remains 100%                              |
 | 2026-08-09 | `npm audit --audit-level=high`                     | No high or critical findings; four accepted moderate Drizzle Kit development-tool findings    |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | Daily-reading focused suite                        | 6/6 composition, ordering, coverage, version, and duplicate tests passed                      |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 246 tests, and production build                   |
+| 2026-08-09 | `npm run test:coverage`                            | 95.77% statements, 91.83% branches, 100% functions, and 95.71% lines                          |
 | 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
 | 2026-08-09 | Category-engine focused suite                      | 13/13 formula, trace, bounds, schema, immutability, and failure tests passed                  |
 | 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 240 tests, and production build                   |
@@ -573,6 +583,24 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   scientific measurement. It changes no source fact or rendered prose and adds
   no AI, persistence, entitlement, notification, delivery, or UI behavior. See
   `docs/CATEGORY_MODEL.md`.
+
+## Goal 17 daily-reading composition record
+
+- Commands: `npx vitest run tests/daily-reading.test.ts`, `npm run check`,
+  `npm run test:coverage`, and `npm audit --omit=dev`.
+- Payload: reading version 1.0.0 combines the existing immutable context,
+  rendered fact/tradition sections, explainable category results, and strongest
+  signals without recalculating or copying a source fact.
+- Consistency: effective time, ordered fact coverage, context/projection/library/
+  locale/renderer/score-model/formula versions, child-section provenance,
+  known category references, unique interpretation keys, and unique
+  contributions are checked again at assembly.
+- Signal policy: at most five existing category contributions are ordered by
+  absolute impact descending, confidence descending, category, source fact ID,
+  then rule ID. Each signal retains its complete contribution trace and category
+  score; no new influence is inferred.
+- Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
+  behavior was added.
 
 ## Goal 2 migration and security review
 
