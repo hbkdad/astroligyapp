@@ -1,0 +1,4 @@
+interface:
+  display_name: "Lunar Validation"
+  short_description: "Validate lunar phases and Moon calculations"
+  default_prompt: "Use $lunar-validation to verify a lunar calculation change."

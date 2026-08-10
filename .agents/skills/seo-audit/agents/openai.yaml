@@ -1,0 +1,4 @@
+interface:
+  display_name: "SEO Audit"
+  short_description: "Verify useful indexable public pages"
+  default_prompt: "Use $seo-audit to review this public page or SEO change."

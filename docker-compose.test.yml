@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: cosmic
+      POSTGRES_USER: cosmic
+      POSTGRES_PASSWORD: cosmic_local_only
+    ports:
+      - "127.0.0.1:55432:5432"
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cosmic -d cosmic"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+    security_opt:
+      - no-new-privileges:true

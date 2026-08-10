@@ -1,0 +1,4 @@
+interface:
+  display_name: "Numerology Validation"
+  short_description: "Validate traceable numerology calculations"
+  default_prompt: "Use $numerology-validation to verify a numerology engine change."

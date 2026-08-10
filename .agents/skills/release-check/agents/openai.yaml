@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Check"
+  short_description: "Run evidence-based production release gates"
+  default_prompt: "Use $release-check to determine whether this build is ready for release."

@@ -1,0 +1,11 @@
+#:schema https://developers.openai.com/codex/config-schema.json
+
+# Project-local defaults. Provider, authentication, notification, and telemetry
+# settings belong in the user's Codex configuration, not this repository.
+model_reasoning_effort = "high"
+model_verbosity = "medium"
+web_search = "live"
+project_doc_max_bytes = 32768
+
+[agents]
+enabled = true

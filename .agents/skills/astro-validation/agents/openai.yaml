@@ -1,0 +1,4 @@
+interface:
+  display_name: "Astro Validation"
+  short_description: "Validate deterministic astrology calculations"
+  default_prompt: "Use $astro-validation to verify an astronomy or transit calculation change."

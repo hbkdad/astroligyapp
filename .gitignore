@@ -1,0 +1,34 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# test output
+/coverage
+
+# Next.js
+/.next/
+/out/
+/build/
+
+# local environment and provider data
+.env*
+!.env.example
+/data/ephemeris/
+
+# deployment state
+/.vercel/
+
+# logs and caches
+*.log
+*.tsbuildinfo
+.eslintcache
+
+# editor and operating-system files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# temporary scaffolds
+/codex-scaffold-temp/

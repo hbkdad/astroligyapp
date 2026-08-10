@@ -1,0 +1,4 @@
+interface:
+  display_name: "UI Quality"
+  short_description: "Verify accessible responsive product UI"
+  default_prompt: "Use $ui-quality to review this interface across accessibility and responsive states."
