@@ -4,7 +4,7 @@ Last updated: 2026-08-10
 
 ## Current position
 
-Status: Goal 30 complete; the trusted-clock public daily loader and bounded cache contract are implemented and verified.
+Status: Goal 31 complete; current UTC public readings are integrated behind the twelve no-index sign routes and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,14 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 31: instantiate the selected local Astronomy Engine adapter behind a
+      server-only current-reading factory with exact provider/data expectations,
+      trusted system UTC clock, injected test seams, and a two-entry process cache.
+- [x] Replace the fixed historical route source with all twelve current UTC
+      readings under a declared 900-second ISR policy matching the loader TTL.
+- [x] Map source/cache/clock failures into deliberate generic UI states and
+      verify current dates, concurrency, rollover, cache hits, invalid paths,
+      noindex metadata, responsive UI, local-only network, and response privacy.
 - [x] Goal 30: add a server-only public loader that derives the UTC plain date
       from an injected clock and accepts no browser date, observer, account, or profile.
 - [x] Define a version-complete bounded cache key/entry contract with 15-minute
@@ -304,22 +312,21 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 31 — integrate the current public loader behind the no-index sign routes.
+Goal 32 — implement the deterministic phase-one compatibility fact engine.
 
 Deliverables:
 
-1. Add one server-only loader factory for the selected local Astronomy Engine
-   adapter with explicit expected provider/data versions and a process-bounded
-   cache; keep clock, provider, and cache injection available to tests.
-2. Replace the fixed historical route source with the current UTC loader under a
-   declared regeneration policy, mapping generic loader failures into deliberate
-   unavailable/error UI without exposing internal details.
-3. Verify all twelve current-date paths, one calculation under concurrent route
-   loads, cache/ISR behavior, midnight rollover, invalid signs, noindex metadata,
-   valid-route consoles/network, timezone disclosure, and response privacy.
-4. Keep routes noindex/nofollow/noarchive. Add no managed cache/storage, browser
-   date input, user data, analytics, AI, entitlement, notification, schema/
-   canonical metadata, production deployment, or external network provider.
+1. Define a versioned provider-neutral compatibility strategy that accepts only
+   validated zodiac signs and deterministic numerology results, with explicit
+   symmetry, ordering, units, and failure behavior.
+2. Implement phase-one zodiac element/modality and numerology pair facts through
+   declared data tables and reconstructable operations; keep facts separate from
+   relationship interpretation or outcome claims.
+3. Verify all sign/value combinations, reversed-input symmetry, identical and
+   boundary pairs, malformed/version-drift inputs, deterministic ordering,
+   immutability, and complete provenance.
+4. Add no birth/profile loading, persistence, sharing token, weighted synastry,
+   house overlay, UI, relationship advice, AI, entitlement, or deployment.
 
 ## Phase queue
 
@@ -329,8 +336,8 @@ Deliverables:
 | 2     | Ephemeris abstraction, zodiac, aspects, Moon, numerology | Complete    |
 | 3     | Natal charts, transits, personal context, fixtures       | Complete    |
 | 4     | Interpretation, dashboard, and natal-chart foundation    | Complete    |
-| 5     | Timelines, daily/public readings, retention content      | In progress |
-| 6     | Compatibility and privacy-safe sharing                   | Pending     |
+| 5     | Timelines, daily/public readings, retention content      | Complete    |
+| 6     | Compatibility and privacy-safe sharing                   | In progress |
 | 7     | Subscriptions, entitlements, notifications               | Pending     |
 | 8     | SEO and useful public content                            | Pending     |
 | 9     | Security, privacy, performance, accessibility, QA        | Pending     |
@@ -358,8 +365,8 @@ Deliverables:
 - Rise/set, altitude/azimuth, and personal lunar aspect windows remain deferred
   until validated location-aware capabilities exist. Primary phase and Moon-sign
   ingress searches now use positional provider evaluations; mean-cycle age is
-  not used as an event ephemeris. Public production-date generation and routing
-  remain pending.
+  not used as an event ephemeris. Public current-date routing is locally verified,
+  while eventual production-host runtime and cache behavior remain release gates.
 - Authentication, managed database, payment, AI, email, monitoring, and
   deployment providers remain intentionally undecided.
 - Authentication-provider selection still requires sign-in methods, MFA or
@@ -760,6 +767,44 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 31 current public route integration record
+
+- Commands: focused current-loader/route/read-model suites; `npm run check`;
+  `npm run test:coverage`; `npm audit --omit=dev`; `git diff --check`; optimized
+  response inspection; and Playwright CLI review through `security-audit` and
+  `ui-quality` procedures.
+- Server boundary: one `server-only` factory selects local Astronomy Engine
+  2.1.19 with exact `astronomy-engine-model-2.1.19` data expectation, a trusted
+  system clock, 15-minute TTL, and a maximum two-entry process cache. Provider,
+  clock, cache, expectation, and TTL remain injectable for deterministic tests.
+- Routing/ISR: all twelve allowlisted sign paths load the same current UTC-date
+  aggregate and select one immutable model. Next.js prerenders them with a
+  literal 900-second ISR interval; the optimized manifest and response headers
+  reported 900 seconds, and repeated responses reported `x-nextjs-cache: HIT`.
+  Unknown signs remain closed by `dynamicParams = false` and returned 404/noindex.
+- Concurrency/failure/privacy: twelve concurrent route-state loads produced one
+  provider calculation. Existing loader tests retain cache expiry, invalidation,
+  and UTC-midnight rollover coverage. Source failure maps to unavailable;
+  cache/clock or lost-coverage failure maps to error; every path uses only the
+  generic public message. Responses set no cookie and browser inspection found
+  no local/session storage, external request, account/profile/birth input, or log.
+- UI/accessibility: the page labels the current UTC date, 12:00 UTC sample,
+  bounded regeneration, and no-index preview. Desktop 1440px and mobile 390px
+  screenshots were inspected; mobile and 200% text had no horizontal overflow.
+  The skip link focused main, reduced motion changed smooth scrolling to auto,
+  and the optimized valid route produced zero console errors or warnings.
+- Security result: the assets are public shared-sky facts only; the route is a
+  read-only statically cached GET with no auth, mutation, private discriminator,
+  managed store, browser-controlled date, analytics, or secret. No critical or
+  high finding remains. Production-host ISR/process lifetime remains a release
+  verification gate.
+- Evidence: 30 test files and 428 tests passed; coverage was 94.09% statements,
+  91.15% branches, 99.60% functions, and 94.93% lines. The production dependency
+  audit found zero vulnerabilities.
+- Scope: no managed cache/storage, persistence, schema/canonical metadata,
+  analytics, AI, entitlement, notification, external network provider,
+  production service, or deployment was added.
 
 ## Goal 30 current public loader and cache record
 

@@ -4,8 +4,10 @@ import type { PublicHoroscopeViewState } from "@/presentation/public-horoscope-r
 
 export function PublicHoroscopeView({
   state,
+  deliveryMode = "historical-demo",
 }: {
   state: PublicHoroscopeViewState;
+  deliveryMode?: "historical-demo" | "current-preview";
 }) {
   if (state.status !== "ready") return <PublicHoroscopeStatus state={state} />;
   const { model } = state;
@@ -34,7 +36,11 @@ export function PublicHoroscopeView({
           <a href="#daily-facts">Daily facts</a>
           <a href="#horoscope-trace">Trace</a>
         </nav>
-        <span className="demo-badge">No-index local demo</span>
+        <span className="demo-badge">
+          {deliveryMode === "current-preview"
+            ? "No-index current preview"
+            : "No-index local demo"}
+        </span>
       </header>
 
       <main id="horoscope-content" className="horoscope-shell" tabIndex={-1}>
@@ -64,10 +70,21 @@ export function PublicHoroscopeView({
           </dl>
         </header>
 
-        <aside className="horoscope-demo-note" aria-label="Demo limitation">
-          <strong>Historical local demo.</strong> This fixed January 1, 2000
-          reading verifies the presentation without a live production data call.
-          It is intentionally excluded from search indexing.
+        <aside className="horoscope-demo-note" aria-label="Delivery limitation">
+          {deliveryMode === "current-preview" ? (
+            <>
+              <strong>Current UTC preview.</strong> This page is regenerated on
+              a bounded schedule from the selected local ephemeris adapter. It
+              remains intentionally excluded from search indexing while delivery
+              is verified.
+            </>
+          ) : (
+            <>
+              <strong>Historical local demo.</strong> This fixed January 1, 2000
+              reading verifies the presentation without a live production data
+              call. It is intentionally excluded from search indexing.
+            </>
+          )}
         </aside>
 
         <nav

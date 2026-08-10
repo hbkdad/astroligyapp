@@ -1,11 +1,14 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
 
 import { PublicDailyReadingEngine } from "@/application/compose-public-daily-readings";
 import {
   dynamicParams,
   generateMetadata,
   generateStaticParams,
+  revalidate,
 } from "@/app/horoscope/[sign]/page";
 import { PublicHoroscopeView } from "@/components/public-horoscope-view";
 import { ZODIAC_SIGNS, type ZodiacSign } from "@/domain/astro/zodiac";
@@ -97,6 +100,19 @@ describe("public horoscope presentation boundary", () => {
     for (const item of model.items) expect(html).toContain(item.id);
   });
 
+  it("labels the current UTC route mode without changing the immutable model", () => {
+    const html = renderToStaticMarkup(
+      <PublicHoroscopeView
+        state={{ status: "ready", model: models[0]! }}
+        deliveryMode="current-preview"
+      />,
+    );
+    expect(html).toContain("No-index current preview");
+    expect(html).toContain("Current UTC preview");
+    expect(html).toContain("regenerated on a bounded schedule");
+    expect(html).not.toContain("Historical local demo");
+  });
+
   it.each([
     { status: "loading" as const },
     { status: "unavailable" as const, message: "No shared sky is available." },
@@ -142,6 +158,7 @@ describe("public horoscope presentation boundary", () => {
 
   it("publishes exactly twelve static, no-index route variants", async () => {
     expect(dynamicParams).toBe(false);
+    expect(revalidate).toBe(900);
     expect(generateStaticParams()).toEqual(
       ZODIAC_SIGNS.map((sign) => ({ sign })),
     );
@@ -150,6 +167,7 @@ describe("public horoscope presentation boundary", () => {
     });
     expect(metadata).toMatchObject({
       title: "Aries Daily Sky Reflection",
+      description: expect.stringContaining("current UTC preview"),
       robots: { index: false, follow: false, noarchive: true },
     });
     expect(isPublicHoroscopeSign("aries")).toBe(true);

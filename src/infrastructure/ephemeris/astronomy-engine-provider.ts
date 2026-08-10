@@ -29,7 +29,9 @@ import {
   WHOLE_SIGN_HOUSE_SYSTEM,
 } from "@/domain/astro/house-strategies";
 
-const PACKAGE_VERSION = "2.1.19";
+export const ASTRONOMY_ENGINE_PROVIDER_ID = "astronomy-engine";
+export const ASTRONOMY_ENGINE_PROVIDER_VERSION = "2.1.19";
+export const ASTRONOMY_ENGINE_POSITION_DATA_VERSION = `astronomy-engine-model-${ASTRONOMY_ENGINE_PROVIDER_VERSION}`;
 const SPEED_STEP_DAYS = 1 / 1440;
 
 const BODY_MAP: Readonly<Record<CelestialBody, Body>> = {
@@ -46,7 +48,7 @@ const BODY_MAP: Readonly<Record<CelestialBody, Body>> = {
 };
 
 export class AstronomyEngineProvider implements EphemerisProvider {
-  readonly id = "astronomy-engine";
+  readonly id = ASTRONOMY_ENGINE_PROVIDER_ID;
 
   constructor(
     private readonly houseStrategy: HouseStrategy = new WholeSignHouseStrategy(),
@@ -76,8 +78,8 @@ export class AstronomyEngineProvider implements EphemerisProvider {
           positions,
           metadata: {
             providerId: this.id,
-            providerVersion: PACKAGE_VERSION,
-            dataVersion: `astronomy-engine-model-${PACKAGE_VERSION}`,
+            providerVersion: ASTRONOMY_ENGINE_PROVIDER_VERSION,
+            dataVersion: ASTRONOMY_ENGINE_POSITION_DATA_VERSION,
             calculatedAt: new Date().toISOString(),
             timeScale: "utc",
             referenceFrame: "ecliptic-of-date",
@@ -137,8 +139,8 @@ export class AstronomyEngineProvider implements EphemerisProvider {
           ...angles,
           metadata: {
             providerId: this.id,
-            providerVersion: PACKAGE_VERSION,
-            dataVersion: `astronomy-engine-model-${PACKAGE_VERSION}+${this.houseStrategy.id}-${this.houseStrategy.version}`,
+            providerVersion: ASTRONOMY_ENGINE_PROVIDER_VERSION,
+            dataVersion: `${ASTRONOMY_ENGINE_POSITION_DATA_VERSION}+${this.houseStrategy.id}-${this.houseStrategy.version}`,
             calculatedAt: new Date().toISOString(),
             timeScale: "utc",
             referenceFrame: "ecliptic-of-date",

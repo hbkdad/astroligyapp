@@ -209,10 +209,12 @@ tests/
   complete Goal 28 aggregate plus one canonical sign, rechecks date/sample,
   all-sign order and identity, shared lunar geometry, transit order, provider and
   content versions, exact fact coverage, and claims-safe renderer provenance.
-  Twelve allowlisted `/horoscope/[sign]` paths are statically generated from one
-  fixed historical local demo and marked no-index. React receives only the
-  immutable read model and performs no calculation, interpretation, scoring,
-  personalization, provider access, or runtime data loading.
+  Twelve allowlisted `/horoscope/[sign]` paths are statically generated and
+  incrementally revalidated every 900 seconds from one current UTC aggregate.
+  A server-only factory owns the selected local adapter, exact version
+  expectation, trusted clock, and bounded process cache. The paths remain
+  noindex; React receives only the immutable read model and performs no
+  calculation, interpretation, scoring, personalization, or provider access.
 - Natal-chart presentation: `toNatalChartReadModel` accepts only a validated
   `NatalChart`, rechecks normalized facts and trace completeness, and maps them
   into a versioned immutable SVG/table model. `pointAtLongitude` owns only the
