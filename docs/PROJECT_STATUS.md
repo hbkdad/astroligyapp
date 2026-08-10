@@ -1,10 +1,10 @@
 # Project status
 
-Last updated: 2026-08-09
+Last updated: 2026-08-10
 
 ## Current position
 
-Status: Goal 23 complete; the unified deterministic timeline-fact composition foundation is implemented and verified.
+Status: Goal 24 complete; the accessible timeline presentation and read-model foundation is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,15 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 24: map only the validated Goal 23 aggregate into a versioned,
+      immutable timeline read model with unchanged source IDs, occurrence shapes,
+      deterministic ordering, and calculation/search version references.
+- [x] Add a responsive `/timeline` route with distinct instant/window cards,
+      deterministic All/Transit/Moon/Station/Cycle filters, a synchronized complete
+      table equivalent, visible trace, and loading/locked/error/empty states.
+- [x] Verify keyboard filtering, 44px controls, 390px mobile, 200% text, reduced
+      motion, desktop/mobile visuals, production hydration, and zero console errors;
+      browser review found and fixed enlarged-text header overflow.
 - [x] Goal 23: compose validated personal transit windows, lunar events,
       planetary stations, and explicit numerology boundaries into one versioned,
       immutable timeline-fact aggregate over a half-open display interval.
@@ -247,21 +256,22 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 24 — build the accessible timeline presentation/read-model foundation.
+Goal 25 — build the personal Moon presentation/read-model foundation.
 
 Deliverables:
 
-1. Map only a validated Goal 23 aggregate into one versioned immutable timeline
-   presentation model; preserve source fact IDs, occurrence shapes, and trace
-   references without calculation, scoring, or interpretation in components.
-2. Render a responsive chronological timeline with distinct instant/window
-   treatment, complete semantic text/table representation, and deterministic
-   filters that hide but never mutate or reorder facts.
-3. Provide deliberate loading, locked, error, empty, and success states plus
-   keyboard operation, visible focus, mobile behavior, 200% text support, and
-   reduced-motion handling through the `ui-quality` workflow.
-4. Use only explicit local demo data. Add no persistence, entitlement decision,
-   notification scheduling, public sharing, production provider, or deployment.
+1. Map the existing validated personal-lunar snapshot plus Goal 23 lunar facts
+   into one versioned immutable presentation model without Moon, zodiac, aspect,
+   event-time, rise/set, score, or interpretation calculation in components.
+2. Render current phase/sign, approximate illumination/age labels, personal lunar
+   aspects, and a chronologically ordered upcoming phase/ingress section with a
+   complete semantic text/table equivalent and visible calculation trace.
+3. Provide deliberate loading, unavailable, locked, error, empty, and success
+   states; verify keyboard, mobile, 200% text, reduced motion, and long trace data
+   through `lunar-validation` followed by `ui-quality`.
+4. Use only explicit local demo data and label approximations. Defer moonrise/set
+   until a location-aware provider exists; add no persistence, notification,
+   entitlement decision, production provider, public sharing, or deployment.
 
 ## Phase queue
 
@@ -701,6 +711,37 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 24 timeline presentation record
+
+- Commands: timeline read-model, Goal 23 composer, dashboard, and natal-chart
+  focused suites; `npm run check`; `npm run test:coverage`; `npm audit --omit=dev`;
+  `git diff --check`; and real Chromium checks against development and optimized
+  production servers through the `ui-quality` and Playwright workflows.
+- Boundary: timeline read model 1.0.0 consumes only a Goal 23 timeline 1.0.0
+  aggregate, rechecks interval, IDs, source versions, display range, and published
+  time/type/ID ordering, then maps unchanged source references into display text.
+  React performs no astronomy, numerology, event search, score, or interpretation.
+- Interaction: All, Transits, Moon, Stations, and Personal cycles are client-only
+  visibility filters. They preserve source order and synchronously update the
+  semantic ordered list, live count, pressed state, and complete table equivalent.
+- States and provenance: loading, locked, error, empty, and ready are explicit.
+  Every event shows an instant or start/exact/end window and its stable source ID;
+  the trace discloses composition/search/numerology versions. Demo events are
+  calculated locally at build time from existing versioned adapters and fixtures.
+- Accessibility/browser: keyboard Tab/Enter filtering passed; controls retain a
+  44px minimum; 390px had no horizontal page overflow; 200% root text scaling
+  initially exposed header overflow, which was fixed and reverified at 375px
+  document width inside a 390px viewport. Reduced-motion changed scroll behavior
+  from smooth to auto. Desktop and mobile visuals were inspected, and table
+  overflow stays inside a named keyboard-focusable region.
+- Production/evidence: 24 files and 361 tests passed; coverage was 94.77%
+  statements, 90.99% branches, 99.46% functions, and 95.60% lines. The static
+  `/timeline` route passed the optimized build, production filtering, document
+  width, and zero-console-error checks; the dependency audit found zero
+  vulnerabilities. No remote fonts, images, or visualization library were added.
+- Scope: no persistence, entitlement decision, notification, public sharing,
+  production provider call, AI, or deployment behavior was added.
 
 ## Goal 23 unified timeline-fact composition record
 

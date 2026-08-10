@@ -23,6 +23,7 @@ export function NatalChartView({ state }: { state: NatalChartViewState }) {
         </Link>
         <nav aria-label="Chart navigation">
           <Link href="/">Today</Link>
+          <Link href="/timeline">Timeline</Link>
           <a href="#placements">Placements</a>
           <a href="#aspects">Aspects</a>
           <a href="#chart-trace">Trace</a>

@@ -656,6 +656,161 @@ tbody tr:target {
 .chart-trace {
   margin-top: 1rem;
 }
+.timeline-shell {
+  width: min(1080px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 4rem 0 3rem;
+}
+.timeline-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(17rem, 0.65fr);
+  gap: 3rem;
+  align-items: end;
+  padding-bottom: 3rem;
+}
+.timeline-meta {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: rgb(12 25 23 / 82%);
+}
+.timeline-meta div {
+  display: grid;
+  gap: 0.25rem;
+}
+.timeline-panel {
+  margin-bottom: 1rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: rgb(12 25 23 / 82%);
+}
+.timeline-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+.timeline-filters button {
+  min-height: 44px;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid #50655f;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--foreground);
+  font: inherit;
+  cursor: pointer;
+}
+.timeline-filters button span {
+  display: inline-grid;
+  min-width: 1.55rem;
+  min-height: 1.55rem;
+  margin-left: 0.35rem;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 8%);
+  font-size: 0.78rem;
+}
+.timeline-filters button:hover,
+.timeline-filters button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: #263b34;
+}
+.timeline-filters button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.filter-status {
+  margin: 1rem 0 1.5rem;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.event-timeline {
+  position: relative;
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.event-timeline::before {
+  position: absolute;
+  top: 0.75rem;
+  bottom: 0.75rem;
+  left: 0.42rem;
+  width: 1px;
+  background: #50655f;
+  content: "";
+}
+.event-timeline > li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr);
+  gap: 1rem;
+  padding-bottom: 1rem;
+}
+.event-marker {
+  z-index: 1;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin-top: 1.65rem;
+  border: 2px solid var(--background);
+  border-radius: 50%;
+  background: var(--mint);
+  box-shadow: 0 0 0 1px var(--mint);
+}
+.timeline-transits .event-marker,
+.timeline-stations .event-marker {
+  background: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.timeline-cycles .event-marker {
+  background: #c0a7d8;
+  box-shadow: 0 0 0 1px #c0a7d8;
+}
+.event-timeline article {
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--surface-raised);
+}
+.event-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.event-heading time {
+  color: var(--muted);
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+.event-category {
+  margin-bottom: 0.25rem;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.event-timeline article > p:not(.event-category) {
+  color: #c6d2cd;
+}
+.occurrence-detail {
+  margin-bottom: 0.7rem;
+  font-size: 0.86rem;
+}
+.event-timeline code,
+.timeline-panel td code {
+  overflow-wrap: anywhere;
+  color: var(--mint);
+  white-space: normal;
+}
+.timeline-trace {
+  margin-top: 1rem;
+}
 
 @media (max-width: 850px) {
   .site-header {
@@ -685,6 +840,10 @@ tbody tr:target {
   .chart-intro {
     display: block;
   }
+  .timeline-intro {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
   .chart-orientation {
     margin-top: 1.5rem;
   }
@@ -696,14 +855,24 @@ tbody tr:target {
 @media (max-width: 520px) {
   .site-header {
     width: min(100% - 1.25rem, 1180px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 0.5rem;
   }
   .brand span:last-child {
-    max-width: 9rem;
+    min-width: 0;
+    max-width: none;
     line-height: 1.05;
+    overflow-wrap: anywhere;
+  }
+  .site-header .brand {
+    width: 100%;
+    min-width: 0;
   }
   .demo-badge {
-    max-width: 6.5rem;
+    max-width: 100%;
+    justify-self: auto;
     text-align: center;
   }
   .dashboard-shell {
@@ -713,6 +882,22 @@ tbody tr:target {
   .chart-shell {
     width: min(100% - 1.25rem, 1180px);
     padding-top: 2.5rem;
+  }
+  .timeline-shell {
+    width: min(100% - 1.25rem, 1080px);
+    padding-top: 2.5rem;
+  }
+  .timeline-panel {
+    padding: 1rem;
+  }
+  .timeline-panel .section-heading,
+  .event-heading {
+    display: block;
+  }
+  .event-heading time {
+    display: block;
+    margin: 0.5rem 0;
+    white-space: normal;
   }
   .chart-visual-panel,
   .chart-data-panel {

@@ -166,6 +166,13 @@ tests/
   perform no calculations, scoring, or interpretation. The current page uses
   explicitly labeled synthetic local data only and provides semantic text
   equivalents for category meters and the decorative Moon graphic.
+- Timeline presentation: `toTimelineReadModel` accepts only a Goal 23 timeline
+  aggregate, rechecks its version, interval, identity, range, source trace, and
+  published ordering, then maps immutable instant/window display records. The
+  client filters only visibility while preserving item order; the ordered cards
+  and synchronized table are equivalent representations. The `/timeline` route
+  uses explicitly labeled local calculated demo data and performs no calculation
+  in React.
 - Natal-chart presentation: `toNatalChartReadModel` accepts only a validated
   `NatalChart`, rechecks normalized facts and trace completeness, and maps them
   into a versioned immutable SVG/table model. `pointAtLongitude` owns only the
