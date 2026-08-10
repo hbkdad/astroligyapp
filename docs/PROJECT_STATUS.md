@@ -4,7 +4,7 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 18 complete; the accessible personal-dashboard foundation is implemented and verified.
+Status: Goal 19 complete; the accessible natal-chart visualization foundation is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -92,6 +92,16 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 19: map a validated natal-chart aggregate into a versioned,
+      immutable presentation model without ephemeris, zodiac, house, or aspect
+      calculation in the presentation layer.
+- [x] Render a responsive tropical Whole Sign SVG with sign, house, body,
+      aspect, ASC/DSC, and MC/IC layers plus complete placement and aspect tables.
+- [x] Preserve exact chart facts and calculation/provider versions while making
+      all ten planet markers keyboard-focusable links to authoritative details.
+- [x] Verify sourced JPL/Swiss fixture tolerances, exact layout boundaries,
+      mobile/desktop presentation, keyboard flow, 200% text, reduced motion,
+      horizontal table scrolling, and optimized production hydration.
 - [x] Goal 18: map the Goal 17 payload boundary into a versioned, immutable
       presentation model with no calculation, scoring, or interpretation in
       React components.
@@ -195,18 +205,22 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 19 — build the accessible natal-chart visualization foundation.
+Goal 20 — build the provider-neutral transit event-window search foundation.
 
 Deliverables:
 
-1. Map only a validated natal-chart aggregate into a versioned presentation
-   model; retain body, sign, degree, house, aspect, orb, and source versions.
-2. Render a responsive Whole Sign chart graphic with planet/house/aspect layers
-   and a complete nonvisual placement/aspect table; do no astronomy in UI code.
-3. Support keyboard-readable details, long labels, missing birth time/house
-   capability, mobile layout, 200% text scaling, and reduced motion.
-4. Apply `astro-validation` and `ui-quality`, use sourced local fixture data,
-   and add no persistence, sharing, entitlement, or production provider calls.
+1. Define a versioned event-search request/result contract over the existing
+   `EphemerisProvider`, natal targets, aspect policy, explicit UTC interval,
+   sampling step, and refinement tolerance.
+2. Find bracketed personal transit-aspect entry, exact peak, and exit instants
+   with deterministic refinement; preserve provider, natal, policy, search,
+   tolerance, and sample provenance.
+3. Fail explicitly for invalid intervals, unsupported bodies, unbracketed or
+   ambiguous events, provider failures, and insufficient precision; never infer
+   or fabricate a start, peak, or end.
+4. Apply `astro-validation` with hand-checkable geometry and sourced provider
+   fixtures. Add no UI, interpretation, scoring, persistence, entitlement,
+   notification, or production provider behavior.
 
 ## Phase queue
 
@@ -215,8 +229,8 @@ Deliverables:
 | 1     | Infrastructure, architecture, database, auth, standards  | Complete    |
 | 2     | Ephemeris abstraction, zodiac, aspects, Moon, numerology | Complete    |
 | 3     | Natal charts, transits, personal context, fixtures       | Complete    |
-| 4     | Interpretation and personal dashboard foundation         | In progress |
-| 5     | Interpretation library, daily reading, public horoscopes | Pending     |
+| 4     | Interpretation, dashboard, and natal-chart foundation    | Complete    |
+| 5     | Timelines, daily/public readings, retention content      | In progress |
 | 6     | Compatibility and privacy-safe sharing                   | Pending     |
 | 7     | Subscriptions, entitlements, notifications               | Pending     |
 | 8     | SEO and useful public content                            | Pending     |
@@ -262,6 +276,13 @@ Deliverables:
 
 | Date       | Evidence                                           | Result                                                                                        |
 | ---------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 2026-08-09 | Natal-chart focused/cross-layer suite              | 89/89 read-model, geometry, source-tolerance, natal, house, zodiac, and aspect tests passed   |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 273 tests, and production build                   |
+| 2026-08-09 | `npm run test:coverage`                            | 96.27% statements, 92.45% branches, 100% functions, and 96.33% lines                          |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | `astro-validation` chart gate                      | JPL positions within 0.02 degrees; Swiss ASC/MC within 0.01 degrees; layout boundaries passed |
+| 2026-08-09 | `ui-quality` chart browser gate                    | Desktop/mobile, keyboard links, scroll tables, 200% text, reduced motion, and overflow passed |
+| 2026-08-09 | Optimized natal-chart production browser           | 200 response, zero console errors/warnings, zero external resources, and zero page overflow   |
 | 2026-08-09 | Initial top-level inventory                        | Two Markdown source prompts only; no Git metadata                                             |
 | 2026-08-09 | Official Codex guidance and repo skill validation  | Control paths confirmed; all eight skills passed `quick_validate.py`                          |
 | 2026-08-09 | Runtime inventory                                  | Node 24.15.0, npm 11.12.1, Git 2.54.0                                                         |
@@ -620,6 +641,37 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 19 natal-chart visualization record
+
+- Commands: focused chart, natal, house, zodiac, and aspect suites;
+  `npm run check`; `npm run test:coverage`; `npm audit --omit=dev`; and
+  Playwright CLI inspection against development and optimized production builds.
+- Presentation boundary: natal-chart read model 1.0.0 accepts only a validated
+  `NatalChart`, rechecks body/cusp/aspect completeness and normalized facts,
+  retains the complete calculation/provider trace, and deep-freezes the result.
+  The mapper and React component perform display geometry and formatting only.
+- Source validation: the checked-in Zollikon demo was regenerated through
+  Astronomy Engine 2.1.19 and Whole Sign 1.0.0. All ten longitudes remain within
+  the fixed 0.02-degree JPL Horizons tolerance; ASC/MC remain within the fixed
+  0.01-degree Swiss Ephemeris 2.10.3.5 tolerance; cusps match the source fixture.
+- Geometry and semantics: the 600-unit wheel declares 0 degrees Aries at top
+  with longitude increasing clockwise. Exact cardinal points, the 359.999-degree
+  edge, invalid normalized inputs, all layers, 10 linked planet markers, 12
+  houses/signs, 14 aspects, complete data tables, and failure states are tested.
+- Accessibility/UI: desktop 1440x1000 and mobile 390x844 screenshots were
+  inspected. The skip link moves focus to the main content; keyboard focus and
+  activation move from each SVG planet to its exact placement row. Tables expose
+  labeled focusable horizontal scroll regions. At 390px and at 200% root text
+  there was zero page overflow; reduced-motion emulation disabled smooth scroll.
+- Production correction: React development diagnostics exposed multi-node SVG
+  aspect tooltip titles, which browsers flatten before hydration. Each title is
+  now one deterministic string. The chart timestamp also uses explicit UTC
+  formatting. A fresh optimized browser reported zero errors/warnings, all 10
+  planet links, both tables, zero external resources, and zero page overflow.
+- Scope: this is a sourced local visualization fixture, not a saved user chart.
+  No private birth loading, persistence, sharing, entitlements, interpretation,
+  scoring, notifications, production provider calls, or deployment was added.
 
 ## Goal 18 dashboard and UI-quality record
 

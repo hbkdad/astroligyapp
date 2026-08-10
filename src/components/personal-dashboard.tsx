@@ -26,6 +26,7 @@ export function PersonalDashboard({ state }: { state: DashboardState }) {
           <a href="#today">Today</a>
           <a href="#signals">Signals</a>
           <a href="#categories">Categories</a>
+          <Link href="/chart">My chart</Link>
           <a href="#trace">Trace</a>
         </nav>
         <span className="demo-badge">Local demo data</span>

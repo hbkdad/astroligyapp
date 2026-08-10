@@ -461,12 +461,214 @@ footer p:first-child {
   color: var(--accent);
 }
 
+.chart-shell {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 3.5rem 0 3rem;
+}
+.chart-intro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+.chart-intro h1 {
+  margin-bottom: 0.75rem;
+}
+.chart-intro > div > p:last-child,
+.chart-orientation,
+.chart-visual-note,
+.table-note {
+  color: var(--muted);
+}
+.chart-orientation {
+  max-width: 34rem;
+  padding-left: 1rem;
+  border-left: 2px solid #426b5e;
+}
+.chart-visual-panel,
+.chart-data-panel {
+  margin-bottom: 1rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: rgb(12 25 23 / 82%);
+}
+.chart-wheel-wrap {
+  width: min(100%, 48rem);
+  margin: 0 auto;
+}
+.chart-wheel {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.wheel-ring,
+.house-line,
+.angle-axis,
+.aspect-line {
+  vector-effect: non-scaling-stroke;
+}
+.wheel-ring {
+  fill: none;
+  stroke: #38524b;
+  stroke-width: 1.5;
+}
+.wheel-ring.outer {
+  fill: #091714;
+  stroke: #6f815f;
+  stroke-width: 2;
+}
+.wheel-ring.zodiac {
+  fill: #0c1d19;
+}
+.wheel-ring.houses {
+  fill: #0b1715;
+}
+.house-line {
+  stroke: #29463f;
+  stroke-width: 1;
+}
+.house-number,
+.zodiac-glyph,
+.angle-label,
+.planet-node text {
+  dominant-baseline: middle;
+  text-anchor: middle;
+  user-select: none;
+}
+.house-number {
+  fill: #7f948d;
+  font-size: 11px;
+}
+.zodiac-glyph {
+  fill: var(--accent);
+  font-family: "Segoe UI Symbol", sans-serif;
+  font-size: 21px;
+}
+.angle-axis {
+  stroke-width: 2;
+}
+.angle-axis.horizon {
+  stroke: #e4b866;
+}
+.angle-axis.meridian {
+  stroke: #8bcbb8;
+}
+.angle-label {
+  fill: var(--foreground);
+  font-size: 11px;
+  font-weight: 800;
+}
+.aspect-line {
+  opacity: 0.48;
+  stroke-width: 1.4;
+}
+.aspect-conjunction {
+  stroke: #e4b866;
+}
+.aspect-sextile {
+  stroke: #8bcbb8;
+  stroke-dasharray: 5 3;
+}
+.aspect-trine {
+  stroke: #83a9d8;
+}
+.aspect-square,
+.aspect-opposition {
+  stroke: #d58879;
+  stroke-dasharray: 3 3;
+}
+.planet-node {
+  color: var(--foreground);
+  cursor: pointer;
+  outline: none;
+}
+.planet-node circle {
+  fill: #132923;
+  stroke: #769c8f;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.planet-node text {
+  fill: var(--foreground);
+  font-family: "Segoe UI Symbol", sans-serif;
+  font-size: 19px;
+}
+.planet-node:hover circle,
+.planet-node:focus-visible circle {
+  fill: #2a453c;
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.wheel-center {
+  fill: var(--accent);
+}
+.chart-visual-note {
+  max-width: 72ch;
+  margin: 1.5rem auto 0;
+  text-align: center;
+}
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+}
+.table-scroll:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+table {
+  width: 100%;
+  min-width: 48rem;
+  border-collapse: collapse;
+}
+th,
+td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+}
+thead th {
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+tbody th {
+  color: var(--foreground);
+}
+tbody td {
+  color: #c6d2cd;
+}
+tbody tr:target {
+  background: rgb(228 184 102 / 12%);
+  scroll-margin-top: 1rem;
+}
+.table-note {
+  margin: 0.9rem 0 0;
+  font-size: 0.82rem;
+}
+.chart-trace {
+  margin-top: 1rem;
+}
+
 @media (max-width: 850px) {
   .site-header {
     grid-template-columns: 1fr auto;
+    padding: 0.65rem 0;
   }
   .site-header nav {
-    display: none;
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    gap: 1.25rem;
+    max-width: 100%;
+    overflow-x: auto;
+    border-top: 1px solid var(--line);
   }
   .hero-panel,
   .dashboard-grid,
@@ -479,6 +681,12 @@ footer p:first-child {
   }
   .full-width {
     grid-column: auto;
+  }
+  .chart-intro {
+    display: block;
+  }
+  .chart-orientation {
+    margin-top: 1.5rem;
   }
   .category-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -501,6 +709,23 @@ footer p:first-child {
   .dashboard-shell {
     width: min(100% - 1.25rem, 1180px);
     padding-top: 2.5rem;
+  }
+  .chart-shell {
+    width: min(100% - 1.25rem, 1180px);
+    padding-top: 2.5rem;
+  }
+  .chart-visual-panel,
+  .chart-data-panel {
+    padding: 1rem;
+  }
+  .chart-visual-panel .section-heading,
+  .chart-data-panel .section-heading {
+    display: block;
+  }
+  .chart-visual-panel .section-heading > span,
+  .chart-data-panel .section-heading > span {
+    display: block;
+    margin-top: 0.5rem;
   }
   .moon-card {
     min-height: auto;

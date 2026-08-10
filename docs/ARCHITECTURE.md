@@ -140,6 +140,12 @@ tests/
   perform no calculations, scoring, or interpretation. The current page uses
   explicitly labeled synthetic local data only and provides semantic text
   equivalents for category meters and the decorative Moon graphic.
+- Natal-chart presentation: `toNatalChartReadModel` accepts only a validated
+  `NatalChart`, rechecks normalized facts and trace completeness, and maps them
+  into a versioned immutable SVG/table model. `pointAtLongitude` owns only the
+  declared visual coordinate system; it is not ephemeris or zodiac logic. The
+  chart component provides a complete table representation and keyboard links
+  from each SVG body to its exact placement row.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
 - Optional AI explanation remains deferred behind future validated input/output
