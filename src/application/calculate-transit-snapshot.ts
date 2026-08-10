@@ -83,8 +83,8 @@ export class TransitSnapshotEngine {
     natalChart: NatalChart,
     input: TransitSnapshotInput,
   ): Promise<EphemerisProviderResult<TransitSnapshot>> {
-    validateNatalTargets(natalChart);
-    validateCoordinateSource(input);
+    validateNatalTransitTargets(natalChart);
+    validateTransitInputProvenance(input);
 
     const skyResult = await getValidatedPositions(this.provider, {
       instant: input.instant,
@@ -95,7 +95,7 @@ export class TransitSnapshotEngine {
     });
     if (!skyResult.ok) return skyResult;
 
-    const natalTargets = buildNatalTargets(natalChart);
+    const natalTargets = buildNatalTransitTargets(natalChart);
     const aspects: TransitAspect[] = [];
     const skyByBody = new Map(
       skyResult.value.positions.map((position) => [position.body, position]),
@@ -149,7 +149,7 @@ export class TransitSnapshotEngine {
   }
 }
 
-function buildNatalTargets(
+export function buildNatalTransitTargets(
   natalChart: NatalChart,
 ): readonly NatalTransitTarget[] {
   const placements = new Map(
@@ -177,7 +177,7 @@ function buildNatalTargets(
   ];
 }
 
-function validateNatalTargets(natalChart: NatalChart): void {
+export function validateNatalTransitTargets(natalChart: NatalChart): void {
   if (natalChart.placements.length !== CELESTIAL_BODIES.length) {
     throw new RangeError("Natal chart must contain every supported body");
   }
@@ -200,7 +200,9 @@ function validateNatalTargets(natalChart: NatalChart): void {
   }
 }
 
-function validateCoordinateSource(input: TransitSnapshotInput): void {
+export function validateTransitInputProvenance(
+  input: TransitSnapshotInput,
+): void {
   if (
     input.coordinateOrigin === "topocentric" &&
     (!input.observer || !validSource(input.coordinateSource))

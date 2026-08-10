@@ -99,8 +99,14 @@ tests/
   sky against canonical natal planet, Ascendant, and Midheaven targets. It
   returns instantaneous major-aspect facts and preserves natal/current
   provenance. Geocentric snapshots omit location; topocentric snapshots require
-  an observer and coordinate source. Event-window search, weighting,
-  interpretation, persistence, and notification remain outside this engine.
+  an observer and coordinate source. Weighting, interpretation, persistence,
+  and notification remain outside this engine.
+- `TransitEventWindowSearch`: separate provider-neutral application service for
+  one explicitly requested personal aspect over a bounded UTC interval. It
+  requires a complete sampled window and exact signed branch crossing, then
+  refines entry/peak/exit with provider evaluations only. All evaluated instants
+  and calculation versions remain in the result; incomplete, ambiguous,
+  inconsistent, or under-refined searches fail explicitly.
 - `derivePersonalLunarSnapshot`: provider-free derivation from a validated
   transit snapshot. It combines current Sun/Moon phase geometry and Moon zodiac
   placement with the existing Moon-to-natal planet/ASC/MC aspects, while

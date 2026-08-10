@@ -4,7 +4,7 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 19 complete; the accessible natal-chart visualization foundation is implemented and verified.
+Status: Goal 20 complete; the provider-neutral transit event-window search foundation is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -92,6 +92,16 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 20: define a bounded, versioned personal transit-event search over
+      the existing provider, natal-target, and major-aspect boundaries.
+- [x] Require one complete inactive-active-exact-active-inactive bracket and
+      refine start, peak, and end to an explicit time tolerance without
+      interpolating or inventing an unobserved provider fact.
+- [x] Retain every provider-evaluated instant, longitude, calculation timestamp,
+      provider/data version, natal trace, aspect policy, and search policy.
+- [x] Fail before dispatch for invalid requests and return explicit failures for
+      incomplete, exactless, ambiguous, inconsistent-provider, unavailable, and
+      under-refined searches.
 - [x] Goal 19: map a validated natal-chart aggregate into a versioned,
       immutable presentation model without ephemeris, zodiac, house, or aspect
       calculation in the presentation layer.
@@ -205,22 +215,20 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 20 — build the provider-neutral transit event-window search foundation.
+Goal 21 — build the provider-neutral lunar event-search foundation.
 
 Deliverables:
 
-1. Define a versioned event-search request/result contract over the existing
-   `EphemerisProvider`, natal targets, aspect policy, explicit UTC interval,
-   sampling step, and refinement tolerance.
-2. Find bracketed personal transit-aspect entry, exact peak, and exit instants
-   with deterministic refinement; preserve provider, natal, policy, search,
-   tolerance, and sample provenance.
-3. Fail explicitly for invalid intervals, unsupported bodies, unbracketed or
-   ambiguous events, provider failures, and insufficient precision; never infer
-   or fabricate a start, peak, or end.
-4. Apply `astro-validation` with hand-checkable geometry and sourced provider
-   fixtures. Add no UI, interpretation, scoring, persistence, entitlement,
-   notification, or production provider behavior.
+1. Define versioned searches for Moon sign ingress and the primary lunar phase
+   events from validated Sun/Moon longitude geometry over explicit UTC ranges.
+2. Refine event instants to declared time tolerances through the existing
+   `EphemerisProvider`; retain every evaluation and provider/search version.
+3. Validate zodiac wrap, all 30-degree ingress boundaries, New/First Quarter/
+   Full/Last Quarter anchors, incomplete brackets, ambiguity, and provider
+   failure. Do not derive event times from mean-cycle Moon age.
+4. Apply `lunar-validation` and `astro-validation`. Add no rise/set,
+   interpretation, scoring, UI, persistence, entitlement, notification, or
+   production provider behavior.
 
 ## Phase queue
 
@@ -276,6 +284,12 @@ Deliverables:
 
 | Date       | Evidence                                           | Result                                                                                        |
 | ---------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 2026-08-09 | Transit-event focused/cross-layer suite            | 54/54 search, transit, natal, zodiac, aspect, source, trace, and failure tests passed         |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 284 tests, and production build                   |
+| 2026-08-09 | `npm run test:coverage`                            | 95.79% statements, 91.83% branches, 100% functions, and 96.34% lines                          |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | `astro-validation` event-window gate               | Hand start/peak/end within 1 second; wrap/square boundaries and explicit failures passed      |
+| 2026-08-09 | Astronomy Engine/JPL-near event search             | J2000 instant bracketed; Venus-natal-Mars peak refined below 0.001 degrees                    |
 | 2026-08-09 | Natal-chart focused/cross-layer suite              | 89/89 read-model, geometry, source-tolerance, natal, house, zodiac, and aspect tests passed   |
 | 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 273 tests, and production build                   |
 | 2026-08-09 | `npm run test:coverage`                            | 96.27% statements, 92.45% branches, 100% functions, and 96.33% lines                          |
@@ -641,6 +655,36 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 20 transit event-window search record
+
+- Commands: `npx vitest run tests/transit-event-window.test.ts` with transit,
+  natal, zodiac, and aspect regressions; `npm run check`;
+  `npm run test:coverage`; and `npm audit --omit=dev`.
+- Contract: search version 1.0.0 accepts one supported transiting body, canonical
+  natal body/ASC/MC target, configured aspect, explicit UTC interval, coordinate
+  provenance, integer sample step, integer refinement tolerance, and bounded
+  iteration count. Intervals are capped at 366 days and 2,048 initial samples.
+- Algorithm: provider observations must expose one complete inactive-active-
+  inactive run and one exact signed branch crossing. Bisection refines orb entry,
+  exact peak, and orb exit independently. A result is returned only when the
+  three instants are strictly ordered and every bracket meets the declared time
+  tolerance; provider values are never interpolated.
+- Trace: output retains the target and aspect definition, start/peak/end
+  observations, provider/data/calculation versions, natal input and metadata,
+  aspect/search versions, sample/tolerance limits, and every evaluated instant,
+  longitude, and provider calculation timestamp. Output is deeply frozen.
+- Validation: a linear 2-degree/day fixture proves 1.5-day entry, 5.5-day exact,
+  and 9.5-day exit to one second. Tests cover the 359-to-0 conjunction wrap, a
+  square branch, malformed/provenance inputs, incomplete and exactless windows,
+  multiple events, changing provider versions, provider failure, zero-orb
+  policy, and refinement exhaustion.
+- Source check: the real Astronomy Engine 2.1.19 adapter brackets the existing
+  JPL-near J2000 Venus-to-natal-Mars conjunction, contains the independently
+  checked J2000 sample, and refines the closest point below 0.001 degrees.
+- Scope: this service produces calculation facts only. It adds no event scoring,
+  category, interpretation, timeline composition, UI, persistence, entitlement,
+  notification, production provider call, or deployment behavior.
 
 ## Goal 19 natal-chart visualization record
 
