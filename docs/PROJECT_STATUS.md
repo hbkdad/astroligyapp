@@ -4,14 +4,15 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 6 complete; versioned Pythagorean numerology strategy verified.
+Status: Goal 7 complete; ephemeris conformance and provider-selection gates verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
 migrations, forced row-level security on 19 private tables, a server-only
 verified-session boundary, identity-scoped transactions, account bootstrap,
-deterministic zodiac/aspect primitives, lunar phase geometry, and a traceable
-Pythagorean numerology strategy. No production data, managed database,
+deterministic zodiac/aspect primitives, lunar phase geometry, a traceable
+Pythagorean numerology strategy, and a strict ephemeris adapter validation
+boundary. No production data, managed database,
 authentication, billing, AI, notification, ephemeris, or deployment provider is
 selected.
 
@@ -67,6 +68,16 @@ selected.
 - [x] Apply `numerology-validation` to A-Z mapping, master numbers, date
       components, leap/zero-containing dates, Unicode, punctuation, empty
       categories, and calendar boundaries.
+- [x] Goal 7: add strict ephemeris request/result/error validation and reusable
+      provider conformance tests covering completeness, normalization,
+      metadata, documented failures, and no silent fallback.
+- [x] Define versioned provider-independent UTC/location fixture inputs,
+      coordinate conventions, source-capture rules, and provisional acceptance
+      tolerances without fabricating astronomical expected values.
+- [x] Compare Swiss Ephemeris, Astronomy Engine, JPL Horizons, and NAIF SPICE
+      for license, runtime, operations, houses, and cost fit.
+- [x] Accept ADR 0005 to defer selection behind concrete accuracy, house,
+      deployment, operating-cost, and licensing approval gates.
 
 ## In progress
 
@@ -74,22 +85,20 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 7 — ephemeris provider conformance and candidate decision harness.
+Goal 8 — time-boxed positions adapter evaluation and independent fixture capture.
 
 Deliverables:
 
-1. Add shared conformance tests for every `EphemerisProvider` implementation,
-   including request validation, all requested bodies exactly once, finite
-   normalized longitudes, metadata completeness, error codes, and no silent
-   fallback.
-2. Define sourced UTC/location fixtures and explicit tolerances independently of
-   any candidate implementation.
-3. Compare viable provider candidates for licensing, Node runtime/deployment
-   fit, data footprint, update operations, house support, performance, and cost.
-4. Record the decision or a concrete approval blocker in an ADR; do not install
-   or couple to Swiss Ephemeris without licensing approval.
-5. Use `astro-validation` and keep natal/transit/event-time work behind the
-   provider boundary.
+1. Capture reproducible planetary expected values and raw provenance from JPL
+   Horizons for the versioned reference cases.
+2. Implement an isolated Astronomy Engine positions adapter evaluation without
+   selecting it as the production provider or leaking its types into the domain.
+3. Run the shared conformance suite and circular-difference accuracy checks at
+   the declared tolerances; record latency, package size, and failure behavior.
+4. Confirm whether apparent tropical ecliptic-of-date and topocentric output can
+   be mapped without hidden convention changes.
+5. Stop or reject the candidate explicitly if it cannot meet the normalized
+   position contract. House selection remains a separate unresolved gate.
 
 ## Phase queue
 
@@ -177,6 +186,30 @@ Deliverables:
 | 2026-08-09 | `npm run test:coverage`                            | 97.77% statements/lines, 90.9% branches, and 100% functions in scoped application/domain code |
 | 2026-08-09 | `astro-validation` zodiac/aspect suite             | Exact boundaries, wraparound, symmetry, orb edges, closest match, and motion phases passed    |
 | 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | `astro-validation` ephemeris conformance suite     | 26/26 focused request, output, metadata, failure, and no-fallback tests passed                |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 112 tests, and production build                   |
+| 2026-08-09 | `npm run test:coverage`                            | 92.38% statements, 87.61% branches, 100% functions, and 92.2% lines                           |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+
+## Goal 7 astro-validation record
+
+- Boundary: strict UTC `Z` instants, declared bodies, observer ranges, zodiac
+  reference, coordinate origin, normalized ecliptic-of-date output, and exact
+  provider/data provenance. Invalid requests fail before dispatch.
+- Output policy: every requested body appears exactly once; non-finite or
+  out-of-range values, mismatched metadata, unexpected fields, incomplete
+  results, malformed error objects, and thrown provider diagnostics fail closed.
+  Operational diagnostics are replaced by privacy-safe contract errors.
+- Shared harness: every candidate must run request, complete-position,
+  12-house-cusp, all documented error-code, thrown-failure, and no-silent-
+  fallback cases. The fixture provider proves the harness only; its synthetic
+  values are not astronomical evidence.
+- Reference inputs: four versioned UTC/location cases cover J2000, modern,
+  date-boundary, southern-hemisphere, and high-latitude behavior. Numerical
+  expected values remain explicitly pending reproducible JPL Horizons capture.
+- Decision: no provider or package was selected. ADR 0005 evaluates Astronomy
+  Engine first for positions, keeps JPL Horizons as the independent reference,
+  and retains Swiss Ephemeris behind explicit commercial-or-AGPL approval.
 
 ## Goal 2 migration and security review
 

@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "reference": {
+    "name": "JPL Horizons API",
+    "url": "https://ssd-api.jpl.nasa.gov/doc/horizons.html",
+    "retrievalStatus": "expected-values-pending-candidate-spike"
+  },
+  "conventions": {
+    "timeScale": "utc",
+    "referenceFrame": "ecliptic-of-date",
+    "zodiacReference": "tropical",
+    "coordinateOrigin": "topocentric",
+    "longitudeRange": "[0,360)",
+    "observerLongitude": "east-positive-degrees"
+  },
+  "tolerances": {
+    "longitudeDegrees": 0.02,
+    "latitudeDegrees": 0.02,
+    "distanceAu": 0.000001,
+    "speedLongitudeDegreesPerDay": 0.001,
+    "houseCuspsDegrees": 0.1
+  },
+  "cases": [
+    {
+      "id": "j2000-greenwich",
+      "instant": "2000-01-01T12:00:00Z",
+      "observer": {
+        "latitudeDegrees": 51.4779,
+        "longitudeDegrees": 0,
+        "elevationMeters": 46
+      }
+    },
+    {
+      "id": "toronto-modern",
+      "instant": "2026-01-15T17:30:00Z",
+      "observer": {
+        "latitudeDegrees": 43.6532,
+        "longitudeDegrees": -79.3832,
+        "elevationMeters": 76
+      }
+    },
+    {
+      "id": "sydney-date-boundary",
+      "instant": "2026-06-30T23:59:59Z",
+      "observer": {
+        "latitudeDegrees": -33.8688,
+        "longitudeDegrees": 151.2093,
+        "elevationMeters": 58
+      }
+    },
+    {
+      "id": "reykjavik-high-latitude",
+      "instant": "2026-12-21T12:00:00Z",
+      "observer": {
+        "latitudeDegrees": 64.1466,
+        "longitudeDegrees": -21.9426,
+        "elevationMeters": 61
+      }
+    }
+  ]
+}
