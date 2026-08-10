@@ -18,6 +18,7 @@ export const LUNAR_PHASES = [
 export type LunarPhase = (typeof LUNAR_PHASES)[number];
 export type IlluminationTrend = "waxing" | "waning" | "turning";
 
+export const LUNAR_PHASE_ENGINE_VERSION = "1.0.0";
 export const MEAN_SYNODIC_MONTH_DAYS = 29.53059;
 
 export interface LunarPhaseResult {

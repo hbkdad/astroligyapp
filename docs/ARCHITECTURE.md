@@ -101,6 +101,12 @@ tests/
   provenance. Geocentric snapshots omit location; topocentric snapshots require
   an observer and coordinate source. Event-window search, weighting,
   interpretation, persistence, and notification remain outside this engine.
+- `derivePersonalLunarSnapshot`: provider-free derivation from a validated
+  transit snapshot. It combines current Sun/Moon phase geometry and Moon zodiac
+  placement with the existing Moon-to-natal planet/ASC/MC aspects, while
+  retaining lunar, transit, natal, provider, and aspect-policy provenance.
+  Approximate illumination and mean-cycle age remain labeled estimates; event
+  prediction and location-dependent rise/set data are absent.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
 - `InterpretationRenderer`: deterministic template rendering with optional AI adapter behind validated input/output schemas.

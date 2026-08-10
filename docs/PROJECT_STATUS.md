@@ -4,7 +4,7 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 11 complete; deterministic instantaneous natal-to-current transits are implemented and verified.
+Status: Goal 12 complete; the deterministic personal lunar snapshot is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -92,6 +92,15 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 12: derive current lunar phase/sign facts and Moon-to-natal
+      planet/ASC/MC aspects from one validated transit snapshot without another
+      provider request or natal recalculation.
+- [x] Preserve the lunar, transit, aspect-policy, provider, and complete natal
+      provenance needed to reproduce the snapshot.
+- [x] Match JPL-derived J2000 Moon-minus-Sun geometry within the combined source
+      tolerance and reuse the existing exact phase-boundary suite.
+- [x] Keep illumination and mean-cycle age explicitly approximate; defer event
+      searches, rise/set, scoring, interpretation, persistence, and alerts.
 - [x] Goal 11: compare every validated current body against canonical natal
       planets plus Ascendant and Midheaven targets using the versioned major
       aspect policy.
@@ -129,18 +138,19 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 12 — build the deterministic personal lunar snapshot.
+Goal 13 — build the combined personal-context fact aggregate.
 
 Deliverables:
 
-1. Derive the validated current lunar phase/sign facts from the transit
-   snapshot's Sun and Moon positions without another provider call.
-2. Select the current Moon-to-natal planet/ASC/MC aspects from the same snapshot
-   with their orb, strength, and motion phase intact.
-3. Preserve lunar, transit, natal, provider, and policy versions in one
-   reproducible structured result.
-4. Keep rise/set, next-phase searches, event windows, scores, interpretation,
-   persistence, notifications, and AI explicitly deferred.
+1. Compose a natal chart, transit snapshot, personal lunar snapshot, and
+   caller-supplied deterministic numerology results into one immutable,
+   versioned fact object.
+2. Validate instant/date and provenance consistency across every component and
+   reject partial or mismatched context rather than silently recomputing it.
+3. Define stable fact identifiers suitable for later rules and UI without
+   embedding prose, category weights, or AI output.
+4. Keep persistence, interpretation, product scoring, entitlements, and delivery
+   outside the aggregate.
 
 ## Phase queue
 
@@ -213,6 +223,10 @@ Deliverables:
 | 2026-08-09 | `npm run check`                                    | Passed formatting, ESLint, strict TypeScript, 2 unit/contract tests, and production build     |
 | 2026-08-09 | `npm run test:coverage`                            | Passed; scoped baseline application/domain coverage remains 100%                              |
 | 2026-08-09 | `npm audit --audit-level=high`                     | No high or critical findings; four accepted moderate Drizzle Kit development-tool findings    |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | Personal lunar focused suite                       | 5/5 reuse, JPL phase, provenance, and malformed-snapshot tests passed                         |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 191 tests, and production build                   |
+| 2026-08-09 | `npm run test:coverage`                            | 95.01% statements, 90.68% branches, 100% functions, and 94.82% lines                          |
 | 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
 | 2026-08-09 | `npx vitest run tests/transit-snapshot.test.ts`    | 9/9 transit snapshot tests passed; dual-source and failure cases covered                      |
 | 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 186 tests, and production build                   |
@@ -368,6 +382,36 @@ Deliverables:
   approximation is returned.
 - Scope: start/peak/end searches, weights, scores, categories, interpretation,
   persistence, notification, and AI remain absent.
+
+## Goal 12 lunar-validation record
+
+- Commands: `npx vitest run tests/personal-lunar-snapshot.test.ts`,
+  `npm run check`, `npm run test:coverage`, and `npm audit --omit=dev`.
+- Source boundary: no new astronomy request occurs. The snapshot reuses the
+  transit result's provider-validated tropical, topocentric,
+  ecliptic-of-date Sun and Moon longitudes plus its already calculated
+  Moon-to-natal aspects. Natal placements are referenced, never recalculated.
+- Geometry: phase angle remains normalized Moon minus Sun longitude in degrees.
+  Phase label, Moon sign, approximate illuminated fraction, estimated mean-cycle
+  age, cycle progress, and waxing/waning state come from lunar phase engine
+  1.0.0. Exact anchors, both sides of classification boundaries, zero
+  wraparound, monotonic illumination samples, and non-finite inputs remain in
+  the shared lunar suite.
+- Reference: JPL Horizons API 1.3 J2000 Greenwich rows give Sun 280.368801
+  degrees and Moon 223.0845542 degrees, producing source phase angle
+  302.7157532 degrees. The aggregate acceptance budget is 0.04 degrees because
+  each endpoint retains the fixed 0.02-degree provider tolerance. The result is
+  waning crescent with the Moon in tropical Scorpio.
+- Reproducibility: personal lunar version 1.0.0, lunar phase engine 1.0.0,
+  transit engine/version/timestamp, complete aspect policy, current provider
+  metadata, transit input, and natal input/calculation metadata are retained.
+- Failure policy: mismatched current instant/origin/zodiac metadata and missing
+  or duplicate Sun/Moon positions throw before any derived result. No plausible
+  replacement is generated.
+- Approximation and scope: illumination is geometric and Moon age uses the
+  explicitly labeled mean synodic month. Neither is an event ephemeris. Next
+  phases, rise/set, altitude/azimuth, aspect windows, scores, interpretations,
+  persistence, notifications, and AI remain absent.
 
 ## Goal 2 migration and security review
 
