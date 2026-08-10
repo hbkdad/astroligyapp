@@ -1,6 +1,8 @@
 import {
   DEFAULT_ASPECT_DEFINITIONS,
   findClosestAspect,
+  MAJOR_ASPECT_POLICY_ID,
+  MAJOR_ASPECT_POLICY_VERSION,
   validateAspectDefinitions,
   type AspectDefinition,
   type AspectMatch,
@@ -27,8 +29,8 @@ import {
 import { toZodiacPosition, type ZodiacPosition } from "@/domain/astro/zodiac";
 
 export const NATAL_CHART_ENGINE_VERSION = "1.0.0";
-export const NATAL_ASPECT_POLICY_ID = "major-aspects";
-export const NATAL_ASPECT_POLICY_VERSION = "1.0.0";
+export const NATAL_ASPECT_POLICY_ID = MAJOR_ASPECT_POLICY_ID;
+export const NATAL_ASPECT_POLICY_VERSION = MAJOR_ASPECT_POLICY_VERSION;
 
 export interface NatalChartInput {
   /** The resolved birth instant in UTC. */

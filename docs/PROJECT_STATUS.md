@@ -4,7 +4,7 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 10 complete; the deterministic natal-chart aggregate is implemented and verified.
+Status: Goal 11 complete; deterministic instantaneous natal-to-current transits are implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -92,6 +92,16 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 11: compare every validated current body against canonical natal
+      planets plus Ascendant and Midheaven targets using the versioned major
+      aspect policy.
+- [x] Preserve the current sky input/result, natal input/metadata, transit engine
+      version, complete aspect definitions, orb, strength, and motion phase.
+- [x] Require observer/source provenance for topocentric snapshots and require
+      location-free inputs for geocentric snapshots.
+- [x] Limit the result to instantaneous facts; do not fabricate start, peak, or
+      end windows and do not add scores, categories, prose, persistence, or
+      notification behavior.
 - [x] Goal 10: build a provider-neutral natal-chart aggregate for all ten
       supported celestial bodies, Whole Sign houses, zodiac placements,
       planet-house placements, and unique major aspects.
@@ -119,18 +129,18 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 11 — build the deterministic natal-to-current transit comparison engine.
+Goal 12 — build the deterministic personal lunar snapshot.
 
 Deliverables:
 
-1. Compare a validated current position set against natal planets plus ASC and
-   MC, returning structured aspect facts with stable target identifiers.
-2. Preserve current UTC input, natal provenance, provider versions, aspect
-   policy version, orb, strength, and applying/separating state.
-3. Define only instantaneous transit facts in this goal; defer start/peak/end
-   event searches until a separately validated time-series capability exists.
-4. Keep category weights, interpretation keys, notifications, persistence, and
-   AI outside the calculation engine.
+1. Derive the validated current lunar phase/sign facts from the transit
+   snapshot's Sun and Moon positions without another provider call.
+2. Select the current Moon-to-natal planet/ASC/MC aspects from the same snapshot
+   with their orb, strength, and motion phase intact.
+3. Preserve lunar, transit, natal, provider, and policy versions in one
+   reproducible structured result.
+4. Keep rise/set, next-phase searches, event windows, scores, interpretation,
+   persistence, notifications, and AI explicitly deferred.
 
 ## Phase queue
 
@@ -166,8 +176,8 @@ Deliverables:
 
 - Production-host deployment fit and performance for the selected composed
   ephemeris provider remain release gates.
-- Next New/Full Moon times, rise/set, altitude/azimuth, and personal lunar
-  transits remain deferred until validated time-series and location-aware
+- Next New/Full Moon times, rise/set, altitude/azimuth, and personal lunar event
+  windows remain deferred until validated time-series and location-aware
   provider capabilities exist. Mean-cycle age must not be used as an ephemeris.
 - Authentication, managed database, payment, AI, email, monitoring, and
   deployment providers remain intentionally undecided.
@@ -203,6 +213,10 @@ Deliverables:
 | 2026-08-09 | `npm run check`                                    | Passed formatting, ESLint, strict TypeScript, 2 unit/contract tests, and production build     |
 | 2026-08-09 | `npm run test:coverage`                            | Passed; scoped baseline application/domain coverage remains 100%                              |
 | 2026-08-09 | `npm audit --audit-level=high`                     | No high or critical findings; four accepted moderate Drizzle Kit development-tool findings    |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | `npx vitest run tests/transit-snapshot.test.ts`    | 9/9 transit snapshot tests passed; dual-source and failure cases covered                      |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 186 tests, and production build                   |
+| 2026-08-09 | `npm run test:coverage`                            | 94.84% statements, 90.44% branches, 100% functions, and 94.64% lines                          |
 | 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
 | 2026-08-09 | JPL Horizons natal fixture capture                 | 10/10 Zollikon topocentric body rows stored with URLs, raw one-minute rows, UTC, and observer |
 | 2026-08-09 | `npx vitest run tests/natal-chart.test.ts`         | 9/9 composition, provenance, dual-source fixture, no-speed, and provider-failure tests passed |
@@ -322,6 +336,38 @@ Deliverables:
   provider failures. No partial or fabricated chart is returned.
 - Scope: no natal persistence, interpretation, AI, product weighting, or score
   calculation was introduced.
+
+## Goal 11 astro-validation record
+
+- Contract: a strict current UTC instant and explicit geocentric or topocentric
+  origin feed one validated all-body position request. Topocentric requests
+  require an east-positive geodetic observer plus coordinate source;
+  geocentric requests omit both. Output remains tropical ecliptic-of-date
+  degrees normalized to `[0, 360)`.
+- Targets: each current body is compared in canonical order against all ten
+  canonical natal bodies plus stable `natal:angle:ascendant` and
+  `natal:angle:midheaven` identifiers. Each current/target pair appears at most
+  once.
+- Motion: natal planets and angles are fixed targets, so phase classification
+  uses current provider speed against zero target speed. Missing current speed
+  remains `unknown` through the shared aspect contract; no motion is invented.
+- Reproducibility: the snapshot retains its current input, complete validated
+  current `PositionResult`, natal input and calculation metadata, transit engine
+  1.0.0, major-aspect policy 1.0.0, complete orb definitions, and calculation
+  timestamp.
+- Reference: the published/captured 1997 Zollikon natal fixture is compared with
+  the JPL Horizons API 1.3 J2000 Greenwich current fixture. All current
+  longitudes retain the fixed 0.02-degree provider tolerance. Robust cross-case
+  checks include transiting Venus conjunct natal Mars and transiting Neptune
+  sextile natal Pluto; their expected orbs use a 0.05-degree aggregate budget
+  because each endpoint has its own 0.02-degree source tolerance.
+- Boundaries and failures: wraparound conjunctions cover applying and separating
+  motion; exact angle aspects, invalid/missing/duplicate natal targets, invalid
+  natal angles, invalid observer provenance, explicit geocentric behavior, and
+  current-provider failure are covered. No partial facts or event-window
+  approximation is returned.
+- Scope: start/peak/end searches, weights, scores, categories, interpretation,
+  persistence, notification, and AI remain absent.
 
 ## Goal 2 migration and security review
 

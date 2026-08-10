@@ -11,6 +11,9 @@ export const ASPECT_TYPES = [
 export type AspectType = (typeof ASPECT_TYPES)[number];
 export type AspectPhase = "applying" | "separating" | "stationary" | "unknown";
 
+export const MAJOR_ASPECT_POLICY_ID = "major-aspects";
+export const MAJOR_ASPECT_POLICY_VERSION = "1.0.0";
+
 export interface AspectDefinition {
   type: AspectType;
   exactAngleDegrees: number;

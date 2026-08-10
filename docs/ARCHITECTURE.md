@@ -95,6 +95,12 @@ tests/
   resolved UTC instant, IANA timezone and source, coordinates and source,
   coordinate origin, provider metadata, and calculation-policy versions; it
   contains no interpretation, score, AI, or persistence behavior.
+- `TransitSnapshotEngine`: application-level comparison of a validated current
+  sky against canonical natal planet, Ascendant, and Midheaven targets. It
+  returns instantaneous major-aspect facts and preserves natal/current
+  provenance. Geocentric snapshots omit location; topocentric snapshots require
+  an observer and coordinate source. Event-window search, weighting,
+  interpretation, persistence, and notification remain outside this engine.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
 - `InterpretationRenderer`: deterministic template rendering with optional AI adapter behind validated input/output schemas.
