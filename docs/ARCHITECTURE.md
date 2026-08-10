@@ -119,6 +119,14 @@ tests/
   refines entry/peak/exit with provider evaluations only. All evaluated instants
   and calculation versions remain in the result; incomplete, ambiguous,
   inconsistent, or under-refined searches fail explicitly.
+- `composeTimelineFacts`: provider-free, deep-frozen composition of validated
+  personal transit windows, lunar events, planetary stations, and explicit
+  numerology year/month/day boundaries over one half-open UTC display interval.
+  It retains complete source results, normalizes instant/window occurrences,
+  proves supplied numerology instants are local midnight in their declared IANA
+  timezone, and enforces stable identity and chronological/type/ID ordering.
+  Interpretation, scoring, UI, persistence, entitlements, and notifications stay
+  downstream.
 - `derivePersonalLunarSnapshot`: provider-free derivation from a validated
   transit snapshot. It combines current Sun/Moon phase geometry and Moon zodiac
   placement with the existing Moon-to-natal planet/ASC/MC aspects, while

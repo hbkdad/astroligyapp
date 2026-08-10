@@ -4,7 +4,7 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 22 complete; the provider-neutral station and retrograde event-search foundation is implemented and verified.
+Status: Goal 23 complete; the unified deterministic timeline-fact composition foundation is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -14,8 +14,9 @@ deterministic zodiac/aspect primitives, lunar phase geometry, a traceable
 Pythagorean numerology strategy, and a strict ephemeris adapter validation
 boundary. Astronomy Engine 2.1.19 plus Whole Sign strategy 1.0.0 is selected for
 the launch ephemeris boundary, and the natal engine now composes validated
-placements, houses, and aspects with complete calculation provenance. No
-production data, managed database,
+placements, houses, and aspects with complete calculation provenance. Bounded
+transit, lunar, station, and explicit numerology events can now be composed into
+one immutable timeline-fact aggregate. No production data, managed database,
 authentication, billing, AI, notification, location-resolution, or deployment
 provider is selected.
 
@@ -92,6 +93,15 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 23: compose validated personal transit windows, lunar events,
+      planetary stations, and explicit numerology boundaries into one versioned,
+      immutable timeline-fact aggregate over a half-open display interval.
+- [x] Preserve complete source results and provenance while normalizing instant/
+      window occurrences, stable identifiers, chronological ordering, and an
+      explicit type/identifier tie policy without recalculation.
+- [x] Require numerology UTC instants to prove local midnight on their declared
+      plain date and IANA timezone; reject malformed, out-of-range, duplicate,
+      cross-version, trace-inconsistent, or internally inconsistent inputs.
 - [x] Goal 22: define bounded, versioned station-retrograde and station-direct
       searches for Mercury through Pluto from provider-supplied longitude speed.
 - [x] Require the requested positive-to-negative or negative-to-positive speed
@@ -237,21 +247,21 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 23 — build the unified deterministic timeline-fact composition foundation.
+Goal 24 — build the accessible timeline presentation/read-model foundation.
 
 Deliverables:
 
-1. Define one versioned immutable timeline fact contract for validated personal
-   transit windows, lunar ingresses/phases, planetary stations, and deterministic
-   numerology year/month/day boundaries over one explicit display interval.
-2. Preserve each source event and complete provenance without recalculation;
-   normalize instant versus start/peak/end shape, stable IDs, and deterministic
-   chronological/tie ordering.
-3. Reject out-of-range, duplicate, malformed, cross-version, or internally
-   inconsistent events and boundaries. Do not invent missing dates or traces.
-4. Add complete empty/single/mixed/boundary/failure tests. Add no scoring,
-   interpretation, timeline UI, persistence, entitlement, notification, or
-   production provider behavior.
+1. Map only a validated Goal 23 aggregate into one versioned immutable timeline
+   presentation model; preserve source fact IDs, occurrence shapes, and trace
+   references without calculation, scoring, or interpretation in components.
+2. Render a responsive chronological timeline with distinct instant/window
+   treatment, complete semantic text/table representation, and deterministic
+   filters that hide but never mutate or reorder facts.
+3. Provide deliberate loading, locked, error, empty, and success states plus
+   keyboard operation, visible focus, mobile behavior, 200% text support, and
+   reduced-motion handling through the `ui-quality` workflow.
+4. Use only explicit local demo data. Add no persistence, entitlement decision,
+   notification scheduling, public sharing, production provider, or deployment.
 
 ## Phase queue
 
@@ -691,6 +701,33 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 23 unified timeline-fact composition record
+
+- Commands: timeline, transit-event, lunar-event, station-event, and numerology
+  focused suites; `npm run check`; `npm run test:coverage`; `npm audit --omit=dev`;
+  and `git diff --check`.
+- Contract: timeline facts 1.0.0 accepts one explicit half-open UTC interval plus
+  existing validated Goal 20-22 event results and optional explicit numerology
+  boundary requests. Output normalizes transit start/peak/end windows and lunar,
+  station, or numerology instants without changing the complete cloned source.
+- Numerology boundary: the caller supplies the strict Gregorian local date, UTC
+  instant, IANA timezone, and timezone-resolution source. Composition proves the
+  instant is local midnight on that date, requires January 1 for a personal year
+  and day 1 for a personal month, then invokes the explicit versioned strategy.
+  No timezone, date, or missing boundary is inferred.
+- Ordering and identity: facts sort by occurrence start, then the published type
+  order, then English identifier ordering. Existing astronomy IDs remain intact;
+  numerology IDs include kind, local date, and timezone. Duplicates fail closed.
+- Validation: source search versions, event/input identities, strict transit
+  ordering, display range, provider trace, evaluation counts/uniqueness, lunar
+  targets, station direction identity, numerology strategy/result trace, boundary
+  kind/date/timezone, and local-midnight consistency are checked at assembly.
+- Evidence: 23 files and 353 tests passed; coverage was 95.42% statements,
+  91.79% branches, 100% functions, and 96.22% lines; the optimized production
+  build passed and the production dependency audit found zero vulnerabilities.
+- Scope: no interpretation, score, UI, persistence, entitlement, notification,
+  public sharing, provider request, or deployment behavior was added.
 
 ## Goal 22 station and retrograde event-search record
 
