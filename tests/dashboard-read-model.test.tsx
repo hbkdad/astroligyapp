@@ -1,23 +1,35 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { PersonalDashboard } from "@/components/personal-dashboard";
 import type { DailyReadingPayload } from "@/application/compose-daily-reading";
 import {
-  DEMO_DASHBOARD,
-  DEMO_DASHBOARD_SOURCE,
+  getDemoDashboard,
+  getDemoDashboardSource,
 } from "@/presentation/dashboard-demo";
 import {
   DASHBOARD_READ_MODEL_VERSION,
   sourceFromDailyReading,
   toDashboardReadModel,
+  type DashboardReadModel,
+  type DashboardReadingSource,
 } from "@/presentation/dashboard-read-model";
+
+let DEMO_DASHBOARD: DashboardReadModel;
+let DEMO_DASHBOARD_SOURCE: DashboardReadingSource;
+
+beforeAll(async () => {
+  [DEMO_DASHBOARD, DEMO_DASHBOARD_SOURCE] = await Promise.all([
+    getDemoDashboard(),
+    getDemoDashboardSource(),
+  ]);
+});
 
 describe("dashboard presentation boundary", () => {
   it("maps deterministic reading fields into a frozen presentation model", () => {
     expect(DEMO_DASHBOARD).toMatchObject({
       version: DASHBOARD_READ_MODEL_VERSION,
-      dateLabel: "Sunday, August 9, 2026",
+      dateLabel: "Monday, December 20, 1999",
       timezoneLabel: "America/Toronto",
       moon: {
         phase: "Waning Crescent",
@@ -34,6 +46,15 @@ describe("dashboard presentation boundary", () => {
     });
     expect(Object.isFrozen(DEMO_DASHBOARD)).toBe(true);
     expect(Object.isFrozen(DEMO_DASHBOARD.categories)).toBe(true);
+    expect(DEMO_DASHBOARD.timelinePreview).toHaveLength(3);
+    expect(DEMO_DASHBOARD.timelinePreview[0]).toMatchObject({
+      id: "numerology:personal-year:2000-01-01:America/Toronto",
+      occurrenceKind: "instant",
+    });
+    expect(DEMO_DASHBOARD.nextEvent).toMatchObject({
+      id: "transit:venus:natal:body:mars:conjunction",
+      occurrenceKind: "window",
+    });
   });
 
   it("narrows a Goal 17 payload without changing its display facts", () => {
@@ -66,7 +87,7 @@ describe("dashboard presentation boundary", () => {
         scoreFormulaVersion: source.versions.scoreFormula,
       },
     } as unknown as DailyReadingPayload;
-    expect(sourceFromDailyReading(reading)).toEqual(source);
+    expect(sourceFromDailyReading(reading, source.timeline)).toEqual(source);
   });
 
   it("renders semantic success content and nonvisual score equivalents", () => {
@@ -81,6 +102,9 @@ describe("dashboard presentation boundary", () => {
     expect(html).toContain('aria-label="Opportunity: 64 out of 100"');
     expect(html).toContain("not scientific measurements");
     expect(html).toContain("View version trace");
+    expect(html).toContain("Timeline preview");
+    expect(html).toContain("Next event");
+    expect(html).toContain("View full timeline");
   });
 
   it.each([
@@ -99,12 +123,15 @@ describe("dashboard presentation boundary", () => {
     (model as unknown as { signals: unknown[] }).signals = [];
     (model as unknown as { numerology: unknown[] }).numerology = [];
     (model as unknown as { reflections: unknown[] }).reflections = [];
+    (model as unknown as { timelinePreview: unknown[] }).timelinePreview = [];
+    delete (model as unknown as { nextEvent?: unknown }).nextEvent;
     const html = renderToStaticMarkup(
       <PersonalDashboard state={{ status: "ready", model }} />,
     );
     expect(html).toContain("No configured category rules matched");
     expect(html).toContain("Numerology values are unavailable");
     expect(html).toContain("No deterministic interpretation is available");
+    expect(html).toContain("No upcoming calculated events are available");
   });
 
   it("fails closed on invalid display facts, category duplicates, and versions", () => {
@@ -131,6 +158,12 @@ describe("dashboard presentation boundary", () => {
     (invalidDate as { localDate: string }).localDate = "not-a-date";
     expect(() => toDashboardReadModel(invalidDate)).toThrow(
       "Invalid local date",
+    );
+
+    const invalidTimeline = structuredClone(DEMO_DASHBOARD_SOURCE);
+    (invalidTimeline.timeline as { version: string }).version = "wrong";
+    expect(() => toDashboardReadModel(invalidTimeline)).toThrow(
+      "timeline version",
     );
   });
 });

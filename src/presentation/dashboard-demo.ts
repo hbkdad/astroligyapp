@@ -6,8 +6,9 @@ import {
   toDashboardReadModel,
   type DashboardReadingSource,
 } from "./dashboard-read-model";
+import { getDemoTimeline } from "./timeline-demo";
 
-const effectiveAt = "2026-08-09T12:00:00Z";
+const effectiveAt = "1999-12-20T12:00:00Z";
 const versions = {
   reading: "1.0.0-demo",
   context: "1.0.0",
@@ -64,9 +65,9 @@ const categories: CategoryScoreOutput = {
   },
 };
 
-export const DEMO_DASHBOARD_SOURCE: DashboardReadingSource = {
+const DASHBOARD_BASE = {
   effectiveAt,
-  localDate: "2026-08-09",
+  localDate: "1999-12-20",
   timezone: "America/Toronto",
   moon: {
     phase: "waning-crescent",
@@ -96,9 +97,23 @@ export const DEMO_DASHBOARD_SOURCE: DashboardReadingSource = {
   categories,
   strongestSignals: signals,
   versions,
-};
+} as const;
 
-export const DEMO_DASHBOARD = toDashboardReadModel(DEMO_DASHBOARD_SOURCE);
+let sourcePromise: Promise<DashboardReadingSource> | undefined;
+let modelPromise: Promise<ReturnType<typeof toDashboardReadModel>> | undefined;
+
+export function getDemoDashboardSource(): Promise<DashboardReadingSource> {
+  sourcePromise ??= getDemoTimeline().then((timeline) => ({
+    ...DASHBOARD_BASE,
+    timeline,
+  }));
+  return sourcePromise;
+}
+
+export function getDemoDashboard() {
+  modelPromise ??= getDemoDashboardSource().then(toDashboardReadModel);
+  return modelPromise;
+}
 
 function signal(
   category: CategoryKey,

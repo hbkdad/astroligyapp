@@ -4,7 +4,7 @@ Last updated: 2026-08-10
 
 ## Current position
 
-Status: Goal 26 complete; the personal numerology presentation and read-model foundation is implemented and verified.
+Status: Goal 27 complete; the deterministic Today timeline preview and next-event foundation is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,12 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 27: extend the Today source/read model with Goal 24 timeline records,
+      preserving stable IDs, source versions, chronology, and instant/window shape.
+- [x] Feature the first event after the reading instant and show the following
+      three facts without duplication, with a direct link to the full timeline.
+- [x] Cover empty and dense previews, invalid versions/order/IDs, all dashboard
+      states, semantic dates, keyboard flow, mobile/200% text, and reduced motion.
 - [x] Goal 26: map six traced Pythagorean core results and three explicit
       personal-cycle boundaries into an immutable numerology read model and page.
 - [x] Preserve master-number policy, normalized tokens, reduction operations,
@@ -275,18 +281,20 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 27 — add the deterministic timeline preview and next-event foundation to Today.
+Goal 28 — build the privacy-safe public daily-reading fact foundation.
 
 Deliverables:
 
-1. Extend the immutable Today read model from Goal 18 with a small ordered preview
-   sourced only from Goal 23/24 facts and one explicit next-event record.
-2. Preserve IDs, instant/window shape, source version, and ordering; link to the
-   complete timeline without recalculation, scoring, or interpretation.
-3. Cover empty/single/dense previews and all dashboard states, then verify mobile,
-   keyboard, 200% text, reduced motion, and production hydration via `ui-quality`.
-4. Add no persistence, notification, entitlement decision, public sharing, AI,
-   production provider, or deployment behavior.
+1. Define one versioned immutable public daily-fact aggregate for a plain date and
+   each of the twelve tropical Sun signs using only shared sky/lunar facts and
+   deterministic, non-personal interpretation keys. Include no birth/profile data.
+2. Separate factual astronomy from tradition-framed public prompts, preserve all
+   provider/calculation/library versions, and prohibit deterministic predictions,
+   individualized claims, scores presented as science, or invented event dates.
+3. Verify all twelve signs, date boundaries, stable ordering/IDs, complete fact
+   coverage, unsupported templates, unsafe claims, and cross-version failures.
+4. Add no public route, SEO metadata, persistence, analytics, AI, entitlement,
+   notification, production provider, or deployment behavior yet.
 
 ## Phase queue
 
@@ -726,6 +734,29 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 27 Today timeline preview record
+
+- Boundary: `DashboardReadingSource` now requires timeline read model 1.0.0.
+  Assembly validates its version, unique IDs, timestamps, ordering, and source
+  versions, then copies only Goal 24 display facts at or after the reading instant.
+- Selection: the first upcoming fact is the explicit next event; the following
+  three facts form the preview. IDs, dates, instant/window kinds, occurrence text,
+  and source versions are unchanged. React performs no search or calculation.
+- UI/states: the featured card includes the full start/exact/end window and source
+  ID; three compact cards retain chronology and shape, with a 44px link to the
+  complete timeline. Existing loading/locked/error states and a new empty preview
+  remain deliberate. The duplicated featured/preview item found in browser review
+  was removed.
+- Browser: semantic snapshot exposed the featured transit followed by year-cycle,
+  New Moon, and month-cycle facts. Skip-link keyboard flow focused `main`; at
+  390px normal and 200% text the document stayed 375px wide; reduced motion used
+  auto scrolling; source IDs wrapped intact; Chromium reported zero errors.
+- Evidence: 26 files and 378 tests passed; coverage was 94.17% statements,
+  90.71% branches, 99.53% functions, and 94.91% lines. The optimized static build
+  passed and the production dependency audit found zero vulnerabilities.
+- Scope: no persistence, notification, entitlement, public sharing, AI,
+  production provider, analytics, or deployment behavior was added.
 
 ## Goal 26 personal numerology presentation record
 

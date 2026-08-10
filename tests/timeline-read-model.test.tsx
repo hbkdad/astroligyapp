@@ -51,6 +51,7 @@ describe("timeline presentation boundary", () => {
     ).toMatchObject({
       categoryLabel: "Personal transit",
       title: "Venus Conjunction natal Mars",
+      occurrenceKind: "window",
       sourceVersion: "1.0.0",
     });
     expect(

@@ -43,6 +43,7 @@ export interface TimelineReadModelItem {
   readonly id: string;
   readonly filter: Exclude<TimelineFilter, "all">;
   readonly type: TimelineFact["type"];
+  readonly occurrenceKind: TimelineFact["occurrence"]["kind"];
   readonly categoryLabel: string;
   readonly title: string;
   readonly detail: string;
@@ -106,6 +107,7 @@ function toItem(fact: TimelineFact): TimelineReadModelItem {
   const common = {
     id: fact.id,
     type: fact.type,
+    occurrenceKind: fact.occurrence.kind,
     dateLabel: formatDate(occurrenceStart(fact)),
     dateTime: occurrenceStart(fact),
     occurrenceLabel: formatOccurrence(fact),

@@ -1,8 +1,10 @@
 import { PersonalDashboard } from "@/components/personal-dashboard";
-import { DEMO_DASHBOARD } from "@/presentation/dashboard-demo";
+import { getDemoDashboard } from "@/presentation/dashboard-demo";
 
-export default function HomePage() {
+export default async function HomePage() {
   return (
-    <PersonalDashboard state={{ status: "ready", model: DEMO_DASHBOARD }} />
+    <PersonalDashboard
+      state={{ status: "ready", model: await getDemoDashboard() }}
+    />
   );
 }

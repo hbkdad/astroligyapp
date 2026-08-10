@@ -166,6 +166,10 @@ tests/
   perform no calculations, scoring, or interpretation. The current page uses
   explicitly labeled synthetic local data only and provides semantic text
   equivalents for category meters and the decorative Moon graphic.
+  Goal 27 additionally requires a Goal 24 timeline read model: the mapper validates
+  identity/version/order, selects facts at or after the reading instant, exposes
+  the first as `nextEvent`, and maps the following three into `timelinePreview`
+  without recalculation or duplication.
 - Timeline presentation: `toTimelineReadModel` accepts only a Goal 23 timeline
   aggregate, rechecks its version, interval, identity, range, source trace, and
   published ordering, then maps immutable instant/window display records. The

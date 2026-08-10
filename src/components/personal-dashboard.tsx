@@ -107,6 +107,52 @@ export function PersonalDashboard({ state }: { state: DashboardState }) {
           </section>
 
           <section
+            className="panel full-width dashboard-timeline"
+            aria-labelledby="timeline-preview-heading"
+          >
+            <div className="section-heading">
+              <div>
+                <p className="section-kicker">What comes next</p>
+                <h2 id="timeline-preview-heading">Timeline preview</h2>
+              </div>
+              <Link href="/timeline">View full timeline</Link>
+            </div>
+            {model.nextEvent ? (
+              <article className="next-event-card">
+                <p className="event-category">
+                  Next event · {model.nextEvent.categoryLabel}
+                </p>
+                <h3>{model.nextEvent.title}</h3>
+                <time dateTime={model.nextEvent.dateTime}>
+                  {model.nextEvent.dateLabel}
+                </time>
+                <p>{model.nextEvent.occurrenceLabel}</p>
+                <code>{model.nextEvent.id}</code>
+              </article>
+            ) : null}
+            {model.timelinePreview.length ? (
+              <ol className="timeline-preview-list">
+                {model.timelinePreview.map((event) => (
+                  <li key={event.id}>
+                    <time dateTime={event.dateTime}>{event.dateLabel}</time>
+                    <div>
+                      <h3>{event.title}</h3>
+                      <p>
+                        {event.categoryLabel} · {event.occurrenceKind}
+                      </p>
+                    </div>
+                    <code>{event.id}</code>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <EmptyMessage>
+                No upcoming calculated events are available.
+              </EmptyMessage>
+            )}
+          </section>
+
+          <section
             className="panel numerology-panel"
             aria-labelledby="numerology-heading"
           >

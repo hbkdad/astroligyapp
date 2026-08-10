@@ -5,6 +5,10 @@ import type {
 } from "@/application/compose-daily-reading";
 import type { RenderedInterpretationItem } from "@/application/render-interpretations";
 import type { ContextNumerologyKey } from "@/domain/context/contracts";
+import {
+  TIMELINE_READ_MODEL_VERSION,
+  type TimelineReadModel,
+} from "./timeline-read-model";
 
 export const DASHBOARD_READ_MODEL_VERSION = "1.0.0";
 
@@ -29,6 +33,7 @@ export interface DashboardReadingSource {
   readonly interpretations: readonly RenderedInterpretationItem[];
   readonly categories: CategoryScoreOutput;
   readonly strongestSignals: readonly DailyReadingSignal[];
+  readonly timeline: TimelineReadModel;
   readonly versions: Readonly<{
     reading: string;
     context: string;
@@ -86,11 +91,25 @@ export interface DashboardReadModel {
     interpretation: string;
     sourceFactId: string;
   }>[];
+  readonly timelinePreview: readonly DashboardTimelineItem[];
+  readonly nextEvent?: DashboardTimelineItem;
   readonly trace: readonly Readonly<{ label: string; value: string }>[];
+}
+
+export interface DashboardTimelineItem {
+  readonly id: string;
+  readonly title: string;
+  readonly categoryLabel: string;
+  readonly dateLabel: string;
+  readonly dateTime: string;
+  readonly occurrenceKind: "instant" | "window";
+  readonly occurrenceLabel: string;
+  readonly sourceVersion: string;
 }
 
 export function sourceFromDailyReading(
   reading: DailyReadingPayload,
+  timeline: TimelineReadModel,
 ): DashboardReadingSource {
   return {
     effectiveAt: reading.effectiveAt,
@@ -107,6 +126,7 @@ export function sourceFromDailyReading(
     interpretations: reading.interpretations.items,
     categories: reading.categories,
     strongestSignals: reading.strongestSignals,
+    timeline,
     versions: {
       reading: reading.metadata.readingVersion,
       context: reading.metadata.contextVersion,
@@ -136,6 +156,20 @@ export function toDashboardReadModel(
       },
     ];
   });
+  const effectiveAt = Date.parse(source.effectiveAt);
+  const upcoming = source.timeline.items
+    .filter((item) => Date.parse(item.dateTime) >= effectiveAt)
+    .map((item) => ({
+      id: item.id,
+      title: item.title,
+      categoryLabel: item.categoryLabel,
+      dateLabel: item.dateLabel,
+      dateTime: item.dateTime,
+      occurrenceKind: item.occurrenceKind,
+      occurrenceLabel: item.occurrenceLabel,
+      sourceVersion: item.sourceVersion,
+    }));
+  const nextEvent = upcoming[0];
   return deepFreeze({
     version: DASHBOARD_READ_MODEL_VERSION,
     eyebrow: "Personal daily context",
@@ -171,6 +205,8 @@ export function toDashboardReadModel(
       sourceFactId: signal.sourceFactId,
     })),
     reflections: reflections.slice(0, 4),
+    timelinePreview: upcoming.slice(1, 4),
+    ...(nextEvent ? { nextEvent } : {}),
     trace: [
       { label: "Reading", value: source.versions.reading },
       { label: "Context", value: source.versions.context },
@@ -179,12 +215,16 @@ export function toDashboardReadModel(
       { label: "Renderer", value: source.versions.renderer },
       { label: "Score model", value: source.versions.scoreModel },
       { label: "Score formula", value: source.versions.scoreFormula },
+      { label: "Timeline read model", value: source.timeline.version },
+      { label: "Timeline facts", value: source.timeline.sourceVersion },
     ],
   });
 }
 
 function validateSource(source: DashboardReadingSource): void {
+  const effectiveAt = Date.parse(source.effectiveAt);
   if (
+    !Number.isFinite(effectiveAt) ||
     !source.localDate.trim() ||
     !source.timezone.trim() ||
     !Number.isFinite(source.moon.illuminatedFraction) ||
@@ -203,6 +243,22 @@ function validateSource(source: DashboardReadingSource): void {
   for (const version of Object.values(source.versions)) {
     if (!version.trim())
       throw new RangeError("Dashboard versions are required");
+  }
+  if (source.timeline.version !== TIMELINE_READ_MODEL_VERSION)
+    throw new RangeError("Dashboard timeline version is unsupported");
+  const ids = source.timeline.items.map((item) => item.id);
+  if (new Set(ids).size !== ids.length)
+    throw new RangeError("Dashboard timeline IDs must be unique");
+  for (const [index, item] of source.timeline.items.entries()) {
+    if (
+      !item.id.trim() ||
+      !item.sourceVersion.trim() ||
+      !Number.isFinite(Date.parse(item.dateTime)) ||
+      (index > 0 &&
+        Date.parse(source.timeline.items[index - 1]!.dateTime) >
+          Date.parse(item.dateTime))
+    )
+      throw new RangeError("Dashboard timeline facts are invalid");
   }
 }
 

@@ -978,6 +978,52 @@ tbody tr:target {
 .numerology-trace {
   margin-top: 1rem;
 }
+.dashboard-timeline .section-heading a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--mint);
+}
+.next-event-card {
+  margin-bottom: 0.8rem;
+  padding: 1.25rem;
+  border: 1px solid #7a663b;
+  border-radius: 1rem;
+  background: linear-gradient(
+    135deg,
+    rgb(228 184 102 / 9%),
+    var(--surface-raised)
+  );
+}
+.next-event-card time,
+.next-event-card p:not(.event-category) {
+  color: var(--muted);
+}
+.next-event-card code,
+.timeline-preview-list code {
+  overflow-wrap: anywhere;
+  color: var(--mint);
+}
+.timeline-preview-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.timeline-preview-list li {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: var(--surface-raised);
+}
+.timeline-preview-list time,
+.timeline-preview-list p {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
 
 @media (max-width: 850px) {
   .site-header {
@@ -1080,6 +1126,9 @@ tbody tr:target {
     padding-top: 2.5rem;
   }
   .number-card-grid {
+    grid-template-columns: 1fr;
+  }
+  .timeline-preview-list {
     grid-template-columns: 1fr;
   }
   .numerology-panel .section-heading {
