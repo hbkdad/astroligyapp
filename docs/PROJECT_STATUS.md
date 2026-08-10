@@ -4,7 +4,7 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 20 complete; the provider-neutral transit event-window search foundation is implemented and verified.
+Status: Goal 21 complete; the provider-neutral lunar event-search foundation is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -92,6 +92,17 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 21: define bounded, versioned searches for Moon sign ingress and the
+      four primary Moon-minus-Sun longitude phase anchors.
+- [x] Refine only increasing crossings through validated provider observations,
+      require samples on both sides, and retain every evaluated instant,
+      longitude, provider calculation timestamp, and search/provider version.
+- [x] Cover all twelve exact 30-degree ingress boundaries, zodiac wrap, all four
+      primary phase anchors, direction, ambiguity, provenance, provider failure,
+      trace consistency, and declared-precision exhaustion.
+- [x] Match USNO Astronomical Applications API v4.0.1 January 2000 New, First
+      Quarter, Full, and Last Quarter times through Astronomy Engine 2.1.19
+      within the fixed 10-minute acceptance tolerance.
 - [x] Goal 20: define a bounded, versioned personal transit-event search over
       the existing provider, natal-target, and major-aspect boundaries.
 - [x] Require one complete inactive-active-exact-active-inactive bracket and
@@ -215,20 +226,20 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 21 — build the provider-neutral lunar event-search foundation.
+Goal 22 — build the provider-neutral station and retrograde event-search foundation.
 
 Deliverables:
 
-1. Define versioned searches for Moon sign ingress and the primary lunar phase
-   events from validated Sun/Moon longitude geometry over explicit UTC ranges.
-2. Refine event instants to declared time tolerances through the existing
-   `EphemerisProvider`; retain every evaluation and provider/search version.
-3. Validate zodiac wrap, all 30-degree ingress boundaries, New/First Quarter/
-   Full/Last Quarter anchors, incomplete brackets, ambiguity, and provider
-   failure. Do not derive event times from mean-cycle Moon age.
-4. Apply `lunar-validation` and `astro-validation`. Add no rise/set,
-   interpretation, scoring, UI, persistence, entitlement, notification, or
-   production provider behavior.
+1. Define versioned searches for station-retrograde and station-direct events
+   from provider-supplied longitudinal speed over explicit bounded UTC ranges.
+2. Require a signed speed crossing in the requested direction, refine the
+   station to a declared time tolerance, and retain all provider/search traces.
+3. Fail explicitly for missing speed capability, incomplete or multiple
+   crossings, trace changes, provider failures, and insufficient refinement;
+   never infer station times from sampled longitude direction alone.
+4. Apply `astro-validation` with hand-checkable motion and independently sourced
+   Mercury event fixtures. Add no interpretation, timeline UI, persistence,
+   entitlement, notification, or production provider behavior.
 
 ## Phase queue
 
@@ -264,9 +275,10 @@ Deliverables:
 
 - Production-host deployment fit and performance for the selected composed
   ephemeris provider remain release gates.
-- Next New/Full Moon times, rise/set, altitude/azimuth, and personal lunar event
-  windows remain deferred until validated time-series and location-aware
-  provider capabilities exist. Mean-cycle age must not be used as an ephemeris.
+- Rise/set, altitude/azimuth, and personal lunar aspect windows remain deferred
+  until validated location-aware capabilities exist. Primary phase and Moon-sign
+  ingress searches now use positional provider evaluations; mean-cycle age is
+  not used as an event ephemeris. Timeline aggregation remains pending.
 - Authentication, managed database, payment, AI, email, monitoring, and
   deployment providers remain intentionally undecided.
 - Authentication-provider selection still requires sign-in methods, MFA or
@@ -284,6 +296,12 @@ Deliverables:
 
 | Date       | Evidence                                           | Result                                                                                        |
 | ---------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 2026-08-09 | Lunar-event focused/cross-layer suite              | 109/109 ingress, phase, lunar, zodiac, provider, trace, source, and failure tests passed      |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 314 tests, and production build                   |
+| 2026-08-09 | `npm run test:coverage`                            | 95.77% statements, 92.09% branches, 100% functions, and 96.48% lines                          |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | `lunar-validation` hand-boundary gate              | 12 ingresses and 4 primary phase anchors refined within 1 second; wrap/direction passed       |
+| 2026-08-09 | USNO API v4.0.1 phase acceptance                   | 4/4 January 2000 events through Astronomy Engine were within fixed 600-second tolerance       |
 | 2026-08-09 | Transit-event focused/cross-layer suite            | 54/54 search, transit, natal, zodiac, aspect, source, trace, and failure tests passed         |
 | 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 284 tests, and production build                   |
 | 2026-08-09 | `npm run test:coverage`                            | 95.79% statements, 91.83% branches, 100% functions, and 96.34% lines                          |
@@ -655,6 +673,39 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 21 lunar event-search record
+
+- Commands: lunar-event, lunar-phase, personal-lunar, zodiac/aspect, and
+  ephemeris-conformance focused suites; `npm run check`;
+  `npm run test:coverage`; and `npm audit --omit=dev`.
+- Contract: lunar search version 1.0.0 accepts either a canonical target Moon
+  sign or New/First Quarter/Full/Third Quarter phase, a bounded UTC interval,
+  coordinate provenance, integer sample/tolerance values, and bounded refinement
+  iterations. Intervals are capped at 62 days, daily-or-finer samples, and 2,048
+  initial observations.
+- Geometry: sign ingress targets exact multiples of 30 degrees. Primary phases
+  target normalized provider-supplied Moon-minus-Sun ecliptic longitude at 0,
+  90, 180, and 270 degrees. Only increasing signed crossings qualify. Exact
+  endpoint, skipped-sign, reverse, missing, or multiple crossings do not produce
+  an event.
+- Refinement/trace: bisection performs provider calls until the requested time
+  tolerance is met and returns the first observed point on or after the crossing.
+  Output retains derived phase/sign geometry, angular error, every evaluated
+  instant and longitude, provider calculation times/versions, and search policy;
+  it is deeply frozen. Mean-cycle Moon age is never used to find an event.
+- Hand validation: all 12 zodiac ingresses and all four primary phase anchors
+  cross exact wrap-aware boundaries and refine within one second. Tests also
+  cover topocentric provenance, reverse/endpoint crossings, malformed requests,
+  ambiguity, provider failure, provider trace changes, and refinement exhaustion.
+- Independent source: USNO defines primary phases at apparent Moon-minus-Sun
+  longitude 0/90/180/270 degrees. Its Astronomical Applications API v4.0.1
+  January 2000 UT results are checked in with request/definition URLs and a fixed
+  600-second tolerance. Astronomy Engine 2.1.19 matched all four events. Source
+  retrieved 2026-08-09.
+- Scope: no mean-age timing, rise/set, altitude, personal lunar aspect window,
+  station, interpretation, score, timeline composition/UI, persistence,
+  entitlement, notification, production provider call, or deployment was added.
 
 ## Goal 20 transit event-window search record
 

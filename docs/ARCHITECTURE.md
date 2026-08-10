@@ -89,6 +89,12 @@ tests/
 - Lunar phase primitives: Moon-minus-Sun ecliptic longitude geometry, explicit
   eight-sector labels, approximate illuminated fraction, mean-cycle age, and
   Moon zodiac position without calendar-based event prediction.
+- `LunarEventSearch`: provider-neutral application service for one requested
+  Moon-sign ingress or primary phase in a bounded UTC interval. It searches
+  validated Moon or Sun/Moon positions for one increasing signed crossing and
+  refines only through further provider observations. Mean-cycle age never
+  supplies an event time; incomplete, reverse, ambiguous, inconsistent, or
+  under-refined searches fail explicitly with every evaluation retained.
 - `NatalChartEngine`: application-level deterministic composition of all ten
   validated positions, Whole Sign angles/cusps, zodiac placements,
   planet-in-house assignments, and unique major aspects. The result retains the

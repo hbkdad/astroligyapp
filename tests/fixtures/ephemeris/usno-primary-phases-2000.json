@@ -1,0 +1,32 @@
+{
+  "source": {
+    "authority": "U.S. Naval Observatory Astronomical Applications Department",
+    "dataset": "Astronomical Applications API - Phases of the Moon",
+    "apiVersion": "4.0.1",
+    "requestUrl": "https://aa.usno.navy.mil/api/moon/phases/date?date=2000-01-01&nump=4",
+    "definitionUrl": "https://aa.usno.navy.mil/faq/moon_phases",
+    "retrievedAt": "2026-08-09",
+    "timeScale": "UT",
+    "comparisonEncoding": "USNO whole-minute UT values are encoded with an ISO Z suffix for this fixed 600-second acceptance comparison.",
+    "definition": "Primary phases occur when apparent Moon longitude minus apparent Sun longitude is 0, 90, 180, or 270 degrees."
+  },
+  "toleranceSeconds": 600,
+  "events": [
+    {
+      "phase": "new-moon",
+      "expectedInstant": "2000-01-06T18:14:00Z"
+    },
+    {
+      "phase": "first-quarter",
+      "expectedInstant": "2000-01-14T13:34:00Z"
+    },
+    {
+      "phase": "full-moon",
+      "expectedInstant": "2000-01-21T04:40:00Z"
+    },
+    {
+      "phase": "third-quarter",
+      "expectedInstant": "2000-01-28T07:57:00Z"
+    }
+  ]
+}
