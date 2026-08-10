@@ -125,6 +125,12 @@ tests/
   unsafe markup and malformed values, and emits fact and tradition sections
   with complete source/library/locale/renderer provenance. Unsupported
   templates return a fixed non-AI fallback record instead of invented content.
+- `calculatePersonalCategoryScores`: application-level matching of validated
+  fact projections against a separately versioned product configuration. Every
+  bounded 0-100 heuristic retains its baseline, raw contribution sum,
+  confidence formula, source fact IDs, and complete contributing-rule trace.
+  Model changes cannot affect calculation facts or interpretation prose. See
+  `docs/CATEGORY_MODEL.md`.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
 - Optional AI explanation remains deferred behind future validated input/output

@@ -4,7 +4,7 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 15 complete; deterministic claim-safe template rendering is implemented and verified.
+Status: Goal 16 complete; explainable deterministic category heuristics are implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -92,6 +92,14 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 16: add a separately versioned, deeply frozen product configuration
+      for ten initial interpretive categories and deterministic fact selectors.
+- [x] Derive bounded 0-100 scores while retaining configured baseline, raw
+      total, confidence formula, source fact IDs, and every contributing rule.
+- [x] Validate categories, rule IDs, template/selector schemas, bounds, safe
+      rationales, and complete known-fact coverage before evaluation.
+- [x] Label model and results as non-scientific product heuristics and keep AI,
+      persistence, entitlements, notifications, delivery, and UI out of scope.
 - [x] Goal 15: render validated projection/template pairs into visibly separate
       factual and tradition-framed plain-text sections without recalculating or
       inventing facts.
@@ -169,19 +177,18 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 16 — build the explainable deterministic category-engine foundation.
+Goal 17 — compose the versioned deterministic daily-reading payload.
 
 Deliverables:
 
-1. Define a versioned, product-owned category and contribution configuration
-   separate from astronomical/numerological calculations and interpretation
-   prose.
-2. Derive bounded 0-100 heuristic scores with confidence, source fact IDs, and
-   reconstructable contributing factors; expose no unexplained number.
-3. Fail closed on duplicate categories/rules, invalid weights or bounds,
-   unknown fact references, and non-finite arithmetic.
-4. Label every result as an interpretive product heuristic; do not add AI,
-   persistence, entitlements, notifications, or UI yet.
+1. Compose the immutable personal context, deterministic rendered sections, and
+   explainable category scores into one versioned application payload.
+2. Verify effective time, source fact coverage, and every context, projection,
+   library, renderer, score-model, and formula version across components.
+3. Select strongest signals only through a documented deterministic ordering
+   over existing category contributions; preserve their complete traces.
+4. Fail closed on mismatches or duplicates and add no AI, persistence,
+   entitlements, notifications, delivery, or UI yet.
 
 ## Phase queue
 
@@ -254,6 +261,10 @@ Deliverables:
 | 2026-08-09 | `npm run check`                                    | Passed formatting, ESLint, strict TypeScript, 2 unit/contract tests, and production build     |
 | 2026-08-09 | `npm run test:coverage`                            | Passed; scoped baseline application/domain coverage remains 100%                              |
 | 2026-08-09 | `npm audit --audit-level=high`                     | No high or critical findings; four accepted moderate Drizzle Kit development-tool findings    |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | Category-engine focused suite                      | 13/13 formula, trace, bounds, schema, immutability, and failure tests passed                  |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 240 tests, and production build                   |
+| 2026-08-09 | `npm run test:coverage`                            | 95.92% statements, 92.18% branches, 100% functions, and 95.75% lines                          |
 | 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
 | 2026-08-09 | Interpretation renderer focused suite              | 16/16 formatting, provenance, fallback, and fail-closed tests passed                          |
 | 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 227 tests, and production build                   |
@@ -536,6 +547,32 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   deterministic interpretation is available for this item.” with provenance.
   No AI adapter, category score, persistence, entitlement, notification,
   delivery, or UI behavior was added.
+
+## Goal 16 category-engine record
+
+- Commands: `npx vitest run tests/category-scores.test.ts`, `npm run check`,
+  `npm run test:coverage`, and `npm audit --omit=dev`.
+- Model boundary: the deeply frozen `personal-category-baseline` 1.0.0
+  configuration owns its categories, selectors, impacts, confidence values,
+  and rationales under `src/config/`; astronomy, numerology, context, and prose
+  modules do not import it.
+- Formula: each category starts at the configured baseline, retains the exact
+  sum of matched rule impacts and unbounded raw score, then exposes
+  `clamp(round(rawScore), 0, 100)`. Confidence is the absolute-impact-weighted
+  mean of contributing rule confidence, or zero without factors. Formula 1.0.0
+  and both formulas accompany output.
+- Traceability: each result contains the product-heuristic label, configured
+  baseline, contribution total, raw and displayed scores, confidence, unique
+  source fact IDs, and every matched rule ID, projection key, impact,
+  confidence, and rationale.
+- Failure policy: invalid or duplicate categories/rules, unknown categories,
+  template families or selector parameters, invalid/non-finite bounds, empty
+  selectors, unsafe text, missing/unknown/duplicate fact projections, and
+  non-finite arithmetic fail closed.
+- Scope: the model is explicitly an interpretive product heuristic, not a
+  scientific measurement. It changes no source fact or rendered prose and adds
+  no AI, persistence, entitlement, notification, delivery, or UI behavior. See
+  `docs/CATEGORY_MODEL.md`.
 
 ## Goal 2 migration and security review
 
