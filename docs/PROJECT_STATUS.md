@@ -4,7 +4,7 @@ Last updated: 2026-08-10
 
 ## Current position
 
-Status: Goal 28 complete; the privacy-safe public daily-reading fact foundation is implemented and verified.
+Status: Goal 29 complete; the no-index public daily-reading presentation foundation is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,14 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 29: map only the complete Goal 28 aggregate into a versioned,
+      immutable public horoscope read model with no provider or calculation in React.
+- [x] Statically generate twelve allowlisted `/horoscope/[sign]` local-demo paths
+      with clear fact/reflection separation, source trace, claims disclaimer, and
+      deliberate loading, unavailable, error, empty, and unsupported states.
+- [x] Verify every route, invalid-sign 404/noindex behavior, keyboard skip flow,
+      44px sign controls, desktop/mobile/200% text, reduced motion, local-only
+      resources, and clean valid-route browser consoles.
 - [x] Goal 28: compose one canonical UTC-noon geocentric tropical sky for a
       strict plain date into twelve immutable, ordered public Sun-sign models.
 - [x] Use explicit tropical sign midpoints, shared lunar geometry, stable
@@ -288,20 +296,22 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 29 — build the public daily-reading presentation foundation.
+Goal 30 — build the current public daily-reading loader and cache contract.
 
 Deliverables:
 
-1. Map only the Goal 28 aggregate into a versioned, immutable public read model;
-   React must receive no provider, calculation engine, library, or private input.
-2. Add a no-index local-demo horoscope presentation for all twelve signs with a
-   direct sign route, clearly separated calculated facts and tradition-framed
-   reflections, canonical-date/sampling disclosure, and complete source trace.
-3. Verify invalid signs, all twelve route variants, fact coverage/order, loading,
-   unavailable, error, and ready states, keyboard flow, 390px/200% text, reduced
-   motion, semantic structure, claims language, and zero browser console errors.
-4. Add no persistence, account/profile input, analytics, AI, entitlement,
-   notification, production provider call, SEO indexing/schema, or deployment.
+1. Define a server-only, provider-neutral loader that derives one strict UTC plain
+   date from an injected clock, composes Goal 28 once, and returns Goal 29 models
+   without accepting browser-supplied dates, observers, accounts, or profiles.
+2. Add an abstract bounded daily cache/coalescing contract whose key includes the
+   date and every calculation/content/provider configuration version; represent
+   expiry, date rollover, provider failure, and invalid cached data explicitly.
+3. Verify concurrency, cache hit/miss, all twelve sign projections, midnight UTC
+   rollover, version-key isolation, malformed entries, generic public errors, and
+   absence of private fields or routine sensitive logging.
+4. Do not switch the routes from the fixed historical demo, enable indexing or
+   schema, select managed storage, add analytics/AI/entitlements/notifications,
+   call a production service, or deploy yet.
 
 ## Phase queue
 
@@ -742,6 +752,49 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 29 public daily-reading presentation record
+
+- Commands: focused public aggregate, renderer, read-model, route, state, and
+  corruption suites; `npm run check`; `npm run test:coverage`;
+  `npm audit --omit=dev`; `git diff --check`; and Playwright CLI inspection of
+  the optimized production build through the `ui-quality` procedure.
+- Boundary: public horoscope read model 1.0.0 accepts only public aggregate 1.0.0
+  and one canonical tropical sign. It rechecks strict date/UTC-noon identity,
+  ten-body geocentric tropical sky trace, all twelve ordered sign models,
+  midpoint targets, shared lunar geometry, transit identity/order, aspect
+  definitions, complete rendered fact coverage, and matching provenance before
+  deeply freezing display data.
+- Content/UI: every source fact is one ordered card with explicit “Calculated
+  fact” and “Tradition-framed reflection” regions or the fixed unsupported
+  fallback. The page declares the historical January 1, 2000 local demo,
+  non-personal midpoint convention, noon UTC sample, no-index state, complete
+  versions, and non-prediction/advice disclaimer. Loading, unavailable, error,
+  empty, unsupported, and ready states are deliberate.
+- Routing/security: `generateStaticParams` allowlists exactly twelve sign paths;
+  `dynamicParams = false` returns a real 404 plus noindex for unknown signs. All
+  valid paths are static, read-only, and noindex/nofollow/noarchive. There are no
+  cookies, sessions, user dates, birth/profile/account/observer inputs, dynamic
+  provider calls, persistence, logs, analytics, mutations, secrets, or external
+  resources. No critical or high finding remains; a future current-date loader
+  still requires bounded caching/coalescing and generic failure handling.
+- Browser/UI quality: all twelve paths returned 200 with the matching H1/current
+  sign and clean consoles. The skip link focused `main`; every sign control was
+  44px. Desktop 1440x1000, mobile 390x844, and 200% root text had no horizontal
+  overflow. Reduced motion produced auto scrolling and near-zero transitions.
+  Visual inspection confirmed readable hierarchy, clear layer separation, and
+  wrapped source IDs. Invalid-sign navigation returned 404 and noindex.
+- Browser corrections: the first pass exposed ISO dates humanized as spaces and
+  eleven eager sign-page prefetches. Validated plain-date parameters now retain
+  `YYYY-MM-DD`; sign and duplicate home-link prefetches are disabled. The final
+  initial network has no alternate-sign page request.
+- Evidence: 28 files and 414 tests passed; coverage was 93.99% statements,
+  90.94% branches, 99.58% functions, and 94.72% lines. The optimized build
+  prerendered all twelve sign paths, and the production dependency audit found
+  zero vulnerabilities.
+- Scope: routes still use one local fixed historical calculation. No current or
+  production provider call, indexing/schema/canonical, persistence, analytics,
+  AI, entitlement, notification, managed service, or deployment was added.
 
 ## Goal 28 public daily-reading fact record
 

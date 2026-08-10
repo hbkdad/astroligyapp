@@ -196,7 +196,10 @@ function formatParameter(
     throw new RangeError(`Parameter ${key} has an unsupported value`);
   }
   validatePlainText(value, `Parameter ${key}`);
-  if (key.toLowerCase().endsWith("version")) return value;
+  const normalizedKey = key.toLowerCase();
+  if (normalizedKey.endsWith("version")) return value;
+  if (normalizedKey.endsWith("date") && /^\d{4}-\d{2}-\d{2}$/.test(value))
+    return value;
   return value
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
     .split(/[._\-/ ]+/)

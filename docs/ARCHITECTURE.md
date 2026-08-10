@@ -198,6 +198,14 @@ tests/
   normalized tokens, operations, master-number flags, local dates/timezones, and
   stable IDs in immutable display records; React performs no reduction and adds
   no traditional meaning.
+- Public horoscope presentation: `toPublicHoroscopeReadModel` accepts only the
+  complete Goal 28 aggregate plus one canonical sign, rechecks date/sample,
+  all-sign order and identity, shared lunar geometry, transit order, provider and
+  content versions, exact fact coverage, and claims-safe renderer provenance.
+  Twelve allowlisted `/horoscope/[sign]` paths are statically generated from one
+  fixed historical local demo and marked no-index. React receives only the
+  immutable read model and performs no calculation, interpretation, scoring,
+  personalization, provider access, or runtime data loading.
 - Natal-chart presentation: `toNatalChartReadModel` accepts only a validated
   `NatalChart`, rechecks normalized facts and trace completeness, and maps them
   into a versioned immutable SVG/table model. `pointAtLongitude` owns only the

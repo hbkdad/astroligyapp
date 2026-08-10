@@ -93,6 +93,7 @@ describe("public daily reading aggregate", () => {
       dayTimezone: "UTC",
       metadata: {
         projectionVersion: PUBLIC_DAILY_PROJECTION_VERSION,
+        lunarEngineVersion: "1.0.0",
         signTargetConvention: PUBLIC_SIGN_TARGET_CONVENTION,
         skySampleConvention: PUBLIC_DAILY_SKY_SAMPLE_CONVENTION,
         library: {

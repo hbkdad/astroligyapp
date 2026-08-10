@@ -21,7 +21,11 @@ import type {
   InterpretationProjection,
 } from "@/domain/interpretation/contracts";
 import { PUBLIC_INTERPRETATION_LIBRARY } from "@/domain/interpretation/public-library";
-import { deriveLunarPhase, type LunarPhaseResult } from "@/domain/lunar/phase";
+import {
+  LUNAR_PHASE_ENGINE_VERSION,
+  deriveLunarPhase,
+  type LunarPhaseResult,
+} from "@/domain/lunar/phase";
 import {
   renderInterpretations,
   type RenderedInterpretationOutput,
@@ -70,6 +74,7 @@ export interface PublicDailyReadings {
   readonly readings: readonly PublicSunSignReading[];
   readonly metadata: Readonly<{
     projectionVersion: string;
+    lunarEngineVersion: string;
     signTargetConvention: typeof PUBLIC_SIGN_TARGET_CONVENTION;
     skySampleConvention: typeof PUBLIC_DAILY_SKY_SAMPLE_CONVENTION;
     aspectPolicy: Readonly<{
@@ -139,6 +144,7 @@ export class PublicDailyReadingEngine {
         readings,
         metadata: {
           projectionVersion: PUBLIC_DAILY_PROJECTION_VERSION,
+          lunarEngineVersion: LUNAR_PHASE_ENGINE_VERSION,
           signTargetConvention: PUBLIC_SIGN_TARGET_CONVENTION,
           skySampleConvention: PUBLIC_DAILY_SKY_SAMPLE_CONVENTION,
           aspectPolicy: {
