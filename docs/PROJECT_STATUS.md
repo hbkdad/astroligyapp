@@ -4,7 +4,7 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 7 complete; ephemeris conformance and provider-selection gates verified.
+Status: Goal 8 complete; independent JPL fixtures and a positions-only candidate spike verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -78,6 +78,14 @@ selected.
       for license, runtime, operations, houses, and cost fit.
 - [x] Accept ADR 0005 to defer selection behind concrete accuracy, house,
       deployment, operating-cost, and licensing approval gates.
+- [x] Goal 8: install exact Astronomy Engine 2.1.19 as an unselected evaluation
+      dependency and isolate it behind `EphemerisProvider`.
+- [x] Capture 40 topocentric body/case comparisons from JPL Horizons API 1.3
+      with complete request URLs, raw rows, versions, coordinates, and UTC inputs.
+- [x] Pass every declared longitude, latitude, and longitudinal-speed tolerance;
+      omit optional distance after it failed the independent distance budget.
+- [x] Prove explicit sidereal and house capability failures, topocentric observer
+      handling, package metadata, and shared conformance behavior.
 
 ## In progress
 
@@ -85,20 +93,21 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 8 — time-boxed positions adapter evaluation and independent fixture capture.
+Goal 9 — complete ephemeris capability and house-system decision.
 
 Deliverables:
 
-1. Capture reproducible planetary expected values and raw provenance from JPL
-   Horizons for the versioned reference cases.
-2. Implement an isolated Astronomy Engine positions adapter evaluation without
-   selecting it as the production provider or leaking its types into the domain.
-3. Run the shared conformance suite and circular-difference accuracy checks at
-   the declared tolerances; record latency, package size, and failure behavior.
-4. Confirm whether apparent tropical ecliptic-of-date and topocentric output can
-   be mapped without hidden convention changes.
-5. Stop or reject the candidate explicitly if it cannot meet the normalized
-   position contract. House selection remains a separate unresolved gate.
+1. Define the exact tropical/sidereal product requirement and supported house
+   systems, including polar-location failure behavior.
+2. Compare a separately validated house implementation or full-provider
+   candidate against sourced cusp/angle fixtures; do not use JPL as a house
+   oracle.
+3. Decide whether a composed positions-plus-houses architecture is acceptable or
+   whether one full provider is required.
+4. Resolve the Swiss commercial-versus-AGPL approval only if Swiss remains the
+   preferred complete candidate.
+5. Record the selected capability boundary and fallback policy before natal or
+   transit persistence begins.
 
 ## Phase queue
 
@@ -171,6 +180,11 @@ Deliverables:
 | 2026-08-09 | `npm run test:coverage`                            | Passed; scoped baseline application/domain coverage remains 100%                              |
 | 2026-08-09 | `npm audit --audit-level=high`                     | No high or critical findings; four accepted moderate Drizzle Kit development-tool findings    |
 | 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | JPL Horizons API 1.3 fixture capture               | 40 topocentric body/case results stored with request URLs and raw rows                        |
+| 2026-08-09 | Astronomy Engine 2.1.19 focused suite              | 14/14 conformance, JPL tolerance, capability, and failure tests passed                        |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 126 tests, and production build                   |
+| 2026-08-09 | `npm run test:coverage`                            | 93.04% statements, 88.09% branches, 100% functions, and 92.88% lines                          |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
 | 2026-08-09 | `git commit` / `git push origin main`              | Foundation checkpoint `d224cc4` published to `origin/main`                                    |
 | 2026-08-09 | NASA Science and USNO lunar documentation          | Eight-phase sequence, longitude anchors, illumination meaning, and 29.53059-day mean sourced  |
 | 2026-08-09 | `npx vitest run tests/lunar-phase.test.ts`         | 23/23 focused lunar geometry tests passed                                                     |
@@ -205,11 +219,29 @@ Deliverables:
   fallback cases. The fixture provider proves the harness only; its synthetic
   values are not astronomical evidence.
 - Reference inputs: four versioned UTC/location cases cover J2000, modern,
-  date-boundary, southern-hemisphere, and high-latitude behavior. Numerical
-  expected values remain explicitly pending reproducible JPL Horizons capture.
+  date-boundary, southern-hemisphere, and high-latitude behavior. Goal 8 has now
+  supplied their reproducible JPL Horizons expected values.
 - Decision: no provider or package was selected. ADR 0005 evaluates Astronomy
   Engine first for positions, keeps JPL Horizons as the independent reference,
   and retains Swiss Ephemeris behind explicit commercial-or-AGPL approval.
+
+## Goal 8 astro-validation record
+
+- Source: JPL Horizons API 1.3 (2025 June), quantities 20 and 31, UT instants,
+  topocentric `coord@399` geodetic observers, IAU76/80 ecliptic-of-date output,
+  and ten explicit target IDs. Every checked-in value retains its request URL
+  and both one-minute raw source rows.
+- Candidate: exact MIT-licensed `astronomy-engine` 2.1.19, 1.84 MB unpacked,
+  isolated under infrastructure. No package type enters the domain contract and
+  the application does not yet instantiate this provider in a production path.
+- Accuracy: 40/40 body/case comparisons met `0.02°` longitude/latitude and
+  `0.001°/day` one-minute forward speed budgets, including circular wraparound.
+  Candidate distance exceeded the independent `0.000001 AU` budget in some
+  cases, so the optional field is omitted rather than the tolerance being
+  weakened.
+- Capability: tropical geocentric/topocentric positions pass. Sidereal output
+  and house cusps fail explicitly as unsupported. The package is not selected
+  as the complete provider; Goal 9 must resolve house and sidereal requirements.
 
 ## Goal 2 migration and security review
 

@@ -53,3 +53,15 @@ Natal, transit, event-time, rise/set, and location-aware lunar work remains
 behind the provider boundary. The application may continue with deterministic
 provider-independent work, but it must not present synthetic conformance data as
 astronomical accuracy evidence.
+
+## Goal 8 evaluation outcome
+
+Astronomy Engine 2.1.19 is retained as an exact-version, unselected evaluation
+dependency. Its isolated adapter passes structural conformance and all 40 JPL
+longitude, latitude, and longitudinal-speed comparisons at the predeclared
+tolerances. It omits distance after that field failed the distance budget and
+explicitly rejects houses and sidereal output.
+
+This evidence is sufficient to continue evaluating it for tropical positions,
+but not to select it as the complete production provider. The original house,
+sidereal, operating-model, and final provider approval blockers remain.

@@ -3,7 +3,7 @@
   "reference": {
     "name": "JPL Horizons API",
     "url": "https://ssd-api.jpl.nasa.gov/doc/horizons.html",
-    "retrievalStatus": "expected-values-pending-candidate-spike"
+    "retrievalStatus": "captured-2026-08-10"
   },
   "conventions": {
     "timeScale": "utc",

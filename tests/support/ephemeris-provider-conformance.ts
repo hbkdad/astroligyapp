@@ -35,6 +35,7 @@ export const CONFORMANCE_HOUSE_REQUEST: HouseRequest = {
 export function describeEphemerisProviderConformance(
   name: string,
   createProvider: () => EphemerisProvider,
+  options: { houses?: "required" | "unsupported" } = {},
 ): void {
   describe(`${name} EphemerisProvider conformance`, () => {
     it("returns every requested body exactly once with normalized metadata", async () => {
@@ -55,11 +56,18 @@ export function describeEphemerisProviderConformance(
       });
     });
 
-    it("returns twelve normalized house cusps and principal angles", async () => {
+    it(`${options.houses === "unsupported" ? "explicitly rejects" : "returns"} house cusps`, async () => {
       const result = await getValidatedHouseCusps(
         createProvider(),
         CONFORMANCE_HOUSE_REQUEST,
       );
+      if (options.houses === "unsupported") {
+        expect(result).toMatchObject({
+          ok: false,
+          error: { code: "unsupported-capability", retryable: false },
+        });
+        return;
+      }
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       expect(result.value.cuspsLongitudeDegrees).toHaveLength(12);

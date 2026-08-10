@@ -1,0 +1,601 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "name": "JPL Horizons API",
+    "apiVersion": "1.3 (2025 June)",
+    "documentation": "https://ssd-api.jpl.nasa.gov/doc/horizons.html",
+    "retrievedAt": "2026-08-10T00:33:39.918Z",
+    "quantities": [
+      "20 apparent range and range-rate",
+      "31 observer ecliptic longitude and latitude"
+    ],
+    "timeScale": "UT",
+    "coordinateDefinition": "observer-centered IAU76/80 ecliptic-of-date"
+  },
+  "cases": [
+    {
+      "id": "j2000-greenwich",
+      "instant": "2000-01-01T12:00:00Z",
+      "bodies": {
+        "sun": {
+          "targetId": "10",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%2710%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%270%2C51.4779%2C0.046%27&START_TIME=%272000-01-01+12%3A00%3A00%27&STOP_TIME=%272000-01-01+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2000-Jan-01 12:00,*,m, 0.98331613222541, -0.0166654,  280.3688010, -0.0021473,",
+            "2000-Jan-01 12:01,*,m, 0.98331612577533, -0.0154985,  280.3695022, -0.0021469,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 280.368801,
+            "eclipticLatitudeDegrees": -0.0021473,
+            "distanceAu": 0.98331613222541,
+            "speedLongitudeDegreesPerDay": 1.0097279999718012
+          }
+        },
+        "moon": {
+          "targetId": "301",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27301%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%270%2C51.4779%2C0.046%27&START_TIME=%272000-01-01+12%3A00%3A00%27&STOP_TIME=%272000-01-01+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2000-Jan-01 12:00,*,m, 0.00268275080095,  0.2707089,  223.0845542,  4.3089281,",
+            "2000-Jan-01 12:01,*,m, 0.00268285948627,  0.2713062,  223.0915479,  4.3088363,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 223.0845542,
+            "eclipticLatitudeDegrees": 4.3089281,
+            "distanceAu": 0.00268275080095,
+            "speedLongitudeDegreesPerDay": 10.070927999931882
+          }
+        },
+        "mercury": {
+          "targetId": "199",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27199%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%270%2C51.4779%2C0.046%27&START_TIME=%272000-01-01+12%3A00%3A00%27&STOP_TIME=%272000-01-01+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2000-Jan-01 12:00,*,m, 1.41545922576557,  8.0333527,  271.8891438, -0.9964850,",
+            "2000-Jan-01 12:01,*,m, 1.41546244770539,  8.0338276,  271.8902199, -0.9965524,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 271.8891438,
+            "eclipticLatitudeDegrees": -0.996485,
+            "distanceAu": 1.41545922576557,
+            "speedLongitudeDegreesPerDay": 1.549583999967581
+          }
+        },
+        "venus": {
+          "targetId": "299",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27299%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%270%2C51.4779%2C0.046%27&START_TIME=%272000-01-01+12%3A00%3A00%27&STOP_TIME=%272000-01-01+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2000-Jan-01 12:00,*,m, 1.13757057551336, 11.4070749,  241.5653498,  2.0643081,",
+            "2000-Jan-01 12:01,*,m, 1.13757515032261, 11.4079479,  241.5661846,  2.0642888,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 241.5653498,
+            "eclipticLatitudeDegrees": 2.0643081,
+            "distanceAu": 1.13757057551336,
+            "speedLongitudeDegreesPerDay": 1.2021120000099472
+          }
+        },
+        "mars": {
+          "targetId": "499",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27499%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%270%2C51.4779%2C0.046%27&START_TIME=%272000-01-01+12%3A00%3A00%27&STOP_TIME=%272000-01-01+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2000-Jan-01 12:00,*,m, 1.84967880199591,  9.1720725,  327.9635332, -1.0690499,",
+            "2000-Jan-01 12:01,*,m, 1.84968248100528,  9.1728679,  327.9640697, -1.0690412,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 327.9635332,
+            "eclipticLatitudeDegrees": -1.0690499,
+            "distanceAu": 1.84967880199591,
+            "speedLongitudeDegreesPerDay": 0.7725599999321275
+          }
+        },
+        "jupiter": {
+          "targetId": "599",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27599%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%270%2C51.4779%2C0.046%27&START_TIME=%272000-01-01+12%3A00%3A00%27&STOP_TIME=%272000-01-01+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2000-Jan-01 12:00,*,m, 4.62117638297345, 26.5979350,   25.2532003, -1.2626962,",
+            "2000-Jan-01 12:01,*,m, 4.62118705079064, 26.5977325,   25.2532292, -1.2626926,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 25.2532003,
+            "eclipticLatitudeDegrees": -1.2626962,
+            "distanceAu": 4.62117638297345,
+            "speedLongitudeDegreesPerDay": 0.041615999944042414
+          }
+        },
+        "saturn": {
+          "targetId": "699",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27699%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%270%2C51.4779%2C0.046%27&START_TIME=%272000-01-01+12%3A00%3A00%27&STOP_TIME=%272000-01-01+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2000-Jan-01 12:00,*,m, 8.65280182236152, 24.6624274,   40.3956835, -2.4451248,",
+            "2000-Jan-01 12:01,*,m, 8.65281171381222, 24.6620248,   40.3956702, -2.4451215,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 40.3956835,
+            "eclipticLatitudeDegrees": -2.4451248,
+            "distanceAu": 8.65280182236152,
+            "speedLongitudeDegreesPerDay": -0.019151999968016753
+          }
+        },
+        "uranus": {
+          "targetId": "799",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27799%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%270%2C51.4779%2C0.046%27&START_TIME=%272000-01-01+12%3A00%3A00%27&STOP_TIME=%272000-01-01+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2000-Jan-01 12:00,*,m, 20.7271605332870, 16.9390493,  314.8092248, -0.6584410,",
+            "2000-Jan-01 12:01,*,m, 20.7271673272575, 16.9397353,  314.8092596, -0.6584409,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 314.8092248,
+            "eclipticLatitudeDegrees": -0.658441,
+            "distanceAu": 20.727160533287,
+            "speedLongitudeDegreesPerDay": 0.05011200013541384
+          }
+        },
+        "neptune": {
+          "targetId": "899",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27899%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%270%2C51.4779%2C0.046%27&START_TIME=%272000-01-01+12%3A00%3A00%27&STOP_TIME=%272000-01-01+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2000-Jan-01 12:00,*,m, 31.0244863708399, 11.4934749,  303.1930548,  0.2349231,",
+            "2000-Jan-01 12:01,*,m, 31.0244909807424, 11.4942370,  303.1930794,  0.2349229,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 303.1930548,
+            "eclipticLatitudeDegrees": 0.2349231,
+            "distanceAu": 31.0244863708399,
+            "speedLongitudeDegreesPerDay": 0.03542399994330481
+          }
+        },
+        "pluto": {
+          "targetId": "999",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27999%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%270%2C51.4779%2C0.046%27&START_TIME=%272000-01-01+12%3A00%3A00%27&STOP_TIME=%272000-01-01+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2000-Jan-01 12:00,*,m, 31.0643364844151,-13.6640514,  251.4547990, 10.8551905,",
+            "2000-Jan-01 12:01,*,m, 31.0643310042724,-13.6632596,  251.4548231, 10.8551914,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 251.454799,
+            "eclipticLatitudeDegrees": 10.8551905,
+            "distanceAu": 31.0643364844151,
+            "speedLongitudeDegreesPerDay": 0.034704000026977155
+          }
+        }
+      }
+    },
+    {
+      "id": "toronto-modern",
+      "instant": "2026-01-15T17:30:00Z",
+      "bodies": {
+        "sun": {
+          "targetId": "10",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%2710%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-79.3832%2C43.6532%2C0.076%27&START_TIME=%272026-01-15+17%3A30%3A00%27&STOP_TIME=%272026-01-15+17%3A31%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jan-15 17:30,*,m, 0.98370405102205,  0.1148357,  295.5754188, -0.0023406,",
+            "2026-Jan-15 17:31,*,m, 0.98370409735517,  0.1162088,  295.5761186, -0.0023392,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 295.5754188,
+            "eclipticLatitudeDegrees": -0.0023406,
+            "distanceAu": 0.98370405102205,
+            "speedLongitudeDegreesPerDay": 1.0077119998459239
+          }
+        },
+        "moon": {
+          "targetId": "301",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27301%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-79.3832%2C43.6532%2C0.076%27&START_TIME=%272026-01-15+17%3A30%3A00%27&STOP_TIME=%272026-01-15+17%3A31%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jan-15 17:30,*,m, 0.00269108660703,  0.1593351,  260.4630576, -5.8536016,",
+            "2026-Jan-15 17:31,*,m, 0.00269115069483,  0.1602626,  260.4691236, -5.8527578,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 260.4630576,
+            "eclipticLatitudeDegrees": -5.8536016,
+            "distanceAu": 0.00269108660703,
+            "speedLongitudeDegreesPerDay": 8.735039999883156
+          }
+        },
+        "mercury": {
+          "targetId": "199",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27199%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-79.3832%2C43.6532%2C0.076%27&START_TIME=%272026-01-15+17%3A30%3A00%27&STOP_TIME=%272026-01-15+17%3A31%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jan-15 17:30,*,m, 1.43022357772409, -0.7184296,  291.8139994, -1.8262761,",
+            "2026-Jan-15 17:31,*,m, 1.43022328971213, -0.7177751,  291.8151235, -1.8263131,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 291.8139994,
+            "eclipticLatitudeDegrees": -1.8262761,
+            "distanceAu": 1.43022357772409,
+            "speedLongitudeDegreesPerDay": 1.6187039999567787
+          }
+        },
+        "venus": {
+          "targetId": "299",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27299%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-79.3832%2C43.6532%2C0.076%27&START_TIME=%272026-01-15+17%3A30%3A00%27&STOP_TIME=%272026-01-15+17%3A31%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jan-15 17:30,*,m, 1.70985577901956, -0.5175208,  297.7350469, -1.0013949,",
+            "2026-Jan-15 17:31,*,m, 1.70985557171675, -0.5162084,  297.7359158, -1.0014143,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 297.7350469,
+            "eclipticLatitudeDegrees": -1.0013949,
+            "distanceAu": 1.70985577901956,
+            "speedLongitudeDegreesPerDay": 1.2512160000005679
+          }
+        },
+        "mars": {
+          "targetId": "499",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27499%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-79.3832%2C43.6532%2C0.076%27&START_TIME=%272026-01-15+17%3A30%3A00%27&STOP_TIME=%272026-01-15+17%3A31%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jan-15 17:30,*,m, 2.39729090900570, -1.7680767,  294.0455170, -0.9751615,",
+            "2026-Jan-15 17:31,*,m, 2.39729020013985, -1.7667380,  294.0460524, -0.9751644,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 294.045517,
+            "eclipticLatitudeDegrees": -0.9751615,
+            "distanceAu": 2.3972909090057,
+            "speedLongitudeDegreesPerDay": 0.7709759999852395
+          }
+        },
+        "jupiter": {
+          "targetId": "599",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27599%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-79.3832%2C43.6532%2C0.076%27&START_TIME=%272026-01-15+17%3A30%3A00%27&STOP_TIME=%272026-01-15+17%3A31%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jan-15 17:30,*,m, 4.23820816019384,  3.4824680,  109.3862416,  0.2726550,",
+            "2026-Jan-15 17:31,*,m, 4.23820955672909,  3.4814971,  109.3861507,  0.2726567,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 109.3862416,
+            "eclipticLatitudeDegrees": 0.272655,
+            "distanceAu": 4.23820816019384,
+            "speedLongitudeDegreesPerDay": -0.13089600004605018
+          }
+        },
+        "saturn": {
+          "targetId": "699",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27699%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-79.3832%2C43.6532%2C0.076%27&START_TIME=%272026-01-15+17%3A30%3A00%27&STOP_TIME=%272026-01-15+17%3A31%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jan-15 17:30,*,m, 9.94196951331853, 24.9705147,  357.1858931, -2.2140031,",
+            "2026-Jan-15 17:31,*,m, 9.94197952853700, 24.9710983,  357.1859482, -2.2140012,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 357.1858931,
+            "eclipticLatitudeDegrees": -2.2140031,
+            "distanceAu": 9.94196951331853,
+            "speedLongitudeDegreesPerDay": 0.07934400007798104
+          }
+        },
+        "uranus": {
+          "targetId": "799",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27799%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-79.3832%2C43.6532%2C0.076%27&START_TIME=%272026-01-15+17%3A30%3A00%27&STOP_TIME=%272026-01-15+17%3A31%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jan-15 17:30,*,m, 18.9478647759771, 24.7369273,   57.6221718, -0.1934491,",
+            "2026-Jan-15 17:31,*,m, 18.9478746972782, 24.7364942,   57.6221607, -0.1934489,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 57.6221718,
+            "eclipticLatitudeDegrees": -0.1934491,
+            "distanceAu": 18.9478647759771,
+            "speedLongitudeDegreesPerDay": -0.015983999910531566
+          }
+        },
+        "neptune": {
+          "targetId": "899",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27899%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-79.3832%2C43.6532%2C0.076%27&START_TIME=%272026-01-15+17%3A30%3A00%27&STOP_TIME=%272026-01-15+17%3A31%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jan-15 17:30,*,m, 30.2998088935651, 26.7959204,  359.7482498, -1.3236043,",
+            "2026-Jan-15 17:31,*,m, 30.2998196408600, 26.7964602,  359.7482639, -1.3236040,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 359.7482498,
+            "eclipticLatitudeDegrees": -1.3236043,
+            "distanceAu": 30.2998088935651,
+            "speedLongitudeDegreesPerDay": 0.02030400006333366
+          }
+        },
+        "pluto": {
+          "targetId": "999",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27999%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-79.3832%2C43.6532%2C0.076%27&START_TIME=%272026-01-15+17%3A30%3A00%27&STOP_TIME=%272026-01-15+17%3A31%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jan-15 17:30,*,m, 36.4040588058123,  5.2447493,  303.1767973, -3.7836106,",
+            "2026-Jan-15 17:31,*,m, 36.4040609095428,  5.2457460,  303.1768192, -3.7836115,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 303.1767973,
+            "eclipticLatitudeDegrees": -3.7836106,
+            "distanceAu": 36.4040588058123,
+            "speedLongitudeDegreesPerDay": 0.031536000133201014
+          }
+        }
+      }
+    },
+    {
+      "id": "sydney-date-boundary",
+      "instant": "2026-06-30T23:59:59Z",
+      "bodies": {
+        "sun": {
+          "targetId": "10",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%2710%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27151.2093%2C-33.8688%2C0.058%27&START_TIME=%272026-06-30+23%3A59%3A59%27&STOP_TIME=%272026-07-01+00%3A00%3A59.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jun-30 23:59:59,*, , 1.01655924604151, -0.1377819,   99.2037497,  0.0018632,",
+            "2026-Jul-01 00:00:59,*, , 1.01655919104924, -0.1364418,   99.2044042,  0.0018645,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 99.2037497,
+            "eclipticLatitudeDegrees": 0.0018632,
+            "distanceAu": 1.01655924604151,
+            "speedLongitudeDegreesPerDay": 0.9424799999942479
+          }
+        },
+        "moon": {
+          "targetId": "301",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27301%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27151.2093%2C-33.8688%2C0.058%27&START_TIME=%272026-06-30+23%3A59%3A59%27&STOP_TIME=%272026-07-01+00%3A00%3A59.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jun-30 23:59:59,*, , 0.00271308111913,  0.2070535,  289.8250364, -2.5726061,",
+            "2026-Jul-01 00:00:59,*, , 0.00271316394996,  0.2059972,  289.8358654, -2.5715217,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 289.8250364,
+            "eclipticLatitudeDegrees": -2.5726061,
+            "distanceAu": 0.00271308111913,
+            "speedLongitudeDegreesPerDay": 15.593760000083421
+          }
+        },
+        "mercury": {
+          "targetId": "199",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27199%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27151.2093%2C-33.8688%2C0.058%27&START_TIME=%272026-06-30+23%3A59%3A59%27&STOP_TIME=%272026-07-01+00%3A00%3A59.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jun-30 23:59:59,*, , 0.61387632999551,-16.0780358,  116.1977228, -2.5010493,",
+            "2026-Jul-01 00:00:59,*, , 0.61386988137580,-16.0760059,  116.1976454, -2.5012306,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 116.1977228,
+            "eclipticLatitudeDegrees": -2.5010493,
+            "distanceAu": 0.61387632999551,
+            "speedLongitudeDegreesPerDay": -0.11145600001327693
+          }
+        },
+        "venus": {
+          "targetId": "299",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27299%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27151.2093%2C-33.8688%2C0.058%27&START_TIME=%272026-06-30+23%3A59%3A59%27&STOP_TIME=%272026-07-01+00%3A00%3A59.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jun-30 23:59:59,*, , 1.04312422849070,-13.4431040,  140.1943707,  1.7803480,",
+            "2026-Jul-01 00:00:59,*, , 1.04311883630296,-13.4426562,  140.1951553,  1.7803288,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 140.1943707,
+            "eclipticLatitudeDegrees": 1.780348,
+            "distanceAu": 1.0431242284907,
+            "speedLongitudeDegreesPerDay": 1.1298239999632642
+          }
+        },
+        "mars": {
+          "targetId": "499",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27499%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27151.2093%2C-33.8688%2C0.058%27&START_TIME=%272026-06-30+23%3A59%3A59%27&STOP_TIME=%272026-07-01+00%3A00%3A59.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jun-30 23:59:59,*, , 2.10647795586947, -5.0997909,   61.5585931, -0.2992054,",
+            "2026-Jul-01 00:00:59,*, , 2.10647591086053, -5.0982739,   61.5590828, -0.2991965,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 61.5585931,
+            "eclipticLatitudeDegrees": -0.2992054,
+            "distanceAu": 2.10647795586947,
+            "speedLongitudeDegreesPerDay": 0.7051680000040506
+          }
+        },
+        "jupiter": {
+          "targetId": "599",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27599%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27151.2093%2C-33.8688%2C0.058%27&START_TIME=%272026-06-30+23%3A59%3A59%27&STOP_TIME=%272026-07-01+00%3A00%3A59.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jun-30 23:59:59,*, , 6.21290420696252,  9.9282860,  120.1618658,  0.4392736,",
+            "2026-Jul-01 00:00:59,*, , 6.21290818910543,  9.9290319,  120.1620138,  0.4392747,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 120.1618658,
+            "eclipticLatitudeDegrees": 0.4392736,
+            "distanceAu": 6.21290420696252,
+            "speedLongitudeDegreesPerDay": 0.21311999995305086
+          }
+        },
+        "saturn": {
+          "targetId": "699",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27699%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27151.2093%2C-33.8688%2C0.058%27&START_TIME=%272026-06-30+23%3A59%3A59%27&STOP_TIME=%272026-07-01+00%3A00%3A59.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jun-30 23:59:59,*, , 9.49657772592477,-28.3105622,   14.1866548, -2.3823383,",
+            "2026-Jul-01 00:00:59,*, , 9.49656637146141,-28.3096559,   14.1866840, -2.3823412,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 14.1866548,
+            "eclipticLatitudeDegrees": -2.3823383,
+            "distanceAu": 9.49657772592477,
+            "speedLongitudeDegreesPerDay": 0.042047999959322624
+          }
+        },
+        "uranus": {
+          "targetId": "799",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27799%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27151.2093%2C-33.8688%2C0.058%27&START_TIME=%272026-06-30+23%3A59%3A59%27&STOP_TIME=%272026-07-01+00%3A00%3A59.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jun-30 23:59:59,*, , 20.2765540980617,-17.0256050,   63.7075846, -0.1562984,",
+            "2026-Jul-01 00:00:59,*, , 20.2765472697721,-17.0243032,   63.7076189, -0.1562982,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 63.7075846,
+            "eclipticLatitudeDegrees": -0.1562984,
+            "distanceAu": 20.2765540980617,
+            "speedLongitudeDegreesPerDay": 0.04939200005537714
+          }
+        },
+        "neptune": {
+          "targetId": "899",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27899%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27151.2093%2C-33.8688%2C0.058%27&START_TIME=%272026-06-30+23%3A59%3A59%27&STOP_TIME=%272026-07-01+00%3A00%3A59.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jun-30 23:59:59,*, , 29.7780082956136,-28.6787343,    4.4066152, -1.3663076,",
+            "2026-Jul-01 00:00:59,*, , 29.7779967934345,-28.6780135,    4.4066173, -1.3663081,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 4.4066152,
+            "eclipticLatitudeDegrees": -1.3663076,
+            "distanceAu": 29.7780082956136,
+            "speedLongitudeDegreesPerDay": 0.00302399994325242
+          }
+        },
+        "pluto": {
+          "targetId": "999",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27999%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27151.2093%2C-33.8688%2C0.058%27&START_TIME=%272026-06-30+23%3A59%3A59%27&STOP_TIME=%272026-07-01+00%3A00%3A59.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Jun-30 23:59:59,*, , 34.6297217481244,-11.1067439,  304.8759206, -4.2238804,",
+            "2026-Jul-01 00:00:59,*, , 34.6297172934017,-11.1072531,  304.8759062, -4.2238819,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 304.8759206,
+            "eclipticLatitudeDegrees": -4.2238804,
+            "distanceAu": 34.6297217481244,
+            "speedLongitudeDegreesPerDay": -0.02073600007861387
+          }
+        }
+      }
+    },
+    {
+      "id": "reykjavik-high-latitude",
+      "instant": "2026-12-21T12:00:00Z",
+      "bodies": {
+        "sun": {
+          "targetId": "10",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%2710%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-21.9426%2C64.1466%2C0.061%27&START_TIME=%272026-12-21+12%3A00%3A00%27&STOP_TIME=%272026-12-21+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Dec-21 12:00,*, , 0.98375695938135, -0.1938352,  269.6255840, -0.0022039,",
+            "2026-Dec-21 12:01,*, , 0.98375688179188, -0.1930720,  269.6262866, -0.0022047,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 269.625584,
+            "eclipticLatitudeDegrees": -0.0022039,
+            "distanceAu": 0.98375695938135,
+            "speedLongitudeDegreesPerDay": 1.0117440000976785
+          }
+        },
+        "moon": {
+          "targetId": "301",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27301%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-21.9426%2C64.1466%2C0.061%27&START_TIME=%272026-12-21+12%3A00%3A00%27&STOP_TIME=%272026-12-21+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Dec-21 12:00,*, , 0.00243712595611, -0.1189068,   53.4376093,  4.1148588,",
+            "2026-Dec-21 12:01,*, , 0.00243707812314, -0.1196023,   53.4496198,  4.1145820,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 53.4376093,
+            "eclipticLatitudeDegrees": 4.1148588,
+            "distanceAu": 0.00243712595611,
+            "speedLongitudeDegreesPerDay": 17.29511999996248
+          }
+        },
+        "mercury": {
+          "targetId": "199",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27199%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-21.9426%2C64.1466%2C0.061%27&START_TIME=%272026-12-21+12%3A00%3A00%27&STOP_TIME=%272026-12-21+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Dec-21 12:00,*, , 1.43031505113831,  6.7073582,  263.3157324, -0.8304166,",
+            "2026-Dec-21 12:01,*, , 1.43031774122212,  6.7074586,  263.3168128, -0.8304876,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 263.3157324,
+            "eclipticLatitudeDegrees": -0.8304166,
+            "distanceAu": 1.43031505113831,
+            "speedLongitudeDegreesPerDay": 1.5557759999683185
+          }
+        },
+        "venus": {
+          "targetId": "299",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27299%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-21.9426%2C64.1466%2C0.061%27&START_TIME=%272026-12-21+12%3A00%3A00%27&STOP_TIME=%272026-12-21+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Dec-21 12:00,*, , 0.57396262775116, 13.0689124,  223.4649837,  3.1500178,",
+            "2026-Dec-21 12:01,*, , 0.57396786891838, 13.0697075,  223.4656038,  3.1500438,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 223.4649837,
+            "eclipticLatitudeDegrees": 3.1500178,
+            "distanceAu": 0.57396262775116,
+            "speedLongitudeDegreesPerDay": 0.8929439999883471
+          }
+        },
+        "mars": {
+          "targetId": "499",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27499%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-21.9426%2C64.1466%2C0.061%27&START_TIME=%272026-12-21+12%3A00%3A00%27&STOP_TIME=%272026-12-21+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Dec-21 12:00,*, , 0.99996673583940,-14.4091499,  158.0974879,  2.9193835,",
+            "2026-Dec-21 12:01,*, , 0.99996095696240,-14.4090668,  158.0976404,  2.9194050,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 158.0974879,
+            "eclipticLatitudeDegrees": 2.9193835,
+            "distanceAu": 0.9999667358394,
+            "speedLongitudeDegreesPerDay": 0.21960000001854496
+          }
+        },
+        "jupiter": {
+          "targetId": "599",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27599%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-21.9426%2C64.1466%2C0.061%27&START_TIME=%272026-12-21+12%3A00%3A00%27&STOP_TIME=%272026-12-21+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Dec-21 12:00,*, , 4.73618025491131,-22.6941170,  146.9072588,  0.8868834,",
+            "2026-Dec-21 12:01,*, , 4.73617115295041,-22.6940598,  146.9072397,  0.8868861,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 146.9072588,
+            "eclipticLatitudeDegrees": 0.8868834,
+            "distanceAu": 4.73618025491131,
+            "speedLongitudeDegreesPerDay": -0.027504000045155408
+          }
+        },
+        "saturn": {
+          "targetId": "699",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27699%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-21.9426%2C64.1466%2C0.061%27&START_TIME=%272026-12-21+12%3A00%3A00%27&STOP_TIME=%272026-12-21+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Dec-21 12:00,*, , 9.21591135092823, 28.2220105,    8.0321179, -2.5007983,",
+            "2026-Dec-21 12:01,*, , 9.21592267005518, 28.2216140,    8.0321316, -2.5007955,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 8.0321179,
+            "eclipticLatitudeDegrees": -2.5007983,
+            "distanceAu": 9.21591135092823,
+            "speedLongitudeDegreesPerDay": 0.019727999933820684
+          }
+        },
+        "uranus": {
+          "targetId": "799",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27799%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-21.9426%2C64.1466%2C0.061%27&START_TIME=%272026-12-21+12%3A00%3A00%27&STOP_TIME=%272026-12-21+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Dec-21 12:00,*, , 18.5446977725861, 13.3474231,   62.6524616, -0.1432557,",
+            "2026-Dec-21 12:01,*, , 18.5447031258163, 13.3469305,   62.6524369, -0.1432557,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 62.6524616,
+            "eclipticLatitudeDegrees": -0.1432557,
+            "distanceAu": 18.5446977725861,
+            "speedLongitudeDegreesPerDay": -0.035568000057537574
+          }
+        },
+        "neptune": {
+          "targetId": "899",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27899%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-21.9426%2C64.1466%2C0.061%27&START_TIME=%272026-12-21+12%3A00%3A00%27&STOP_TIME=%272026-12-21+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Dec-21 12:00,*, , 29.8255768641429, 29.8308192,    1.6340913, -1.3848073,",
+            "2026-Dec-21 12:01,*, , 29.8255888284842, 29.8304721,    1.6340950, -1.3848069,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 1.6340913,
+            "eclipticLatitudeDegrees": -1.3848073,
+            "distanceAu": 29.8255768641429,
+            "speedLongitudeDegreesPerDay": 0.0053279999701771885
+          }
+        },
+        "pluto": {
+          "targetId": "999",
+          "requestUrl": "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND=%27999%27&OBJ_DATA=%27NO%27&MAKE_EPHEM=%27YES%27&EPHEM_TYPE=%27OBSERVER%27&CENTER=%27coord%40399%27&COORD_TYPE=%27GEODETIC%27&SITE_COORD=%27-21.9426%2C64.1466%2C0.061%27&START_TIME=%272026-12-21+12%3A00%3A00%27&STOP_TIME=%272026-12-21+12%3A01%3A00.000%27&STEP_SIZE=%271m%27&QUANTITIES=%2720%2C31%27&TIME_TYPE=%27UT%27&CAL_FORMAT=%27CAL%27&CSV_FORMAT=%27YES%27",
+          "rawRows": [
+            "2026-Dec-21 12:00,*, , 36.4715741149791, 17.9335565,  304.0529753, -4.2541180,",
+            "2026-Dec-21 12:01,*, , 36.4715813076813, 17.9336783,  304.0529943, -4.2541182,"
+          ],
+          "expected": {
+            "eclipticLongitudeDegrees": 304.0529753,
+            "eclipticLatitudeDegrees": -4.254118,
+            "distanceAu": 36.4715741149791,
+            "speedLongitudeDegreesPerDay": 0.027360000094631687
+          }
+        }
+      }
+    }
+  ]
+}
