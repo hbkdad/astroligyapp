@@ -78,8 +78,14 @@ tests/
 - `withIdentityTransaction`: maps an internal account UUID into a constrained,
   transaction-local PostgreSQL role and RLS identity.
 - `NumerologyStrategy`: traceable calculations under an explicitly selected convention.
+- `PythagoreanNumerology`: versioned component reduction, configurable master
+  numbers and Y policy, explicit Latin-name normalization, and traceable core
+  and personal-cycle results.
 - Zodiac and aspect primitives: provider-neutral normalized-degree geometry,
   configurable orbs, structured strength, and optional motion phase.
+- Lunar phase primitives: Moon-minus-Sun ecliptic longitude geometry, explicit
+  eight-sector labels, approximate illuminated fraction, mean-cycle age, and
+  Moon zodiac position without calendar-based event prediction.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
 - `InterpretationRenderer`: deterministic template rendering with optional AI adapter behind validated input/output schemas.

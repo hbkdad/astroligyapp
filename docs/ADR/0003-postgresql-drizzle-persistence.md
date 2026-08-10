@@ -1,6 +1,6 @@
 # ADR 0003: PostgreSQL and Drizzle persistence
 
-Status: accepted  
+Status: accepted
 Date: 2026-08-09
 
 ## Context

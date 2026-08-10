@@ -1,6 +1,6 @@
 # ADR 0004: Provider-neutral authentication boundary
 
-Status: accepted  
+Status: accepted
 Date: 2026-08-09
 
 ## Context

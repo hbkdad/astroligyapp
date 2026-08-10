@@ -26,6 +26,8 @@ export interface NumerologyStrategy {
   calculateExpression(fullBirthName: string): NumerologyResult;
   calculateSoulUrge(fullBirthName: string): NumerologyResult;
   calculatePersonality(fullBirthName: string): NumerologyResult;
+  calculateBirthday(birthDate: string): NumerologyResult;
+  calculateMaturity(birthDate: string, fullBirthName: string): NumerologyResult;
   calculatePersonalYear(birthDate: string, year: number): NumerologyResult;
   calculatePersonalMonth(
     birthDate: string,

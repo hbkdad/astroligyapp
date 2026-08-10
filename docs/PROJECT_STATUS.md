@@ -4,15 +4,16 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goals 3 and 4 complete; auth-to-RLS boundary plus zodiac/aspect primitives verified.
+Status: Goal 6 complete; versioned Pythagorean numerology strategy verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
 migrations, forced row-level security on 19 private tables, a server-only
 verified-session boundary, identity-scoped transactions, account bootstrap,
-and deterministic zodiac/aspect primitives. No production data, managed
-database, authentication, billing, AI, notification, ephemeris, or deployment
-provider is selected.
+deterministic zodiac/aspect primitives, lunar phase geometry, and a traceable
+Pythagorean numerology strategy. No production data, managed database,
+authentication, billing, AI, notification, ephemeris, or deployment provider is
+selected.
 
 ## Completed
 
@@ -52,6 +53,20 @@ provider is selected.
       applying/separating classification.
 - [x] Apply `astro-validation` to exact boundaries, wraparound, symmetry, orbs,
       configuration failures, and motion classification.
+- [x] Goal 5: derive normalized lunar phase angle, eight phase sectors,
+      approximate illumination, estimated mean-cycle age, waxing/waning state,
+      and Moon zodiac position from supplied ecliptic longitudes.
+- [x] Apply `lunar-validation` to exact anchors, both sides of sector boundaries,
+      cycle wraparound, illumination extrema/monotonicity, invalid inputs, and
+      explicit approximation limits.
+- [x] Goal 6: implement versioned Pythagorean Life Path, Expression, Soul Urge,
+      Personality, Birthday, Maturity, Personal Year, Personal Month, and
+      Personal Day calculations with reconstructable traces.
+- [x] Define explicit Latin Unicode normalization, unsupported-character
+      failures, configurable Y treatment, and configurable 11/22/33 preservation.
+- [x] Apply `numerology-validation` to A-Z mapping, master numbers, date
+      components, leap/zero-containing dates, Unicode, punctuation, empty
+      categories, and calendar boundaries.
 
 ## In progress
 
@@ -59,19 +74,22 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 5 — deterministic lunar phase primitives.
+Goal 7 — ephemeris provider conformance and candidate decision harness.
 
 Deliverables:
 
-1. Calculate normalized lunar phase angle from validated solar and lunar
-   ecliptic longitudes without an ephemeris-provider dependency.
-2. Define explicit phase-sector boundaries, illumination, and Moon-age behavior
-   with units and model limitations.
-3. Test every 45-degree boundary, wraparound, invalid input, illumination
-   extrema, and waxing/waning classification.
-4. Keep event-time prediction deferred until an approved provider supplies
-   time-series positions; do not approximate calendar events silently.
-5. Use `lunar-validation` and record exact tolerances and provenance.
+1. Add shared conformance tests for every `EphemerisProvider` implementation,
+   including request validation, all requested bodies exactly once, finite
+   normalized longitudes, metadata completeness, error codes, and no silent
+   fallback.
+2. Define sourced UTC/location fixtures and explicit tolerances independently of
+   any candidate implementation.
+3. Compare viable provider candidates for licensing, Node runtime/deployment
+   fit, data footprint, update operations, house support, performance, and cost.
+4. Record the decision or a concrete approval blocker in an ADR; do not install
+   or couple to Swiss Ephemeris without licensing approval.
+5. Use `astro-validation` and keep natal/transit/event-time work behind the
+   provider boundary.
 
 ## Phase queue
 
@@ -106,6 +124,9 @@ Deliverables:
 ## Blockers and risks
 
 - Ephemeris provider selection remains blocked on final licensing approval, comparative fixtures, deployment fit, and operating-cost validation.
+- Next New/Full Moon times, rise/set, altitude/azimuth, and personal lunar
+  transits remain deferred until validated time-series and location-aware
+  provider capabilities exist. Mean-cycle age must not be used as an ephemeris.
 - Authentication, managed database, payment, AI, email, monitoring, and
   deployment providers remain intentionally undecided.
 - Authentication-provider selection still requires sign-in methods, MFA or
@@ -141,6 +162,14 @@ Deliverables:
 | 2026-08-09 | `npm run test:coverage`                            | Passed; scoped baseline application/domain coverage remains 100%                              |
 | 2026-08-09 | `npm audit --audit-level=high`                     | No high or critical findings; four accepted moderate Drizzle Kit development-tool findings    |
 | 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | `git commit` / `git push origin main`              | Foundation checkpoint `d224cc4` published to `origin/main`                                    |
+| 2026-08-09 | NASA Science and USNO lunar documentation          | Eight-phase sequence, longitude anchors, illumination meaning, and 29.53059-day mean sourced  |
+| 2026-08-09 | `npx vitest run tests/lunar-phase.test.ts`         | 23/23 focused lunar geometry tests passed                                                     |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, types, 56 tests, and production build                                |
+| 2026-08-09 | `npm run test:coverage`                            | 98.03% statements/lines, 92.3% branches, and 100% functions                                   |
+| 2026-08-09 | `npx vitest run tests/numerology.test.ts`          | 30/30 focused normalization, reduction, master-number, and cycle tests passed                 |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, types, 86 tests, and production build                                |
+| 2026-08-09 | `npm run test:coverage`                            | 98.78% statements, 94.68% branches, 100% functions, and 98.74% lines                          |
 | 2026-08-09 | GitHub repository orientation                      | Empty public `hbkdad/astroligyapp` configured as `origin`; authenticated as `hbkdad`; no push |
 | 2026-08-09 | Auth.js, Better Auth, and Clerk primary docs       | Provider selection deferred; server-verified active-session port recorded in ADR 0004         |
 | 2026-08-09 | `npm run test:database`                            | PostgreSQL 18 migration passed; 10/10 migration, isolation, auth, rollback, and pooling tests |
@@ -200,3 +229,42 @@ Deliverables:
 - Provenance: expected values come directly from the documented modular-angle
   formulas, not an AI or ephemeris fixture. Interpretations and product weights
   remain outside the calculation functions.
+
+## Goal 5 lunar-validation record
+
+- Inputs and units: provider-supplied apparent ecliptic solar and lunar
+  longitudes in degrees are required. The calculation has no instant, timezone,
+  observer location, atmosphere, rise/set, altitude, or provider assumption.
+- Formula: phase angle is `(moonLongitude - sunLongitude + 360) % 360`.
+  Eight labels use 45-degree sectors centered on the USNO primary anchors at
+  `0`, `90`, `180`, and `270` degrees and the intermediate NASA phase sequence.
+- Illumination: `(1 - cos(phaseAngle)) / 2` is exposed as an approximate
+  geometric fraction. Tests use 12-decimal tolerance at New, quarters, and Full
+  and prove monotonic increase/decrease on both halves of the cycle.
+- Age: `phaseAngle / 360 * 29.53059 days` uses NASA's published mean synodic
+  month and is explicitly an estimate, not a production ephemeris or event-time
+  predictor.
+- Provenance retrieved 2026-08-09: NASA Science `Moon Phases`, NASA GSFC
+  `Eclipses and the Moon's Orbit`, and USNO `Phases of the Moon and Percent of
+the Moon Illuminated`. No AI-derived or unsourced dated fixture was used.
+
+## Goal 6 numerology-validation record
+
+- Strategy: `pythagorean` version `1.0.0`, using component reduction for dates.
+  The default preserves `11`, `22`, and `33` at every reduction; a strategy
+  option reduces all masters for traditions that do not preserve them.
+- Names: each original Unicode code point is NFKD-normalized, combining marks
+  are removed, Latin A-Z is uppercased and mapped, whitespace/punctuation is
+  ignored, and unsupported letters, numbers, or symbols fail explicitly with a
+  code-point error. Empty normalized names or empty selected vowel/consonant
+  categories fail.
+- Vowels: `A E I O U`; Y is a consonant by default and can be configured as a
+  vowel. No contextual-Y rule is claimed.
+- Calendar basis: strict proleptic Gregorian `YYYY-MM-DD` plain dates with no
+  instant or timezone conversion. Personal cycles change at the supplied local
+  calendar year/month/day boundaries.
+- Hand fixtures: `1990-07-15` reduces to Life Path 5 and Birthday 6;
+  `Pythagoras` produces Expression 4, Soul Urge 8, Personality 5, and Maturity
+  9 under default Y handling. The 2025 personal-year total 22 is preserved by
+  the declared convention. Every result carries normalized tokens, operations,
+  strategy ID, and version; no interpretive meaning is embedded.
