@@ -4,7 +4,7 @@ Last updated: 2026-08-09
 
 ## Current position
 
-Status: Goal 12 complete; the deterministic personal lunar snapshot is implemented and verified.
+Status: Goal 13 complete; the immutable combined personal-context fact aggregate is implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -92,6 +92,16 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 13: compose the natal chart, current transit snapshot, personal lunar
+      snapshot, and all nine deterministic numerology results into one
+      deep-cloned, deep-frozen fact aggregate.
+- [x] Enforce cross-component natal/transit/lunar provenance plus the numerology
+      calendar date resolved from the current UTC instant in the natal IANA
+      timezone.
+- [x] Generate stable unique references for natal placements/aspects, transit
+      aspects, lunar phase/personal aspects, and numerology facts.
+- [x] Keep prose, interpretation keys, category weights, scoring, AI,
+      persistence, entitlements, and delivery outside the aggregate.
 - [x] Goal 12: derive current lunar phase/sign facts and Moon-to-natal
       planet/ASC/MC aspects from one validated transit snapshot without another
       provider request or natal recalculation.
@@ -138,34 +148,33 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 13 — build the combined personal-context fact aggregate.
+Goal 14 — build the deterministic interpretation-key projection and library contract.
 
 Deliverables:
 
-1. Compose a natal chart, transit snapshot, personal lunar snapshot, and
-   caller-supplied deterministic numerology results into one immutable,
-   versioned fact object.
-2. Validate instant/date and provenance consistency across every component and
-   reject partial or mismatched context rather than silently recomputing it.
-3. Define stable fact identifiers suitable for later rules and UI without
-   embedding prose, category weights, or AI output.
-4. Keep persistence, interpretation, product scoring, entitlements, and delivery
-   outside the aggregate.
+1. Map validated context facts to versioned interpretation keys without
+   changing, inventing, or recalculating any astronomical/numerological value.
+2. Define a deterministic template-library contract with explicit factual and
+   tradition-framed interpretation sections plus unsupported-key behavior.
+3. Add claim-safety rules that prohibit medical, legal, financial, safety, or
+   deterministic relationship directives and keep AI entirely optional.
+4. Return structured render data before prose composition; do not add category
+   scoring, persistence, entitlements, or delivery yet.
 
 ## Phase queue
 
-| Phase | Scope                                                    | State       |
-| ----- | -------------------------------------------------------- | ----------- |
-| 1     | Infrastructure, architecture, database, auth, standards  | Complete    |
-| 2     | Ephemeris abstraction, zodiac, aspects, Moon, numerology | Complete    |
-| 3     | Natal charts, transits, personal context, fixtures       | In progress |
-| 4     | Dashboard, Moon, numerology, chart, timeline UI          | Pending     |
-| 5     | Interpretation library, daily reading, public horoscopes | Pending     |
-| 6     | Compatibility and privacy-safe sharing                   | Pending     |
-| 7     | Subscriptions, entitlements, notifications               | Pending     |
-| 8     | SEO and useful public content                            | Pending     |
-| 9     | Security, privacy, performance, accessibility, QA        | Pending     |
-| 10    | Deployment and production verification                   | Pending     |
+| Phase | Scope                                                    | State    |
+| ----- | -------------------------------------------------------- | -------- |
+| 1     | Infrastructure, architecture, database, auth, standards  | Complete |
+| 2     | Ephemeris abstraction, zodiac, aspects, Moon, numerology | Complete |
+| 3     | Natal charts, transits, personal context, fixtures       | Complete |
+| 4     | Interpretation and personal dashboard foundation         | Next     |
+| 5     | Interpretation library, daily reading, public horoscopes | Pending  |
+| 6     | Compatibility and privacy-safe sharing                   | Pending  |
+| 7     | Subscriptions, entitlements, notifications               | Pending  |
+| 8     | SEO and useful public content                            | Pending  |
+| 9     | Security, privacy, performance, accessibility, QA        | Pending  |
+| 10    | Deployment and production verification                   | Pending  |
 
 ## Decisions
 
@@ -223,6 +232,10 @@ Deliverables:
 | 2026-08-09 | `npm run check`                                    | Passed formatting, ESLint, strict TypeScript, 2 unit/contract tests, and production build     |
 | 2026-08-09 | `npm run test:coverage`                            | Passed; scoped baseline application/domain coverage remains 100%                              |
 | 2026-08-09 | `npm audit --audit-level=high`                     | No high or critical findings; four accepted moderate Drizzle Kit development-tool findings    |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| 2026-08-09 | Personal context focused suite                     | 6/6 composition, immutability, timezone, mismatch, ID, and numerology validation tests passed |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 197 tests, and production build                   |
+| 2026-08-09 | `npm run test:coverage`                            | 95.59% statements, 92.07% branches, 100% functions, and 95.42% lines                          |
 | 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
 | 2026-08-09 | Personal lunar focused suite                       | 5/5 reuse, JPL phase, provenance, and malformed-snapshot tests passed                         |
 | 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 191 tests, and production build                   |
@@ -412,6 +425,35 @@ Deliverables:
   explicitly labeled mean synodic month. Neither is an event ephemeris. Next
   phases, rise/set, altitude/azimuth, aspect windows, scores, interpretations,
   persistence, notifications, and AI remain absent.
+
+## Goal 13 context and numerology validation record
+
+- Commands: `npx vitest run tests/personal-context.test.ts
+tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
+  `npm run check`, `npm run test:coverage`, and `npm audit --omit=dev`.
+- Composition: the aggregate accepts existing validated natal, transit, and
+  personal-lunar components and caller-supplied numerology results. It performs
+  no astronomy request and changes no upstream calculation value.
+- Consistency: transit natal input/metadata must match the supplied natal chart;
+  the supplied lunar phase, Moon position, lunar aspects, provider metadata,
+  transit metadata, aspect policy, and natal provenance must reproduce from the
+  supplied transit snapshot. Mismatches fail instead of being silently replaced.
+- Numerology convention: all nine required results use one Pythagorean strategy
+  ID/version. The existing version 1.0.0 convention preserves configured
+  11/22/33 values, uses the existing explicit Latin normalization and default
+  consonant-Y policy, and retains non-empty tokens and reduction traces. No
+  arithmetic or normalization rule changed.
+- Calendar basis: cycle results are selected for the local calendar date of the
+  current UTC instant in the natal IANA timezone. The fixture proves that
+  2000-01-01 02:00 UTC resolves to 1999-12-31 in America/Toronto; a UTC-date
+  Personal Day is rejected for that context.
+- Output: context version 1.0.0 retains every complete component plus strategy
+  provenance, generates ordered unique calculation fact IDs, clones the input
+  graph, and recursively freezes the clone. Equal deterministic inputs yield
+  equal ordered fact IDs even though calculation timestamps differ.
+- Scope: the IDs have no embedded meaning. Interpretation, explanation keys,
+  categories, heuristic scores, AI, persistence, entitlements, and delivery
+  remain absent.
 
 ## Goal 2 migration and security review
 

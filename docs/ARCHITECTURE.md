@@ -107,6 +107,12 @@ tests/
   retaining lunar, transit, natal, provider, and aspect-policy provenance.
   Approximate illumination and mean-cycle age remain labeled estimates; event
   prediction and location-dependent rise/set data are absent.
+- `composePersonalContext`: provider-free, deep-frozen composition of the natal,
+  transit, personal-lunar, and complete deterministic numerology results. It
+  verifies cross-component provenance and resolves the numerology calendar date
+  from the current UTC instant in the natal IANA timezone. Stable fact IDs are
+  calculation references only; interpretation, category weighting, AI,
+  entitlements, persistence, and delivery remain downstream concerns.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
 - `InterpretationRenderer`: deterministic template rendering with optional AI adapter behind validated input/output schemas.
