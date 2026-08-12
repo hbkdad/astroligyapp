@@ -225,8 +225,12 @@ tests/
   comparison accepts canonical tropical signs plus traced, version-matched
   numerology results and returns only symmetric sign/element/modality and Life
   Path/Expression pair facts. It validates but never republishes numerology
-  tokens or traces that can contain names or dates. Scores, relationship claims,
-  synastry, house overlays, persistence, and sharing remain separate later layers.
+  tokens or traces that can contain names or dates. `SynastryAspectEngine`
+  independently revalidates two natal results, strips raw birth/house inputs,
+  canonicalizes the remaining versioned placement facts, and evaluates the full
+  cross-body aspect matrix without provider access. Its derived placement trace
+  remains private relationship data. Scores, relationship claims, house overlays,
+  persistence, and public sharing remain separate later layers.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
 - Optional AI explanation remains deferred behind future validated input/output

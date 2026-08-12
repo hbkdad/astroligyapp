@@ -1,10 +1,10 @@
 # Project status
 
-Last updated: 2026-08-10
+Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 32 complete; the deterministic phase-one zodiac and numerology compatibility fact engine is implemented and verified.
+Status: Goal 33 complete; deterministic, symmetric cross-chart synastry aspect facts are implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,13 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 33: revalidate two complete natal-chart results at the synastry
+      boundary and canonicalize privacy-minimized chart fact sources.
+- [x] Evaluate every ordered cross-chart body pair through a declared, versioned
+      aspect policy with stable IDs, exact geometry, phase, strength, and trace.
+- [x] Verify all 100 pairs, reversed-input byte symmetry, exact/inside/edge/
+      outside orbs, wraparound, closest aspects, every phase, corrupt charts,
+      deterministic ordering, immutability, and raw birth-input exclusion.
 - [x] Goal 32: define a provider-neutral, versioned compatibility strategy over
       validated zodiac signs and traced deterministic numerology results.
 - [x] Produce only canonical sign/element/modality and Life Path/Expression pair
@@ -319,19 +326,19 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 33 — implement deterministic cross-chart synastry aspect facts.
+Goal 34 — implement deterministic cross-chart house-overlay facts.
 
 Deliverables:
 
-1. Accept two already validated natal-chart results and a declared aspect policy;
-   do not call an ephemeris provider or accept browser-owned chart facts.
-2. Derive versioned cross-chart body-aspect facts with stable symmetric identity,
-   canonical ordering, exact orb/strength geometry, and complete source trace.
-3. Verify all body pairs, exact/inside/outside orbs, zero wraparound, reversed
-   chart symmetry, malformed/incomplete/version-drift charts, duplicate identity,
-   deterministic ordering, immutability, and absence of raw birth inputs.
-4. Add no house overlays, compatibility category weights, interpretation,
-   persistence, sharing URL, UI, AI, entitlement, or deployment.
+1. Reuse the validated/canonical chart-fact boundary and project each chart's ten
+   bodies into the other chart's declared Whole Sign cusps without provider calls.
+2. Produce versioned bidirectional overlay facts with stable symmetric identity,
+   canonical ordering, exact house numbers, cusp-policy versions, and source trace.
+3. Verify every body and house, exact/just-below cusp boundaries, zodiac wrap,
+   reversed-chart symmetry, malformed/version-drift charts, duplicate identity,
+   deterministic ordering, immutability, and raw birth-input exclusion.
+4. Add no compatibility category weights, interpretation, persistence, sharing
+   URL, UI, AI, entitlement, notification, or deployment.
 
 ## Phase queue
 
@@ -772,6 +779,51 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 33 cross-chart synastry aspect record
+
+- Commands: focused synastry/natal suites; `npm run check`;
+  `npm run test:coverage`;
+  `npm audit --omit=dev`; and `git diff --check` through the
+  `astro-validation` and `security-audit` procedures.
+- Boundary: `SynastryAspectEngine` accepts two existing `NatalChart` results and
+  one declared aspect policy; it has no provider dependency. Before comparison it
+  revalidates strict UTC/provider metadata, ten canonical tropical placements,
+  normalized longitudes, zodiac/house consistency, twelve cusps, Whole Sign and
+  engine/policy versions, and exact completeness/order of recomputed natal aspects.
+  All invalid inputs fail with one generic error.
+- Geometry: the engine evaluates the canonical 10 x 10 cross-body matrix with
+  existing minimal-angle and closest-aspect functions in ecliptic-of-date tropical
+  degrees. Each match retains exact/actual angle, orb, maximum orb, normalized
+  strength, and applying/separating/stationary/unknown phase. Stable IDs and output
+  order use canonical chart sides followed by canonical body order.
+- Symmetry/provenance: chart sources are canonically sorted by their complete
+  privacy-minimized fact trace, so reversing distinct or identical inputs produces
+  byte-equivalent output. Trace includes chart-engine and position-provider/data
+  versions, coordinate conventions, and all ten longitudes/speeds needed to
+  reproduce both matches and absences. The result and every nested collection are
+  deeply frozen.
+- Astro validation: tests cover all 100 ordered body pairs; exact square, just
+  inside, exact maximum orb, and just outside; 359°/1° wraparound; overlapping
+  closest-aspect selection; all four motion phases; stable unique identity; and
+  malformed, incomplete, duplicate, zodiac/house/aspect, provider, and version
+  corruption. Expected geometry is formula-derived at 12-decimal precision; no
+  new celestial fixture or loosened tolerance was introduced. Existing validated
+  Zollikon chart structure supplies the full natal contract only.
+- Security review: private instant, timezone/source, observer coordinates, house
+  data, provider calculation timestamps, input order, and arbitrary subject labels
+  are not returned or logged. The output contains derived placements and speeds,
+  which remain private relationship data and require an explicit redacted public
+  projection before any future share route. There is no HTTP/auth/cache/persistence
+  entry point yet, so CSRF, ownership, rate-limit, and token controls are not
+  applicable in this goal. No critical or high finding remains.
+- Evidence: 32 test files and 470 tests passed; coverage was 94.53% statements,
+  91.64% branches, 99.63% functions, and 95.32% lines. The new synastry engine had
+  100% statement/function/line and 96% branch coverage. The optimized build passed
+  and the production dependency audit found zero vulnerabilities.
+- Scope: no provider call, house overlay, category weight, interpretation,
+  persistence, share token/URL, UI, AI, entitlement, notification, schema change,
+  or deployment was added.
 
 ## Goal 32 phase-one compatibility fact record
 

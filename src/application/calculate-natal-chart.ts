@@ -168,7 +168,7 @@ export class NatalChartEngine {
   }
 }
 
-function calculateNatalAspects(
+export function calculateNatalAspects(
   positions: readonly CelestialPosition[],
   definitions: readonly AspectDefinition[],
 ): readonly NatalAspect[] {
