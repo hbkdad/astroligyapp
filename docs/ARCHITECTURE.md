@@ -235,8 +235,12 @@ tests/
   revalidates all three result types, proves the overlay placements are the exact
   speed-minimized synastry sources, binds canonical Sun signs to the phase-one
   pair, and preserves the complete facts in a symmetric immutable aggregate.
-  Scores, relationship claims, persistence, and public sharing remain separate
-  later layers.
+  `calculateCompatibilityCategoryScores` independently revalidates that aggregate
+  and evaluates only an injected, versioned policy. Category bounds, baselines,
+  selectors, impacts, confidence, and rationales remain configuration; every
+  matched contribution retains its source fact ID. There is no implicit default
+  policy, and results are explicitly non-scientific product heuristics.
+  Relationship claims, persistence, and public sharing remain separate later layers.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
 - Optional AI explanation remains deferred behind future validated input/output

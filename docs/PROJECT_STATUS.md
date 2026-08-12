@@ -4,7 +4,7 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 35 complete; phase-one, synastry, and Whole Sign overlay results now compose into one validated symmetric compatibility-fact aggregate.
+Status: Goal 36 complete; validated compatibility facts can now be scored transparently through a strict injected policy without a production weight model.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,12 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 36: define strict versioned compatibility category, rule, and
+      discriminated fact-selector contracts with no default production policy.
+- [x] Revalidate the complete Goal 35 aggregate, match only canonical phase-one,
+      synastry, and house-overlay facts, and retain every contribution/source ID.
+- [x] Verify symmetry, declared clamps/rounding, weighted confidence, unmatched
+      rules, malformed policies, misleading claims, provenance, and immutability.
 - [x] Goal 35: accept only exact, version-matched phase-one, synastry, and
       house-overlay result shapes and independently revalidate their facts.
 - [x] Bind canonical Sun placements to the phase-one zodiac pair and require the
@@ -338,21 +344,20 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 36 — implement compatibility category scoring behind an injected policy.
+Goal 37 — select the initial transparent compatibility scoring policy.
 
 Deliverables:
 
-1. Define a versioned, provider-neutral scoring-policy contract whose category
-   IDs, baseline, bounds, fact selectors, contribution values, and confidence
-   rules are injected; do not select production weights in this goal.
-2. Evaluate only a validated Goal 35 aggregate, retain every matched source fact
-   and rule in an explainable trace, and return bounded deeply immutable results.
-3. Verify symmetry, deterministic ordering, exact boundary/clamp behavior,
-   unmatched facts, duplicate/unknown selectors, malformed policies, version
-   drift, misleading claims, and complete provenance.
-4. Label every result as a non-scientific product heuristic. Add no production
-   policy, relationship prediction, interpretation prose, persistence, sharing
-   URL, UI, AI, entitlement, notification, provider call, schema change, or deployment.
+1. Define one separately versioned initial policy for Attraction, Communication,
+   Emotional, Long-Term, and Chemistry using only explicit Goal 35 fact selectors.
+2. Keep weights conservative, symmetric, reconstructable, and independent from
+   calculation engines; document each rule's tradition-framed product rationale.
+3. Verify complete category/rule coverage, stable output, representative exact and
+   unmatched facts, bounds, confidence, version isolation, claim safety, and that
+   configuration changes cannot alter the Goal 35 aggregate.
+4. Add no deterministic relationship prediction, interpretation prose, persistence,
+   sharing URL, UI, AI, entitlement, notification, provider call, schema change,
+   production service, or deployment.
 
 ## Phase queue
 
@@ -793,6 +798,41 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 36 injected compatibility scoring record
+
+- Commands: focused compatibility fact/scoring suites; `npm run check`;
+  `npm run test:coverage`; `npm audit --omit=dev`; and `git diff --check` through
+  the `astro-validation` and `security-audit` procedures.
+- Contract: policy ID/version, category IDs/baseline/minimum/maximum, rule IDs,
+  discriminated selectors, impacts, confidence, and rationales are all injected.
+  No default or production weight model exists. Phase-one selectors address five
+  canonical pair facts; synastry and overlay selectors address only stable Goal 35
+  facts and must declare at least one constraint.
+- Boundary/provenance: the scorer reconstructs Goal 35 from its three children and
+  requires exact equality before matching. Output retains result/formula/policy and
+  all four source versions. Each category preserves bounds, raw and displayed
+  score, confidence, unique source fact IDs, and the full ordered rule contribution
+  trace needed to reproduce it.
+- Formula: contribution sums and weighted confidence are rounded to six decimals;
+  display score is `clamp(round(baseline + sum(impact)), minimum, maximum)`.
+  Unmatched rules leave the declared baseline and zero confidence. Tests cover
+  upper/lower clamps, fractional precision, exact strength threshold, exact
+  phase-one values/master counts, and all three selector families.
+- Symmetry/claims/security: reversing both relationship subjects produces byte-
+  equivalent scores. Unknown/extra fields, invalid/duplicate categories or rules,
+  unsupported/noncanonical values, unconstrained selectors, invalid numeric
+  bounds, aggregate drift, injected birth data, and deterministic perfect-match
+  claims fail with one generic error. Output is deeply frozen and contains no raw
+  birth/profile/numerology-token data. No critical or high finding remains.
+- Evidence: 35 test files and 514 tests passed; coverage was 94.28% statements,
+  91.44% branches, 99.68% functions, and 95.15% lines. The compatibility scorer
+  had 92.50% statement, 91.46% branch, 100% function, and 95.19% line coverage.
+  The optimized build passed and the production dependency audit found zero
+  vulnerabilities.
+- Scope: no production policy/weight, interpretation prose, persistence, share
+  token/URL, UI, AI, entitlement, notification, provider call, schema change,
+  production service, or deployment was added.
 
 ## Goal 35 compatibility fact aggregate record
 
