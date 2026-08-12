@@ -4,9 +4,8 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 44 complete; active privacy-safe compatibility shares now resolve
-through a hardened, script-free public HTTP route without reflecting bearer or
-private report material.
+Status: Goal 45 complete; provider-neutral Free, Personal, and Advanced
+capabilities now resolve through one versioned, server-only entitlement policy.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -95,6 +94,13 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 45: define nineteen stable feature keys and exact inherited Free,
+      Personal, and Advanced capability sets with no price or provider plan ID.
+- [x] Add a pure server-only policy over strict provider-neutral subscription
+      state and an injected trusted clock, returning immutable auditable decisions.
+- [x] Fail malformed/browser-augmented state, unknown features, silent policy
+      drift, invalid clocks, future periods, exact expiry, past-due, and paused
+      access closed; retain canceled paid access only before its period end.
 - [x] Goal 44: map only a validated active public payload into a versioned,
       deeply immutable display model with no bearer, digest, private report, or
       calculation provenance.
@@ -405,19 +411,19 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 45 — define the provider-neutral subscription entitlement policy.
+Goal 46 — define the provider-neutral subscription transition engine.
 
 Deliverables:
 
-1. Define versioned feature keys and configured Free, Personal, and Advanced
-   capability sets without prices or billing-provider plan names.
-2. Add one pure server-side policy that derives effective entitlements from a
-   validated provider-neutral subscription state and injected trusted clock.
-3. Fail closed for unknown features, plans, statuses, malformed dates, expired
-   access, configuration drift, and attempts to bypass the centralized policy.
-4. Verify tier inheritance, active/trialing/canceled/expired transitions, exact
-   period boundaries, immutable decisions, and add no provider SDK, webhook,
-   persistence migration, checkout UI, pricing, notification, or deployment.
+1. Define a versioned normalized provider-event contract and immutable transition
+   state independent of Stripe or any other billing SDK/plan identifier.
+2. Implement a pure transition engine for trialing, active, past-due, paused, and
+   canceled states with strict plan/period validation and explicit terminal rules.
+3. Handle duplicate, stale, same-instant conflicting, and out-of-order events
+   deterministically without granting access from browser-owned state.
+4. Verify complete transition matrices, event ordering/idempotency, period changes,
+   malformed input, and add no webhook route, signature adapter, persistence
+   mutation, checkout UI, price, notification, external call, or deployment.
 
 ## Phase queue
 
@@ -906,6 +912,40 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
 - Residual deployment control: the in-process concurrency gate is deliberately
   not a distributed rate limiter. The eventual edge may add aggregate abuse
   controls without logging or persisting raw capability URLs.
+
+## Goal 45 provider-neutral entitlement policy record
+
+- Commands: focused adversarial entitlement suite; Prettier, ESLint, strict
+  TypeScript, all unit tests, coverage, optimized build, production audit,
+  secret-pattern scan, and `git diff --check` through `security-audit`.
+- Configuration: policy 1.0.0 declares nineteen stable feature keys. Free owns
+  five public/basic capabilities, Personal inherits Free plus seven personal
+  capabilities, and Advanced inherits Personal plus seven advanced capabilities.
+  The exact ordered allocation is frozen and validated; prices, provider plan IDs,
+  customer/subscription references, and SDK types are absent.
+- Decision boundary: `EntitlementPolicy` is server-only and pure. It accepts a
+  strict versioned state projection and injected trusted clock, then returns an
+  immutable decision with policy/state versions, feature, allow/deny, effective
+  tier, reason, evaluation instant, and access end. `null` is the Free baseline.
+- Lifecycle: paid intervals are start-inclusive/end-exclusive. Trialing and active
+  grant configured paid access within the interval; canceled retains it only until
+  the same exact end. Future and expired periods fall back to Free, as do past-due
+  and paused states. Malformed or extra/browser-augmented state denies entirely.
+- Adversarial result: all feature/tier combinations, both granting statuses,
+  cancellation, exact boundaries, inactive states, unknown features, invalid
+  plan/status/version/instant/order/clock, duplicate features, incomplete coverage,
+  tier regression, silent same-version allocation drift, extra fields, and output
+  immutability were covered. No critical/high finding remains.
+- Verification result: 40 unit files and 591 tests passed. Coverage was 93.93%
+  statements, 91.17% branches, 99.37% functions, and 95.02% lines after expanding
+  the measured surface to all server modules; the entitlement policy itself had
+  98.48% statement, 98.52% branch, 100% function, and 100% line coverage. Build,
+  schema check, and the zero-vulnerability production audit passed.
+- Scope/residual risk: there is no repository mapping, authenticated call site,
+  transition engine, provider adapter, webhook/signature handling, persistence
+  mutation, pricing, checkout, UI, notification, external call, or deployment.
+  Future callers must load state server-side; browser plan/status claims are never
+  authoritative.
 
 ## Goal 43 compatibility persistence and share-security record
 

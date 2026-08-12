@@ -293,7 +293,14 @@ tests/
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
 - Optional AI explanation remains deferred behind future validated input/output
   schemas and cannot replace the deterministic renderer.
-- `EntitlementPolicy`: centralized server-side capability checks independent of billing provider plan names.
+- Entitlements: nineteen versioned feature keys are configured once into exact
+  inherited Free, Personal, and Advanced sets. The server-only policy accepts
+  only strict provider-neutral state plus an injected trusted clock and returns
+  immutable feature decisions. `trialing` and `active` grant within a start-
+  inclusive/end-exclusive period; `canceled` retains access only until that end;
+  `past_due`, `paused`, future, expired, malformed, unknown, or version-drifted
+  state fails paid access closed. Browser plan/status claims must never be passed
+  to this policy; a future authenticated repository boundary supplies the state.
 
 ## Data and cache principles
 

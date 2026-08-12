@@ -24,6 +24,7 @@ export default defineConfig({
         "src/presentation/**/*.ts",
         "src/components/**/*.tsx",
         "src/security/**/*.ts",
+        "src/server/**/*.ts",
       ],
     },
   },

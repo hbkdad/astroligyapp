@@ -102,3 +102,18 @@ Never include stack traces, secrets, provider credentials, private birth data, o
 - Include calculation and provider versions in calculation resources.
 - Require idempotency keys or provider event IDs for retried external mutations.
 - Define cache keys from normalized inputs plus all calculation/config versions.
+
+## Implemented entitlement decision boundary
+
+`EntitlementPolicy.check(subscriptionState, feature, trustedClock)` is server-only
+and provider-neutral. The accepted subscription projection contains only its schema
+version, `personal` or `advanced` plan key, normalized status, and canonical period
+instants. It contains no provider/customer/subscription reference, price, checkout,
+or browser value. `null` represents the Free baseline.
+
+Every immutable decision records the policy/state versions, feature, allow/deny,
+effective tier, reason, evaluation instant, and paid-access end. Exact v1 feature
+allocation is validated when the policy is created, so feature changes require a
+declared code/version update. A future authenticated repository must source state;
+request bodies, query parameters, cookies, or client stores never establish plan or
+status.
