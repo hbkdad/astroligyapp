@@ -9,12 +9,14 @@ vi.mock("server-only", () => ({}));
 import {
   AccountUnavailableError,
   bootstrapAccount,
+  LocalAccountDeletionRepository,
   resolveActiveAccountId,
   type AccountId,
 } from "@/infrastructure/auth/account";
 import {
   BetterAuthAccountBootstrapper,
   BetterAuthActiveBillingAccountResolver,
+  BetterAuthCurrentPasswordReauthenticator,
   BetterAuthTrustedBillingContactResolver,
   BetterAuthVerifiedSessionVerifier,
   IdentityScopedAccountReadinessVerifier,
@@ -22,6 +24,7 @@ import {
 import { betterAuthSchema } from "@/db/auth-schema";
 import { createBetterAuth } from "@/server/better-auth-configuration";
 import { bootstrapAccountForRequest } from "@/server/authenticated-account-bootstrap";
+import { deleteAccountForRequest } from "@/server/authenticated-account-deletion";
 import type { AuthenticationEmailRequest } from "@/server/authentication-email";
 import { AuthenticationEmailFeedbackRepository } from "@/server/authentication-email-feedback";
 import { AuthenticationEmailIdempotencyRepository } from "@/server/authentication-email-idempotency";
@@ -153,6 +156,7 @@ const authContactResolver = new BetterAuthTrustedBillingContactResolver(pool);
 const authAccountResolver = new BetterAuthActiveBillingAccountResolver(pool);
 const authAccountBootstrapper = new BetterAuthAccountBootstrapper(pool);
 const authAccountReadiness = new IdentityScopedAccountReadinessVerifier(pool);
+const localAccountDeletion = new LocalAccountDeletionRepository(pool);
 
 function subscriptionEvent(
   overrides: Partial<NormalizedSubscriptionEvent> = {},
@@ -352,6 +356,9 @@ describe("initial PostgreSQL migration", () => {
       bootstrap_direct_table: boolean;
       bootstrap_execute: boolean;
       migrator_retains_bootstrap_owner: boolean;
+      deletion_direct_account: boolean;
+      deletion_execute: boolean;
+      migrator_retains_deletion_owner: boolean;
     }>(
       `select
          has_schema_privilege('app_user', 'auth', 'USAGE') as app_user_schema,
@@ -439,7 +446,21 @@ describe("initial PostgreSQL migration", () => {
            join pg_roles granted_role on granted_role.oid = membership.roleid
            where member_role.rolname = current_user
              and granted_role.rolname = 'app_auth_account_bootstrap_owner'
-         ) as migrator_retains_bootstrap_owner`,
+         ) as migrator_retains_bootstrap_owner,
+         has_table_privilege(
+           'app_account_deletion', 'user_account', 'SELECT,UPDATE,DELETE'
+         ) as deletion_direct_account,
+         has_function_privilege(
+           'app_account_deletion',
+           'app.erase_local_auth_account(text,text,uuid)', 'EXECUTE'
+         ) as deletion_execute,
+         exists (
+           select 1 from pg_auth_members membership
+           join pg_roles member_role on member_role.oid = membership.member
+           join pg_roles granted_role on granted_role.oid = membership.roleid
+           where member_role.rolname = current_user
+             and granted_role.rolname = 'app_account_deletion_owner'
+         ) as migrator_retains_deletion_owner`,
     );
     expect(privileges.rows[0]).toEqual({
       app_user_schema: false,
@@ -466,6 +487,9 @@ describe("initial PostgreSQL migration", () => {
       bootstrap_direct_table: false,
       bootstrap_execute: true,
       migrator_retains_bootstrap_owner: false,
+      deletion_direct_account: false,
+      deletion_execute: true,
+      migrator_retains_deletion_owner: false,
     });
   });
 
@@ -715,6 +739,7 @@ describe("Better Auth trusted contact isolation", () => {
       "app_user",
       "app_auth_account_resolver",
       "app_auth_account_bootstrap",
+      "app_account_deletion",
       "app_auth_contact_resolver",
     ] as const) {
       await expect(
@@ -768,6 +793,29 @@ describe("Better Auth trusted contact isolation", () => {
     ).rejects.toMatchObject({ code: "42501" });
   });
 
+  it("allows the deletion executor only its function and no direct private rows", async () => {
+    for (const statement of [
+      "select id from user_account",
+      "delete from profile",
+      `delete from auth."user"`,
+      "delete from authentication_email_suppression",
+    ]) {
+      await expect(
+        asDatabaseRole("app_account_deletion", (client) =>
+          client.query(statement),
+        ),
+      ).rejects.toMatchObject({ code: "42501" });
+    }
+    await expect(
+      asDatabaseRole("app_auth_account_resolver", (client) =>
+        client.query(
+          `select app.erase_local_auth_account(
+             'wrong', 'wrong', '11111111-1111-4111-8111-111111111111')`,
+        ),
+      ),
+    ).rejects.toMatchObject({ code: "42501" });
+  });
+
   it("cascades sessions and password accounts when an auth user is deleted", async () => {
     await pool.query(
       `insert into auth."user" (id, name, email, email_verified)
@@ -792,12 +840,384 @@ describe("Better Auth trusted contact isolation", () => {
   });
 });
 
+describe("verified-session account deletion lifecycle", () => {
+  async function createFixture(seed: string) {
+    const email = `delete-${seed}-${randomUUID()}@example.test`;
+    const password = "integration-deletion-password-123";
+    const signUp = await auth.api.signUpEmail({
+      body: { name: "Deletion fixture", email, password },
+    });
+    await pool.query(
+      `update auth."user" set email_verified = true where id = $1`,
+      [signUp.user.id],
+    );
+    const signIn = await auth.api.signInEmail({
+      body: { email, password },
+      asResponse: true,
+    });
+    const cookie = signIn.headers.get("set-cookie")!.split(";", 1)[0]!;
+    const sessionHeaders = new Headers({
+      cookie,
+      origin: "https://app.example.test",
+    });
+    const verifier = new BetterAuthVerifiedSessionVerifier(auth.api);
+    const bootstrapRequest = new Request(
+      "https://app.example.test/internal/account-bootstrap",
+      { method: "POST", headers: sessionHeaders },
+    );
+    await expect(
+      bootstrapAccountForRequest(bootstrapRequest, {
+        sessionVerifier: verifier,
+        bootstrapper: authAccountBootstrapper,
+        accountResolver: authAccountResolver,
+        readinessVerifier: authAccountReadiness,
+      }),
+    ).resolves.toMatchObject({ disposition: "ready" });
+    const account = await pool.query<{ id: string }>(
+      `select id from user_account where identity_provider_subject = $1`,
+      [signUp.user.id],
+    );
+    const sessionRequest = new Request("https://app.example.test/private", {
+      headers: sessionHeaders,
+    });
+    const verified = await verifier.verify(sessionRequest);
+    if (verified.status !== "active") throw new Error("fixture session failed");
+    return {
+      email,
+      password,
+      subject: signUp.user.id,
+      ownerId: account.rows[0]!.id as AccountId,
+      session: verified,
+      sessionHeaders,
+      verifier,
+    };
+  }
+
+  async function addPrivateRows(
+    fixture: Awaited<ReturnType<typeof createFixture>>,
+  ) {
+    const profile = await pool.query<{ id: string }>(
+      `insert into profile (owner_user_id, display_name, current_timezone)
+       values ($1, 'Deletion private marker', 'America/Toronto') returning id`,
+      [fixture.ownerId],
+    );
+    const births = await pool.query<{ id: string }>(
+      `insert into birth_profile (profile_id, birth_date, timezone, birth_time_precision)
+       values ($1, '1990-01-01', 'America/Toronto', 'date-only'),
+              ($1, '1991-01-01', 'America/Toronto', 'date-only') returning id`,
+      [profile.rows[0]!.id],
+    );
+    await pool.query(
+      `insert into calculation_run
+         (owner_user_id, kind, normalized_input_hash, engine_version,
+          provider_key, provider_version, config_version)
+       values ($1, 'deletion-fixture', $2, '1', 'fixture', '1', '1')`,
+      [fixture.ownerId, randomUUID()],
+    );
+    const reportId = await compatibilityRepository.create(fixture.ownerId, {
+      primaryBirthProfileId: births.rows[0]!.id,
+      comparisonBirthProfileId: births.rows[1]!.id,
+      report: DEMO_COMPATIBILITY_REPORT,
+    });
+    const publication = await compatibilityRepository.publishOwned(
+      fixture.ownerId,
+      reportId,
+      null,
+    );
+    await pool.query(
+      `insert into audit_event
+         (owner_user_id, actor_reference, resource_type, resource_reference,
+          action, request_id, metadata)
+       values ($1::uuid, 'deletion-fixture', 'account', ($1::uuid)::text,
+               'fixture-created', $2, '{"private":"marker"}')`,
+      [fixture.ownerId, randomUUID()],
+    );
+    await pool.query(
+      `insert into auth.verification
+         (id, identifier, value, expires_at)
+       values ($1, $2, $3, CURRENT_TIMESTAMP + interval '1 hour')`,
+      [randomUUID(), fixture.email, fixture.subject],
+    );
+    return { profileId: profile.rows[0]!.id, shareToken: publication!.token };
+  }
+
+  function deletionRequest(
+    fixture: Awaited<ReturnType<typeof createFixture>>,
+    password = fixture.password,
+  ) {
+    const body = JSON.stringify({
+      version: "1.0.0",
+      confirmation: "DELETE MY ACCOUNT",
+      currentPassword: password,
+    });
+    const headers = new Headers(fixture.sessionHeaders);
+    headers.set("origin", "https://app.example.test");
+    headers.set("sec-fetch-site", "same-origin");
+    headers.set("content-type", "application/json");
+    headers.set("content-length", String(Buffer.byteLength(body)));
+    return new Request("https://app.example.test/internal/account-deletion", {
+      method: "POST",
+      headers,
+      body,
+    });
+  }
+
+  function deletionDependencies(
+    fixture: Awaited<ReturnType<typeof createFixture>>,
+  ) {
+    return {
+      canonicalOrigin: "https://app.example.test",
+      sessionVerifier: fixture.verifier,
+      accountResolver: authAccountResolver,
+      passwordReauthenticator: new BetterAuthCurrentPasswordReauthenticator(
+        auth.api,
+      ),
+      eraser: localAccountDeletion,
+    };
+  }
+
+  it("erases local private/auth/share state, retains safety ledgers, and flags billing reconciliation", async () => {
+    const fixture = await createFixture("billing");
+    const privateRows = await addPrivateRows(fixture);
+    const customerReference = `customer-${randomUUID()}`;
+    await pool.query(
+      `insert into subscription
+         (user_account_id, plan_key, status, external_provider,
+          external_customer_reference, external_subscription_reference)
+       values ($1, 'legacy-plan', 'active', 'deletion_test', $2, $3)`,
+      [fixture.ownerId, customerReference, `subscription-${randomUUID()}`],
+    );
+    await pool.query(
+      `insert into billing_customer_binding
+         (user_account_id, external_provider, external_customer_reference)
+       values ($1, 'deletion_test', $2)`,
+      [fixture.ownerId, customerReference],
+    );
+    const safetyBefore = await pool.query<{
+      feedback: string;
+      suppression: string;
+    }>(
+      `select
+         (select count(*)::text from authentication_email_feedback_receipt) as feedback,
+         (select count(*)::text from authentication_email_suppression) as suppression`,
+    );
+
+    await expect(
+      deleteAccountForRequest(
+        deletionRequest(fixture, "wrong-password"),
+        deletionDependencies(fixture),
+      ),
+    ).resolves.toMatchObject({
+      disposition: "reject",
+      code: "deletion-not-authorized",
+    });
+    await expect(
+      deleteAccountForRequest(
+        deletionRequest(fixture),
+        deletionDependencies(fixture),
+      ),
+    ).resolves.toEqual({
+      version: "1.0.0",
+      disposition: "reconcile",
+      code: "external-account-reconciliation-required",
+    });
+
+    const state = await pool.query<{
+      deleted: boolean;
+      profiles: string;
+      calculations: string;
+      reports: string;
+      audits: string;
+      auth_users: string;
+      auth_sessions: string;
+      auth_accounts: string;
+      verifications: string;
+      subscriptions: string;
+      bindings: string;
+      feedback: string;
+      suppression: string;
+    }>(
+      `select
+         (select deleted_at is not null from user_account where id = $1) as deleted,
+         (select count(*)::text from profile where owner_user_id = $1) as profiles,
+         (select count(*)::text from calculation_run where owner_user_id = $1) as calculations,
+         (select count(*)::text from compatibility_report where owner_user_id = $1) as reports,
+         (select count(*)::text from audit_event where owner_user_id = $1) as audits,
+         (select count(*)::text from auth."user" where id = $2) as auth_users,
+         (select count(*)::text from auth."session" where user_id = $2) as auth_sessions,
+         (select count(*)::text from auth.account where user_id = $2) as auth_accounts,
+         (select count(*)::text from auth.verification
+            where identifier = $3 or value = $2) as verifications,
+         (select count(*)::text from subscription where user_account_id = $1) as subscriptions,
+         (select count(*)::text from billing_customer_binding where user_account_id = $1) as bindings,
+         (select count(*)::text from authentication_email_feedback_receipt) as feedback,
+         (select count(*)::text from authentication_email_suppression) as suppression`,
+      [fixture.ownerId, fixture.subject, fixture.email],
+    );
+    expect(state.rows[0]).toEqual({
+      deleted: true,
+      profiles: "0",
+      calculations: "0",
+      reports: "0",
+      audits: "0",
+      auth_users: "0",
+      auth_sessions: "0",
+      auth_accounts: "0",
+      verifications: "0",
+      subscriptions: "1",
+      bindings: "1",
+      feedback: safetyBefore.rows[0]!.feedback,
+      suppression: safetyBefore.rows[0]!.suppression,
+    });
+    await expect(
+      compatibilityRepository.resolveActivePublic(privateRows.shareToken),
+    ).resolves.toBeNull();
+    await expect(bootstrapAccount(pool, fixture.session)).rejects.toEqual(
+      new AccountUnavailableError(),
+    );
+
+    await pool.query("delete from subscription where user_account_id = $1", [
+      fixture.ownerId,
+    ]);
+    await pool.query(
+      "delete from billing_customer_binding where user_account_id = $1",
+      [fixture.ownerId],
+    );
+    await pool.query("delete from user_account where id = $1", [
+      fixture.ownerId,
+    ]);
+  });
+
+  it("serializes replay, deletes one account only, and returns completed without billing", async () => {
+    const first = await createFixture("concurrent-a");
+    const second = await createFixture("concurrent-b");
+    await addPrivateRows(first);
+    const secondRows = await addPrivateRows(second);
+    const outcomes = await Promise.all([
+      localAccountDeletion.erase(first.session, first.ownerId),
+      localAccountDeletion.erase(first.session, first.ownerId),
+      localAccountDeletion.erase(first.session, first.ownerId),
+    ]);
+    expect(outcomes).toEqual(["deleted", "deleted", "deleted"]);
+    const isolation = await pool.query<{
+      first_deleted: boolean;
+      first_profiles: string;
+      second_deleted: boolean;
+      second_profiles: string;
+      second_auth: string;
+    }>(
+      `select
+         (select deleted_at is not null from user_account where id = $1) as first_deleted,
+         (select count(*)::text from profile where owner_user_id = $1) as first_profiles,
+         (select deleted_at is not null from user_account where id = $2) as second_deleted,
+         (select count(*)::text from profile where owner_user_id = $2) as second_profiles,
+         (select count(*)::text from auth."user" where id = $3) as second_auth`,
+      [first.ownerId, second.ownerId, second.subject],
+    );
+    expect(isolation.rows[0]).toEqual({
+      first_deleted: true,
+      first_profiles: "0",
+      second_deleted: false,
+      second_profiles: "1",
+      second_auth: "1",
+    });
+    await expect(
+      compatibilityRepository.resolveActivePublic(secondRows.shareToken),
+    ).resolves.not.toBeNull();
+    await pool.query(`delete from auth."user" where id = $1`, [second.subject]);
+    await pool.query("delete from user_account where id in ($1, $2)", [
+      first.ownerId,
+      second.ownerId,
+    ]);
+  });
+
+  it("uses the subject, erasure, and retained-billing indexes", async () => {
+    const client = await pool.connect();
+    try {
+      await client.query("begin");
+      await client.query("set local enable_seqscan = off");
+      const planRows: unknown[] = [];
+      for (const query of [
+        "explain (format json) select id from user_account where identity_provider_subject = 'index-probe'",
+        "explain (format json) select id from profile where owner_user_id = '00000000-0000-4000-8000-000000000001'",
+        "explain (format json) select id from calculation_run where owner_user_id = '00000000-0000-4000-8000-000000000001'",
+        "explain (format json) select id from audit_event where owner_user_id = '00000000-0000-4000-8000-000000000001'",
+        "explain (format json) select id from subscription where user_account_id = '00000000-0000-4000-8000-000000000001'",
+        "explain (format json) select id from billing_customer_binding where user_account_id = '00000000-0000-4000-8000-000000000001'",
+      ]) {
+        const result = await client.query(query);
+        planRows.push(...result.rows);
+      }
+      const plan = JSON.stringify(planRows);
+      expect(plan).toContain("user_account_identity_subject_uidx");
+      expect(plan).toContain("profile_owner_idx");
+      expect(plan).toContain("calculation_run_owner_idx");
+      expect(plan).toContain("audit_event_owner_occurred_idx");
+      expect(plan).toContain("subscription_user_idx");
+      expect(plan).toContain("billing_customer_binding_owner_idx");
+    } finally {
+      await client.query("rollback");
+      client.release();
+    }
+  });
+
+  it("rolls every local erasure back on an internal failure and restores pooled authority", async () => {
+    const fixture = await createFixture("rollback");
+    await addPrivateRows(fixture);
+    await pool.query(
+      `create function public.fail_account_deletion_fixture() returns trigger
+       language plpgsql as $$ begin raise exception 'deliberate deletion rollback'; end $$;
+       create trigger fail_account_deletion_fixture
+       before delete on calculation_run for each statement
+       execute function public.fail_account_deletion_fixture()`,
+    );
+    try {
+      await expect(
+        localAccountDeletion.erase(fixture.session, fixture.ownerId),
+      ).rejects.toThrow("deliberate deletion rollback");
+    } finally {
+      await pool.query(
+        `drop trigger if exists fail_account_deletion_fixture on calculation_run;
+         drop function if exists public.fail_account_deletion_fixture()`,
+      );
+    }
+    const state = await pool.query<{
+      deleted: boolean;
+      profiles: string;
+      auth_users: string;
+      current_role: string;
+      current_user: string;
+    }>(
+      `select
+         (select deleted_at is not null from user_account where id = $1) as deleted,
+         (select count(*)::text from profile where owner_user_id = $1) as profiles,
+         (select count(*)::text from auth."user" where id = $2) as auth_users,
+         current_role, current_user`,
+      [fixture.ownerId, fixture.subject],
+    );
+    expect(state.rows[0]).toEqual({
+      deleted: false,
+      profiles: "1",
+      auth_users: "1",
+      current_role: "cosmic",
+      current_user: "cosmic",
+    });
+    await pool.query(`delete from auth."user" where id = $1`, [
+      fixture.subject,
+    ]);
+    await pool.query("delete from user_account where id = $1", [
+      fixture.ownerId,
+    ]);
+  });
+});
+
 async function asDatabaseRole<T>(
   role:
     | "app_user"
     | "app_auth_runtime"
     | "app_auth_account_resolver"
     | "app_auth_account_bootstrap"
+    | "app_account_deletion"
     | "app_auth_contact_resolver",
   work: (client: PoolClient) => Promise<T>,
 ) {

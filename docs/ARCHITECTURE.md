@@ -391,6 +391,21 @@ tests/
   verified email through `app.resolve_verified_auth_contact`. Both SQL functions
   recheck deletion/ownership; contact also rechecks session ID, subject, expiry,
   freshness, and current `email_verified` state.
+- Account deletion: a strict internal same-origin command requires a recent verified
+  Better Auth session, an independently resolved active internal owner, explicit canonical
+  intent, and current-password reauthentication. The browser never selects the subject or
+  owner. One execute-only database function rechecks all identity state under a separate
+  NOLOGIN/NOINHERIT owner and serializes on the internal account tombstone.
+- Deletion lifecycle: the transaction erases profiles and nested birth/numerology/
+  compatibility/share data, calculation runs, owner audit events, auth verification
+  values, and the Better Auth user with session/account cascades. It then soft-deletes the
+  internal account so bootstrap cannot recreate it. A failure rolls the whole local
+  lifecycle back; concurrent and replayed execution converges on the same terminal state.
+- Retention boundary: subscription and billing bindings remain for external-provider
+  reconciliation and force a reconciliation-required result. Content-free email-feedback
+  receipts and keyed recipient suppression remain independent safety ledgers. Their future
+  owner/maintenance expiry procedures must be explicit; account deletion cannot silently
+  weaken suppression or claim external billing deletion.
 
 ## Data and cache principles
 

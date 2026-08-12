@@ -38,6 +38,15 @@ export interface BetterAuthSessionApi {
   getSession(input: Readonly<{ headers: Headers }>): Promise<unknown>;
 }
 
+export interface BetterAuthPasswordApi {
+  verifyPassword(
+    input: Readonly<{
+      headers: Headers;
+      body: Readonly<{ password: string }>;
+    }>,
+  ): Promise<unknown>;
+}
+
 export class BetterAuthBillingSessionVerifier implements SessionVerifier {
   constructor(
     private readonly api: BetterAuthSessionApi,
@@ -119,6 +128,30 @@ export class IdentityScopedAccountReadinessVerifier {
       );
       return result.rows[0]?.id === ownerId;
     });
+  }
+}
+
+export class BetterAuthCurrentPasswordReauthenticator {
+  constructor(private readonly api: BetterAuthPasswordApi) {}
+
+  async verify(request: Request, currentPassword: string): Promise<boolean> {
+    try {
+      const value = await this.api.verifyPassword({
+        headers: new Headers(request.headers),
+        body: { password: currentPassword },
+      });
+      if (!record(value) || Object.keys(value).length !== 1)
+        throw new AccountUnavailableError();
+      return value.status === true;
+    } catch (error) {
+      if (
+        record(error) &&
+        record(error.body) &&
+        error.body.code === "INVALID_PASSWORD"
+      )
+        return false;
+      throw error;
+    }
   }
 }
 

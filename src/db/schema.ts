@@ -73,6 +73,13 @@ export const userAccount = pgTable(
       using: sql`true`,
       withCheck: sql`true`,
     }),
+    pgPolicy("user_account_deletion_owner", {
+      as: "permissive",
+      for: "all",
+      to: ["app_account_deletion_owner"],
+      using: sql`true`,
+      withCheck: sql`true`,
+    }),
   ],
 );
 
@@ -110,6 +117,13 @@ export const profile = pgTable(
       to: ["app_user"],
       using: sql`(owner_user_id = app.current_user_id())`,
       withCheck: sql`(owner_user_id = app.current_user_id())`,
+    }),
+    pgPolicy("profile_deletion_owner", {
+      as: "permissive",
+      for: "all",
+      to: ["app_account_deletion_owner"],
+      using: sql`true`,
+      withCheck: sql`true`,
     }),
     check(
       "profile_current_latitude_check",
@@ -171,6 +185,13 @@ export const calculationRun = pgTable(
       to: ["app_user"],
       using: sql`(owner_user_id = app.current_user_id())`,
       withCheck: sql`(owner_user_id = app.current_user_id())`,
+    }),
+    pgPolicy("calculation_run_deletion_owner", {
+      as: "permissive",
+      for: "all",
+      to: ["app_account_deletion_owner"],
+      using: sql`true`,
+      withCheck: sql`true`,
     }),
   ],
 );
@@ -337,6 +358,12 @@ export const subscription = pgTable(
       using: sql`(user_account_id = app.current_user_id())`,
       withCheck: sql`(user_account_id = app.current_user_id())`,
     }),
+    pgPolicy("subscription_deletion_owner", {
+      as: "permissive",
+      for: "select",
+      to: ["app_account_deletion_owner"],
+      using: sql`true`,
+    }),
     check(
       "subscription_transition_state_check",
       sql`((transition_state_version IS NULL AND last_provider_event_occurred_at IS NULL) OR (transition_state_version = '1.0.0' AND plan_key IN ('personal', 'advanced') AND period_starts_at IS NOT NULL AND period_ends_at IS NOT NULL AND period_starts_at < period_ends_at AND last_provider_event_id ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$' AND last_provider_event_occurred_at IS NOT NULL))`,
@@ -384,6 +411,12 @@ export const billingCustomerBinding = pgTable(
       to: ["app_user"],
       using: sql`(user_account_id = app.current_user_id())`,
       withCheck: sql`(user_account_id = app.current_user_id())`,
+    }),
+    pgPolicy("billing_customer_binding_deletion_owner", {
+      as: "permissive",
+      for: "select",
+      to: ["app_account_deletion_owner"],
+      using: sql`true`,
     }),
     check(
       "billing_customer_binding_provider_check",
@@ -699,6 +732,13 @@ export const auditEvent = pgTable(
       for: "select",
       to: ["app_user"],
       using: sql`(owner_user_id = app.current_user_id())`,
+    }),
+    pgPolicy("audit_event_deletion_owner", {
+      as: "permissive",
+      for: "all",
+      to: ["app_account_deletion_owner"],
+      using: sql`true`,
+      withCheck: sql`true`,
     }),
   ],
 );

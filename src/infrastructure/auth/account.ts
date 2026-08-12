@@ -57,6 +57,43 @@ export async function bootstrapAccount(
   }
 }
 
+export type LocalAccountDeletionOutcome =
+  "deleted" | "reconciliation-required" | "unavailable";
+
+export class LocalAccountDeletionRepository {
+  constructor(private readonly pool: Pick<Pool, "connect">) {}
+
+  async erase(
+    session: ActiveSession,
+    ownerId: AccountId,
+  ): Promise<LocalAccountDeletionOutcome> {
+    if (!isUuid(ownerId)) throw new AccountUnavailableError();
+    const client = await this.pool.connect();
+    try {
+      await client.query("begin");
+      await client.query("set local role app_account_deletion");
+      const result = await client.query<{ outcome: unknown }>(
+        `select app.erase_local_auth_account($1, $2, $3) as outcome`,
+        [session.subject, session.sessionId, ownerId],
+      );
+      const outcome = result.rows[0]?.outcome;
+      if (
+        outcome !== "deleted" &&
+        outcome !== "reconciliation-required" &&
+        outcome !== "unavailable"
+      )
+        throw new AccountUnavailableError();
+      await client.query("commit");
+      return outcome;
+    } catch (error) {
+      await rollback(client);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+}
+
 async function rollback(client: PoolClient) {
   try {
     await client.query("rollback");

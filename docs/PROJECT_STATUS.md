@@ -4,8 +4,8 @@ Last updated: 2026-08-12
 
 ## Current position
 
-Status: Goal 62 complete; live email-verified Better Auth sessions can bootstrap exactly one
-internal account through an execute-only function and prove identity-scoped readiness.
+Status: Goal 63 complete; verified Better Auth users can authorize one transactional local
+account erasure with current-password proof, explicit intent, safe retention, and no public route.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -99,6 +99,13 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 63: require an exact same-origin deletion command, recent live email-verified
+      Better Auth session, independently resolved active account, canonical explicit intent,
+      and current-password reauthentication before any local state changes.
+- [x] Add migration `0011_nervous_mystique`, execute-only deletion authority, a separate
+      NOLOGIN/NOINHERIT function owner, transactional private/auth/share erasure, internal
+      tombstoning, billing reconciliation, safety-ledger retention, concurrency convergence,
+      rollback, isolation, query-plan, and nonresurrection proof.
 - [x] Goal 61: validate one bounded non-raw SNS-to-SQS notification envelope for the
       configured `ca-central-1` topic and normalize exact SES delivery, bounce,
       complaint, reject, delivery-delay, and rendering-failure configuration-set events
@@ -550,26 +557,23 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 63 — implement verified-session account-deletion and retention orchestration without
-exposing a public authentication route or touching production data.
+Goal 64 — define and verify the minimum public Better Auth HTTP boundary without adding
+account UI, live email, external resources, production data changes, or deployment.
 
 Deliverables:
 
-1. Define a strict server-only deletion request/result contract requiring a recent
-   email-verified session, the independently resolved active internal account, explicit
-   same-origin user intent, and a current password reauthentication seam. Never accept
-   browser account/subject IDs or reveal whether partial identity/provider state exists.
-2. Design one transactionally safe lifecycle across internal soft deletion, private-row
-   cascade/retention requirements, Better Auth sessions/accounts/user deletion, public
-   share revocation, billing bindings/subscriptions, feedback receipts, and keyed email
-   suppression. Document what is erased, retained, anonymized, or externally reconciled.
-3. Implement only local injected orchestration and least-privilege persistence required
-   for deterministic deletion. Prove two-account isolation, replay, concurrency, partial
-   failure/reconciliation, session revocation, rollback, pooling cleanup, retention/index
-   plans, and no account resurrection.
-4. Apply `database-migration` and `security-audit`, set the next single auth workflow goal,
-   and run every gate. Do not expose public routes/UI, call Paddle/AWS, delete production
-   data, create credentials/resources, purchase, or deploy.
+1. Inventory Better Auth's exact 1.6.27 handler surface and select only required email/password,
+   verification, reset, session, sign-out, and current-password operations. Reject unintended
+   provider, telemetry, account-linking, or administrative exposure.
+2. Add the smallest reviewed App Router handler boundary with canonical origin/proxy rules,
+   bounded request handling, safe headers, anti-enumerating failures, and no browser-owned
+   internal identity. Keep account bootstrap/deletion as separate trusted workflows.
+3. Prove method/path allowlisting, hostile origin/forwarded headers, malformed/oversized bodies,
+   cookie/session attributes, verification/reset token handling, revocation, rate-limit seams,
+   and response privacy using local deterministic tests and disposable PostgreSQL only.
+4. Apply `security-audit`, document residual CSRF/abuse/recovery/browser-E2E gates, set the next
+   single auth workflow goal, and run every gate. Do not send live email, create credentials or
+   infrastructure, modify production data, purchase, or deploy.
 
 ## Phase queue
 
@@ -619,8 +623,8 @@ Deliverables:
   while eventual production-host runtime and cache behavior remain release gates.
 - Managed database, payment-account, AI, monitoring, and deployment providers remain
   intentionally undecided. Amazon SES is selected only for authentication email.
-- Better Auth still requires deletion/retention orchestration, public route/UI review,
-  browser E2E, and production recovery testing. The SES SNS signature authenticator and
+- Better Auth still requires public route/UI review, browser E2E, and production recovery
+  testing. The SES SNS signature authenticator and
   regional queue infrastructure remain external gates. MFA and passkeys remain
   release-hardening decisions.
 - Production database role provisioning, TLS, pooling, migration timeouts,
@@ -655,6 +659,9 @@ Deliverables:
 | 2026-08-12 | Goal 62 migration and PostgreSQL gate              | Oldest schema upgraded cumulatively; 50/50 auth/bootstrap/isolation tests passed              |
 | 2026-08-12 | Goal 62 focused and coverage gates                 | 25 focused cases; 58 files/997 tests at 93.47% statements and 91.56% branches passed          |
 | 2026-08-12 | Goal 62 full application gate                      | Formatting, lint, strict TypeScript, 58 files/997 tests, and optimized build passed           |
+| 2026-08-12 | Goal 63 migration and PostgreSQL gate              | Oldest schema upgraded cumulatively; 55/55 deletion/retention/isolation tests passed          |
+| 2026-08-12 | Goal 63 focused and coverage gates                 | 49 focused cases; 60 files/1035 tests at 93.42% statements and 91.59% branches passed         |
+| 2026-08-12 | Goal 63 full application gate                      | Formatting, lint, strict TypeScript, 60 files/1035 tests, and optimized build passed          |
 | 2026-08-11 | `npm run db:check`                                 | Drizzle schema, migration journal, and generated snapshot are consistent                      |
 | 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 562 tests, and optimized production build         |
 | 2026-08-11 | `npm run test:coverage`                            | 94.04% statements, 91.04% branches, 99.73% functions, and 95.13% lines                        |
@@ -1212,6 +1219,43 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 63 verified-session account-deletion and retention record
+
+- Trust order: `deleteAccountForRequest` requires an exact canonical same-origin POST,
+  recent live email-verified Better Auth session, canonical bounded JSON intent, independent
+  active-account resolution, and current-password verification before local erasure. It
+  rejects query/fragment, cross-site fetches, unknown/reordered fields, browser identity,
+  malformed content, and stale/unverified/revoked state with fixed identity-free outcomes.
+- Transaction: `LocalAccountDeletionRepository` assumes only `app_account_deletion` and
+  calls `app.erase_local_auth_account(subject, session, owner)` before validating the exact
+  terminal result and committing. Any thrown, malformed, or invariant-failing operation
+  rolls back, resets authority, and releases the pooled client.
+- Migration: `0011_nervous_mystique` adds the NOLOGIN executor and separate
+  NOLOGIN/NOINHERIT security-definer owner with a fixed `pg_catalog` search path,
+  column-limited grants, forced-RLS policies, no direct executor table access, and no
+  retained migrator membership. The function locks the internal tombstone and rechecks the
+  exact active verified user/session/owner binding inside the deletion transaction.
+- Erasure/retention: profiles and all nested birth/numerology/compatibility/public-share
+  state, calculation runs, owner audit events, auth verification values, and the Better
+  Auth user/accounts/sessions are erased. The internal account is tombstoned and cannot be
+  bootstrapped again. Existing subscription/billing rows are retained and force external
+  reconciliation; content-free feedback receipts and keyed suppression remain independent
+  safety ledgers. No external provider deletion is claimed.
+- Security audit: account identity, password proof, private birth/relationship data,
+  public shares, auth state, deletion finality, billing records, and safety ledgers are the
+  protected assets. Tests prove hostile request rejection, strict call order, incorrect
+  password collapse, privilege denial, session/account rechecks, replay/concurrency,
+  two-account isolation, public-share removal, complete rollback, pooled-role cleanup,
+  billing reconciliation, retained safety counts, no resurrection, and all six indexed
+  subject/erasure/retention access paths. No critical/high finding remains.
+- Verification: 49 focused request/repository/adapter cases and all 55 PostgreSQL 18
+  integration cases pass. Coverage passes 60 files/1035 tests at 93.42% statements,
+  91.59% branches, 99.34% functions, and 95.00% lines. The cumulative oldest-schema
+  migration path and Drizzle metadata check pass. The full gate passes formatting, ESLint,
+  strict TypeScript, all 60 files/1035 tests, and the optimized production build.
+- Scope: no public auth/deletion route, page/form, live Paddle/AWS call, external resource,
+  credential, production data mutation, purchase, or deployment was added.
 
 ## Goal 62 verified-session internal-account bootstrap record
 

@@ -385,3 +385,36 @@ requires its UUID to match the bootstrapped UUID, and proves `app_user` plus
 `retry`, or `reconcile` values with fixed codes and never expose subject, session, internal
 account UUID, email, profile, database error, or caller-supplied data. No public route,
 cookie name, page, form, redirect, or automatic invocation is selected by this contract.
+
+## Verified-session account-deletion boundary
+
+`deleteAccountForRequest` is an internal server-only workflow. It accepts only an exact
+same-origin `POST` to `/internal/account-deletion`, `application/json`, a bounded body,
+`Sec-Fetch-Site: same-origin`, and the canonical key order `{version, confirmation,
+currentPassword}`. The version is `1.0.0`, confirmation is the exact phrase
+`DELETE MY ACCOUNT`, and the password is passed only to the injected reauthentication
+port. Query, fragment, browser account/subject/email fields, unknown keys, redirects,
+and cross-site requests are rejected before account resolution or password work.
+
+Authorization order is fixed: recent live email-verified Better Auth session, strict
+intent, independently resolved active internal account, current-password verification,
+then local erasure. `BetterAuthCurrentPasswordReauthenticator` calls the official
+password-verification API with the request headers and maps an incorrect password to the
+same identity-free authorization failure as other invalid identity state. Dependency or
+database uncertainty returns retry/reconciliation, never a false success.
+
+`LocalAccountDeletionRepository` assumes only the NOLOGIN `app_account_deletion` role and
+executes `app.erase_local_auth_account(subject, session, owner)` in one transaction. The
+security-definer function rechecks the active verified auth user/session and exact internal
+binding, locks the tombstone, erases private profiles and their cascades, calculations,
+audit rows, auth verification values, and the Better Auth user with account/session
+cascades, then marks the internal account deleted. Public compatibility shares disappear
+with the private profile/report cascade. Concurrent/replayed calls converge and bootstrap
+cannot resurrect the tombstone.
+
+Subscription and billing-customer rows are retained when present because external Paddle
+state is outside this local transaction; the fixed result is then
+`external-account-reconciliation-required`. Content-free authentication-email feedback
+receipts and keyed suppression are retained because they are not linked to the account and
+remain safety/abuse controls. No Paddle/AWS call, live deletion, public route, UI, provider
+identity, account UUID, subject, email, session, or exception is exposed by this contract.

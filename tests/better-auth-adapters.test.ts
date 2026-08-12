@@ -4,6 +4,7 @@ vi.mock("server-only", () => ({}));
 
 import {
   BetterAuthBillingSessionVerifier,
+  BetterAuthCurrentPasswordReauthenticator,
   BetterAuthVerifiedSessionVerifier,
 } from "@/infrastructure/auth/better-auth-adapters";
 
@@ -107,5 +108,64 @@ describe("Better Auth billing adapters", () => {
         status: "invalid",
       });
     }
+  });
+});
+
+describe("Better Auth current-password reauthentication", () => {
+  it("projects only headers and current password into the server API", async () => {
+    const verifyPassword = vi.fn(async () => ({ status: true }));
+    const reauthenticator = new BetterAuthCurrentPasswordReauthenticator({
+      verifyPassword,
+    });
+    await expect(
+      reauthenticator.verify(request, "current-password-123"),
+    ).resolves.toBe(true);
+    expect(verifyPassword).toHaveBeenCalledWith({
+      headers: expect.any(Headers),
+      body: { password: "current-password-123" },
+    });
+    expect(JSON.stringify(verifyPassword.mock.calls)).not.toContain("query");
+  });
+
+  it("returns false only for Better Auth's exact invalid-password code", async () => {
+    const invalid = new BetterAuthCurrentPasswordReauthenticator({
+      verifyPassword: async () => {
+        throw {
+          body: { code: "INVALID_PASSWORD", message: "private detail" },
+        };
+      },
+    });
+    await expect(invalid.verify(request, "wrong-password")).resolves.toBe(
+      false,
+    );
+  });
+
+  it.each([
+    async () => ({ status: false }),
+    async () => ({ status: true, extra: "unsafe" }),
+  ])("rejects malformed server results", async (verifyPassword) => {
+    const reauthenticator = new BetterAuthCurrentPasswordReauthenticator({
+      verifyPassword,
+    });
+    if ((await verifyPassword()).status === false) {
+      await expect(
+        reauthenticator.verify(request, "current-password"),
+      ).resolves.toBe(false);
+    } else {
+      await expect(
+        reauthenticator.verify(request, "current-password"),
+      ).rejects.toThrow("account is unavailable");
+    }
+  });
+
+  it("propagates non-password provider failure", async () => {
+    const reauthenticator = new BetterAuthCurrentPasswordReauthenticator({
+      verifyPassword: async () => {
+        throw new Error("private database outage");
+      },
+    });
+    await expect(
+      reauthenticator.verify(request, "current-password"),
+    ).rejects.toThrow("database outage");
   });
 });
