@@ -4,8 +4,8 @@ Last updated: 2026-08-12
 
 ## Current position
 
-Status: Goal 59 complete; authentication email now has a forced-RLS content-free
-idempotency ledger and rollover-aware keyed reference boundary without sending.
+Status: Goal 60 complete; the exact SES v2 Canada Central adapter composes local
+templates, suppression, and durable idempotency through a single injected fake-tested send.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 23-table public schema plus four isolated auth
@@ -23,7 +23,7 @@ tables, strict server configuration, database sessions, and execute-only account
 contact lookups. No live billing account, production data, managed database/auth
 infrastructure, public auth surface, AI, general notification, location-resolution,
 or deployment provider is selected. Authentication email has a provider decision but
-no SDK, account, DNS, credentials, infrastructure, provider adapter, or delivery.
+an exact SDK/adapter but no account, DNS, credentials, infrastructure, or live delivery.
 
 ## Completed
 
@@ -98,6 +98,13 @@ no SDK, account, DNS, credentials, infrastructure, provider adapter, or delivery
 
 ## Recently completed
 
+- [x] Goal 60: pin `@aws-sdk/client-sesv2` 3.1108.0 and implement a strict server-only
+      adapter fixed to `ca-central-1`, one normalized authentication sender, one required
+      configuration set, local Simple text/HTML, and an SDK client with retries disabled.
+- [x] Compose exact request validation, durable reservation/replay/collision state,
+      injected suppression lookup, one SES call, accepted message binding, definite
+      reject/retry classification, and conservative ambiguous reconciliation without a
+      live client, credential, resource, account, DNS change, route, or email.
 - [x] Goal 59: add forward-only migration `0007_nasty_mister_sinister` with a
       content-free authentication-email delivery ledger, forced RLS, one NOLOGIN
       runtime role limited to SELECT/INSERT/UPDATE, unique reference digest, lifecycle
@@ -526,25 +533,26 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 60 — implement the isolated Amazon SES API v2 authentication-email adapter against
-an injected client without creating AWS resources or sending live email.
+Goal 61 — implement provider-neutral SES feedback normalization and durable local
+suppression processing from injected queue messages without creating AWS resources.
 
 Deliverables:
 
-1. Pin exact `@aws-sdk/client-sesv2` 3.1108.0 and define strict server-only SES
-   configuration fixed to `ca-central-1`, a verified authentication sender, required
-   configuration set, and no global endpoint/SMTP/tracking/provider template.
-2. Compose Goal 58 validation/rendering and Goal 59 reservation with one injected
-   `SendEmail` client. Map definite pre-acceptance rejection/throttle/quota outcomes
-   safely; treat timeout/network/malformed success or other ambiguous acceptance as
-   reconciliation-required and never issue a second send.
-3. Prove exact MIME/content shape, text+HTML parity, sender/recipient/configuration-set
-   fields, accepted message-reference binding, terminal replay, collision, suppression
-   seam, every error class, no raw data in results/errors/logs, and no call before a new
-   reservation using a fake client only.
-4. Apply `security-audit`, document feedback-ingestion as the single next goal, and run
-   all gates. Do not create an AWS account/identity/DNS/IAM/configuration set/topic/queue,
-   use credentials, call live SES, send email, expose auth routes/UI, purchase, or deploy.
+1. Define strict provider-neutral delivery/bounce/complaint/reject/delay/render-failure
+   events and validate the exact SES configuration-set event shapes expected through
+   same-region SNS-to-SQS. Accept only bounded known versions/types/message IDs and
+   never persist or return raw queue/SNS/SES payload, recipient, diagnostic text, or IP.
+2. Add a content-free append-only feedback receipt and keyed-recipient suppression table
+   behind a dedicated NOLOGIN queue-consumer role. Deduplicate at least-once events and
+   suppress on permanent bounce/complaint only; delivery/delay/reject/render failure
+   update safe delivery state without unsuppressing.
+3. Implement injected-message orchestration with safe acknowledge/retry/reconcile
+   outcomes. Prove cumulative upgrade, malformed/tampered/duplicate/out-of-order events,
+   two-recipient privacy, isolation, concurrency, constraints, retention/deletion,
+   rollback, index plans, and exact Goal 60 suppression lookup.
+4. Apply `database-migration` and `security-audit`, set the next authentication workflow
+   goal, and run every gate. Do not create AWS/SNS/SQS/IAM/DNS resources, credentials,
+   poll a live queue, send email, expose a public webhook/auth route/UI, purchase, or deploy.
 
 ## Phase queue
 
@@ -594,7 +602,7 @@ Deliverables:
   while eventual production-host runtime and cache behavior remain release gates.
 - Managed database, payment-account, AI, monitoring, and deployment providers remain
   intentionally undecided. Amazon SES is selected only for authentication email.
-- Better Auth still requires an SES adapter/infrastructure, account-bootstrap
+- Better Auth still requires SES feedback/suppression infrastructure, account-bootstrap
   orchestration, public route/UI review, deletion/retention orchestration, browser E2E,
   and production recovery testing. MFA and passkeys remain release-hardening decisions.
 - Production database role provisioning, TLS, pooling, migration timeouts,
@@ -621,6 +629,8 @@ Deliverables:
 | 2026-08-12 | Goal 59 migration and PostgreSQL gate              | Oldest schema upgraded empty; 41/41 integration tests and least-privilege checks passed       |
 | 2026-08-12 | Goal 59 coverage gate                              | 54 files/921 tests passed; 94.25% statements, 92.16% branches, and 99.29% functions           |
 | 2026-08-12 | Goal 59 full application gate                      | Formatting, lint, strict TypeScript, 54 files/921 tests, and optimized build passed           |
+| 2026-08-12 | Goal 60 fake-client and coverage gates             | 32 focused cases; coverage 55 files/952 tests at 94.12% statements and 92.17% branches        |
+| 2026-08-12 | Goal 60 full application gate                      | Formatting, lint, strict TypeScript, 55 files/953 tests, and optimized build passed           |
 | 2026-08-11 | `npm run db:check`                                 | Drizzle schema, migration journal, and generated snapshot are consistent                      |
 | 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 562 tests, and optimized production build         |
 | 2026-08-11 | `npm run test:coverage`                            | 94.04% statements, 91.04% branches, 99.73% functions, and 95.13% lines                        |
@@ -1178,6 +1188,42 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 60 Amazon SES authentication-email adapter record
+
+- Package/configuration: exact Apache-2.0 `@aws-sdk/client-sesv2` 3.1108.0 supports the
+  project Node baseline. Configuration accepts exactly `ca-central-1`, the canonical
+  HTTPS Better Auth origin, one lowercase ASCII sender, and one bounded configuration
+  set; extra/global endpoint configuration and browser-prefixed values fail closed.
+- Send boundary: the constructed SES client is regional with `maxAttempts: 1`. The
+  injected adapter sends once only after Goal 59 returns a new reservation and the
+  suppression resolver returns clear. Replays, in-progress, collisions, and every
+  terminal state return their fixed safe result without suppression or provider work.
+- Content: `SendEmailCommand` contains only fixed From, one To recipient, required
+  configuration set, and Goal 58's matching UTF-8 Simple subject/text/HTML. It sets no
+  global EndpointId, provider template, tags, reply-to, feedback-forwarding address,
+  list-management field, raw MIME, tracking instruction, or arbitrary metadata.
+- Outcomes: a canonical accepted SES message ID is privately bound to the ledger.
+  documented client-side message/domain/account/configuration rejection is definite
+  rejected; quota/throttle rejection is retry. Network/timeout, unknown SDK failure,
+  malformed/missing message ID, or suppression-source failure is reconciliation-required.
+  None makes a second send; repository failure becomes one generic delivery error.
+- Security audit: assets remain recipient and single-use action URL. The dispatcher is
+  server-only and accepts an already strict request; configuration, reservation, and
+  suppression must all pass before the provider boundary. Results contain no recipient,
+  URL/token, content, SES message ID, provider detail, credential, or exception. No
+  critical/high finding remains. Queue feedback authenticity, durable suppression,
+  production IAM/DNS/quota, and delivery testing remain Goal 61/external gates.
+- Scope: no AWS account, identity, configuration set, IAM role, DNS record, SNS topic,
+  SQS queue, credential, live client call, email, route/UI, production data, purchase,
+  or deployment was created. Every adapter test uses injected fakes.
+- Verification: exact SDK metadata/version, configuration, regional client/no retry,
+  command fields, all replay/suppression/error paths, and privacy exclusions pass 31
+  focused cases. Drizzle consistency, cumulative upgrade, and 41 PostgreSQL tests pass.
+  Coverage passed 55 files/952 tests at 94.12% statements, 92.17% branches, 99.30%
+  functions, and 95.54% lines; the adapter is 87.67% statements, 92.55% branches,
+  100% functions, and 95.16% lines. The full application gate passed formatting,
+  ESLint, strict TypeScript, all 953 tests, and the optimized Next.js build.
 
 ## Goal 59 authentication-email idempotency persistence record
 

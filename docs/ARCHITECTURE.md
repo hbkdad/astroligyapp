@@ -441,14 +441,15 @@ tests/
   v1 request/result validators, two fixed local `en-CA` templates, and Better Auth
   callback seam are implemented. Only the injected reference factory sees the raw
   framework token; the dispatcher receives a frozen validated request and every unsafe
-  outcome fails generically. A future adapter pins `@aws-sdk/client-sesv2` 3.1108.0,
+  outcome fails generically. The SES adapter pins `@aws-sdk/client-sesv2` 3.1108.0,
   dedicated SPF/DKIM/DMARC/custom-MAIL-FROM identity, required configuration-set
   events, and same-region SNS-to-SQS feedback. The durable service-only ledger now
   reserves separate versioned HMAC reference/request digests, supports retained-key
   rollover, serializes concurrency, and turns abandoned/late work into reconciliation
   without storing recipient, capability, content, or account identity. No concrete
-  dispatcher, account, SDK, DNS, credential, queue, route, or send exists yet. See
-  ADR 0009.
+  dispatcher uses a single-attempt injected regional client and only local Simple
+  content after durable reservation and suppression lookup. No account, DNS, credential,
+  queue, route, or live send exists yet. See ADR 0009.
 - Ephemeris: exact Astronomy Engine 2.1.19 for tropical positions and local
   angles, composed with Whole Sign strategy 1.0.0. No silent house-system
   fallback; exact poles fail explicitly. See ADR 0006.

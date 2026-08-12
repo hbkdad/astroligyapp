@@ -24,6 +24,7 @@
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
+    "@aws-sdk/client-sesv2": "3.1108.0",
     "@paddle/paddle-node-sdk": "3.10.0",
     "astronomy-engine": "2.1.19",
     "better-auth": "1.6.27",

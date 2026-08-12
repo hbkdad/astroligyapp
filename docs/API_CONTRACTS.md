@@ -310,3 +310,18 @@ private provider message reference; rejected/retry/suppressed forbid it; reconci
 may include one. A missing row, expired lease, abandoned reservation, or late completion
 returns reconciliation-required and never reopens the reference. Results remain fixed
 and contain no recipient, URL/token, digest, row/provider identity, or exception.
+
+`createSesAuthenticationEmailDispatcher` is the first concrete dispatcher. It accepts
+only strict server configuration fixed to `ca-central-1`, one normalized sender, one
+configuration set, an injected SDK-compatible client, the Goal 59 repository, and an
+injected suppression resolver. Its production SDK factory pins SES v2 3.1108.0 and
+sets `maxAttempts: 1`; the adapter itself makes exactly one `SendEmail` call only after
+a new durable reservation and a clear suppression result.
+
+The command uses SES Simple content with the Goal 58 local UTF-8 subject, text, and
+HTML, exactly one recipient, the fixed sender, and the required configuration set. It
+does not set global `EndpointId`, provider templates, tags, reply-to, feedback-forward
+address, list management, tracking, or custom headers. A valid accepted SES message ID
+is bound privately. Definite SES request/quota rejection maps to rejected/retry;
+network/timeout, unknown error, malformed success, or suppression outage maps to
+reconciliation-required. No path calls send twice or reflects SDK details.
