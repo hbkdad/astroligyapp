@@ -4,8 +4,8 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 47 complete; normalized subscription transitions now persist
-atomically with durable idempotency receipts behind forced row security.
+Status: Goal 48 complete; untrusted billing webhook bytes now pass through a
+bounded provider-neutral verification/orchestration boundary before persistence.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 21-table normalized schema, checked-in SQL
@@ -94,6 +94,15 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 48: define server-only provider adapter, verified identity/event,
+      internal owner resolver, subscription writer, trusted clock, and safe
+      acknowledge/reject/retry disposition contracts.
+- [x] Bound and clone raw bodies, normalize headers, reject duplicates/control
+      characters, validate adapter/provider/event output, and keep all identity,
+      signature, payload, and error detail out of dispositions.
+- [x] Verify fake signature/freshness rejection, clock/adapter/owner/persistence
+      retry semantics, all Goal 47 outcomes, identity conflicts, malformed
+      requests/contracts, browser-added data, and no downstream work before verify.
 - [x] Goal 47: add nullable transition version/event occurrence fields plus a
       forced-RLS append-only provider-event receipt ledger with no event payload.
 - [x] Implement owner-scoped atomic application, identity serialization, durable
@@ -427,21 +436,22 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 48 — define the billing-provider adapter and webhook orchestration boundary.
+Goal 49 — select and implement the first billing-provider verification adapter.
 
 Deliverables:
 
-1. Define a provider-neutral server adapter that verifies raw webhook bytes,
-   required headers, signature, and freshness before returning a strict internal
-   account mapping request, provider identity, and Goal 46 normalized event.
-2. Add pure orchestration that resolves the internal owner server-side, invokes
-   Goal 47 once, and classifies duplicate/stale/conflict/retry/failure responses
-   without logging raw bodies, signatures, customer IDs, or subscription IDs.
-3. Keep provider-specific plan mapping, secrets, algorithms, and SDK types inside
-   adapters; reject unverified/browser-supplied events before database work.
-4. Verify fake-adapter signature/freshness failures, replay/out-of-order outcomes,
-   owner resolution, retry semantics, redacted errors, and add no vendor SDK,
-   public route, checkout UI, prices, notification, external call, or deployment.
+1. Research current primary-source pricing, Canada availability, tax/merchant-of-
+   record implications, webhook signature/freshness behavior, Node support, and
+   operating fit for Stripe and credible alternatives; record an ADR.
+2. If one provider satisfies the master-spec/provider-abstraction gates, install an
+   exact supported server SDK and implement only the Goal 48 adapter behind the
+   provider-neutral interface.
+3. Map an explicit allowlist of subscription lifecycle events and configured
+   provider price/plan references into internal Personal/Advanced keys; reject
+   unknown products, customers, statuses, periods, signatures, and stale events.
+4. Verify official fixtures or locally signed payloads, version pinning, no secret/
+   raw-payload logging, and add no live credentials, checkout purchase, public
+   webhook route, production account mutation, notification, or deployment.
 
 ## Phase queue
 
@@ -1058,6 +1068,48 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 48 billing webhook orchestration record
+
+- Commands: focused fake-adapter/orchestration, transition, and entitlement suites;
+  Prettier, ESLint, strict TypeScript, all unit tests, server-inclusive coverage,
+  optimized build, production audit, secret-pattern scan, and `git diff --check`
+  through `security-audit`.
+- Trust boundary: the exact server-only input is a non-empty `Uint8Array` body up to
+  256 KiB and one record of 1-64 headers. Header names are bounded/token-safe,
+  case-normalized, and unique; values are bounded and reject NUL/CR/LF. The adapter
+  receives cloned bytes, frozen headers, and one canonical trusted receive instant.
+- Adapter contract: a configured safe provider key must match strict normalized
+  provider/customer/subscription identity. A verified result must contain an exact
+  Goal 46 event; rejected results accept only four internal reason classes. Extra,
+  browser-added, mismatched-provider, malformed-event, or private-detail fields
+  fail before owner resolution.
+- Orchestration: signature/freshness rejection produces one generic nonretryable
+  response. Clock/adapter/owner/persistence unavailability is retryable. All durable
+  applied/duplicate/stale/invalid-transition outcomes acknowledge; state or identity
+  conflict acknowledges under a safe conflict code to stop unbounded retry loops.
+  Impossible adapter/persistence contracts fail explicitly.
+- Privacy/logging: the frozen disposition contains only version, 200/400/503,
+  acknowledge/reject/retry, and a small safe code. Raw body, header/signature,
+  provider/customer/subscription/event identity, entitlement state, adapter reason,
+  and exception text are absent. This layer performs no logging, caching, analytics,
+  response reflection, or client serialization.
+- Adversarial result: successful single-pass verification, body clone isolation,
+  header normalization, fake invalid signature and stale timestamp, every stored
+  transition outcome, state/identity conflict, malformed/oversized body/header,
+  duplicate-case/control-character headers, invalid clock/adapter key/result/event,
+  unknown/invalid owner, thrown dependencies, malformed writer result, redaction,
+  immutability, and no downstream work before verification passed. No critical/high
+  finding remains.
+- Verification result: 42 unit files and 646 tests passed. Coverage was 94.17%
+  statements, 91.64% branches, 99.39% functions, and 95.23% lines; the orchestrator
+  had 100% statement/function/line and 98.80% branch coverage. The optimized build
+  passed.
+- Scope/residual risk: no actual provider/signature algorithm, SDK, event/price map,
+  current pricing decision, account resolver implementation, public Route Handler,
+  secret, live provider account, checkout, production mutation, external call,
+  notification, or deployment was added. Provider-specific verification and HTTP
+  request/response behavior remain later gates.
 
 ## Goal 43 compatibility persistence and share-security record
 

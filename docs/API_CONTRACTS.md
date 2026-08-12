@@ -141,3 +141,17 @@ replay returns duplicate even after later transitions; same event identity with
 different normalized content conflicts. Cross-owner provider/subscription collisions
 return one generic internal conflict, and only the strict Goal 45 entitlement state
 is returned. Webhook signature/provider adapters remain subsequent boundaries.
+
+`processBillingWebhook(rawEnvelope, dependencies)` is the implemented provider-
+neutral orchestration boundary. It accepts a maximum 256 KiB non-empty byte body
+and at most 64 bounded, uniquely lowercased headers, then supplies cloned bytes and
+a trusted receive instant to one server adapter. The adapter alone owns signature,
+freshness, payload parsing, lifecycle allowlisting, and provider-to-internal plan
+mapping. Owner lookup and persistence cannot run until its exact verified result is
+revalidated.
+
+The only outward dispositions are safe frozen `{statusCode, disposition, code}`
+records: processed/conflict acknowledgements (200), generic request/verification/
+contract rejection (400), or adapter/clock/owner/persistence retry (503). They do
+not echo adapter rejection reason, raw body, signature, provider identity, customer
+or subscription references, event IDs, entitlement state, or internal exceptions.

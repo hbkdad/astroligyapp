@@ -320,6 +320,16 @@ tests/
   receipts make idempotency durable beyond the current last-event column. Legacy
   rows remain readable only as unverified and produce no entitlement state until a
   separately designed resynchronization path exists.
+- Billing webhook orchestration: the server-only Goal 48 boundary accepts exactly a
+  non-empty raw byte body and bounded header record, snapshots a trusted receive
+  instant, lowercases unique safe header names, and passes cloned bytes to one
+  configured adapter. Only a strict verified provider identity plus Goal 46 event
+  can trigger server-side owner resolution and Goal 47 persistence. Verification
+  rejects return one generic 400; transient adapter/clock/owner/database failures
+  return a generic retryable 503; processed/no-change outcomes acknowledge with 200. State/identity conflicts acknowledge under a separate safe code to prevent
+  unbounded provider retries and require aggregate operational reconciliation.
+  Dispositions never contain raw body, header/signature, provider/customer/
+  subscription/event identity, entitlement state, or exception text.
 
 ## Data and cache principles
 
