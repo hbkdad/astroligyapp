@@ -376,6 +376,12 @@ tests/
   once only when none exists. Create sends email alone, with no ownership custom
   data. Every potentially ambiguous create failure or malformed success is followed
   by one lookup; no unique proof means manual reconciliation, never blind retry.
+- Authenticated billing application service: the only composition order is verified
+  session, active internal account, trusted server contact, then Goal 52 provisioning.
+  The service does not inspect browser bodies/queries/cookies for owner or email and
+  short-circuits every failed trust step. Vendor-neutral verifier, account, and
+  contact ports keep authentication selection outside billing. Fixed versioned
+  outcomes contain no session, subject, account, contact, provider, or customer data.
 
 ## Data and cache principles
 

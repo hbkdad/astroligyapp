@@ -4,8 +4,8 @@ Last updated: 2026-08-12
 
 ## Current position
 
-Status: Goal 53 complete; Paddle customer lookup/create ambiguity is now isolated in
-a deterministic injected adapter with no live API request.
+Status: Goal 54 complete; verified session, active account, trusted contact, and
+customer provisioning now compose through one private application boundary.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 22-table normalized schema, checked-in SQL
@@ -95,6 +95,12 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 54: compose provider-neutral session verification, active internal account
+      resolution, trusted server contact resolution, and Goal 52 provisioning in an
+      exact trust order with fixed identity-free application outcomes.
+- [x] Prove invalid/expired/revoked sessions, verifier outage, missing/deleted account,
+      missing/invalid contact, contact-source failure, malformed/thrown provisioner,
+      concurrency, call short-circuiting, browser-field exclusion, and response privacy.
 - [x] Goal 53: implement an SDK-3.10.0-compatible Paddle customer adapter that
       queries active exact-email matches before create, accepts only one canonical
       `ctm_` identity, sends email alone, and never blindly retries create.
@@ -478,24 +484,25 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 54 — compose verified session, active account, trusted billing contact, and
-customer provisioning behind one authenticated application boundary.
+Goal 55 — select the launch authentication and trusted billing-contact source through
+current evidence, without creating an external account or deployment.
 
 Deliverables:
 
-1. Define a server-trusted billing-contact resolver that consumes only a verified
-   `ActiveSession` and resolved internal `AccountId`; request bodies, query values,
-   cookies, profiles, and browser claims must not supply or override billing email.
-2. Compose `requireActiveSession`, active-account resolution, trusted-contact lookup,
-   and Goal 52 provisioning into one versioned server application service with fixed
-   authentication/reject/retry/reconcile/ready results and no identity or PII.
-3. Distinguish invalid/missing contact from transient contact-source, account, and
-   provider failures without exposing which credential, subject, account, email, or
-   customer failed. Do not select an authentication vendor or add a public endpoint.
-4. Verify expired/revoked/malformed sessions, deleted/missing account, invalid/trusted
-   contact, dependency exceptions, exact call order, no downstream work after failure,
-   concurrency, and response privacy. Add no live credential/API call, customer,
-   checkout, price, notification, database change, public mutation, or deployment.
+1. Compare current Auth.js, Better Auth, Clerk, and Supabase Auth using primary
+   sources for Next.js 16/React 19 support, server-side session verification, verified
+   primary-email evidence, PostgreSQL portability, account deletion/revocation,
+   security controls, Canadian operation, pricing, lock-in, and maintenance.
+2. Decide whether trusted billing contact is read live from signed verified claims or
+   synchronized into a least-privilege internal record. Define email-change,
+   reverification, deletion, stale-session, and provider-outage behavior; browser
+   profile/email fields must never become trusted merely because the user is signed in.
+3. Record the decision or explicit deferral in an ADR with exact versions, cost and
+   operational assumptions, secret/cookie/CSRF/session boundaries, migration/exit
+   strategy, and the adapter plan for existing `SessionVerifier` plus Goal 54 ports.
+4. Use official documentation only and add no package, credential, external account,
+   production data, authentication deployment, Paddle call, customer, checkout,
+   notification, database migration, public mutation, or deploy.
 
 ## Phase queue
 
@@ -1112,6 +1119,39 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 54 authenticated billing provisioning record
+
+- Trust chain: `provisionBillingCustomerForRequest` calls only verified-session,
+  active-account, trusted-contact, then customer-provisioning ports. It never reads
+  request body/query/profile ownership or contact fields. Cookie interpretation stays
+  exclusively inside the injected session verifier; the application service cannot
+  treat cookie presence as authentication.
+- Contact boundary: `TrustedBillingContactResolver` receives the already validated
+  `ActiveSession` and opaque active account ID. Returned contact must have exact shape
+  and a valid bounded email, then is normalized/frozen before provisioning. Missing,
+  malformed, or unavailable contact has a separate non-reflecting outcome and stops
+  provider work.
+- Failure/privacy result: invalid/expired/revoked/malformed sessions authenticate;
+  verifier, account, contact-source, and provisioning outages retry; invalid contact
+  rejects; downstream ambiguity reconciles. Every result is a frozen version/code
+  record with no subject, session, owner UUID, email, provider/customer reference,
+  exception, or entitlement. No logger or analytics path exists in the boundary.
+- Adversarial verification: exact call arguments/order and all short circuits passed,
+  including browser body/cookie decoys, future/expired session times, bad account UUID,
+  missing/deleted account behavior, contact PII failures, malformed provisioner
+  contracts, thrown dependencies, concurrency, and all Goal 52 disposition mappings.
+- Verification: 23 new service cases plus Goal 52/53 composition produced 83 focused
+  tests. The full gate passed 50 files and 842 tests; coverage was 94.58% statements,
+  92.28% branches, 99.33% functions, and 95.64% lines. The new service had 100%
+  statement/function/line and 97.5% branch coverage. Formatting, ESLint, strict
+  TypeScript, optimized build, Drizzle consistency, production audit, secret scan,
+  and diff integrity passed.
+- Scope/residual risk: no authentication/contact provider or storage was selected;
+  every dependency was an in-memory double. No package, credential, external call,
+  Paddle customer, checkout, price, public route/Server Action, notification, database
+  change, production state, or deployment was added. Goal 55 must establish the real
+  source and lifecycle of verified billing email before this service can be exposed.
 
 ## Goal 53 Paddle customer provider adapter record
 

@@ -233,3 +233,17 @@ trigger one exact re-query. Only one proven active match becomes `ready`; zero,
 multiple, malformed, archived, wrong-email, invalid-ID, or failed re-query returns
 `reconciliation-required`. The adapter never makes a second create attempt and never
 reflects SDK error data.
+
+`provisionBillingCustomerForRequest(request, dependencies)` is the unexposed
+authenticated application boundary. It verifies the request through `SessionVerifier`,
+resolves the active opaque account from that verified session, and obtains billing
+contact from a `TrustedBillingContactResolver(session, ownerId)`. It never parses the
+request body, query, cookie, profile, or browser state for owner ID or billing email.
+Only after all three server trust steps succeed does it call `BillingCustomerProvisioner`.
+
+The versioned result is restricted to `ready`, `authenticate`, `reject`, `retry`, or
+`reconcile` plus a fixed code. Authentication rejection and verifier unavailability,
+missing/invalid contact and contact-source outage, account failure, provisioning
+failure, and reconciliation remain distinguishable without returning subject,
+session, owner, email, provider, customer, exception, or entitlement data. No route,
+Server Action, authentication vendor, or contact storage is selected by this contract.
