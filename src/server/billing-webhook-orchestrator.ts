@@ -2,6 +2,8 @@ import "server-only";
 
 import {
   BILLING_WEBHOOK_ORCHESTRATOR_VERSION,
+  BILLING_WEBHOOK_MAXIMUM_BYTES,
+  BILLING_WEBHOOK_MAXIMUM_HEADERS,
   type BillingAccountResolver,
   type BillingProviderAdapter,
   type BillingSubscriptionWriter,
@@ -17,8 +19,6 @@ import {
 } from "@/infrastructure/persistence/subscription-repository";
 import { validateNormalizedSubscriptionEvent } from "@/server/subscription-transition-engine";
 
-const MAXIMUM_WEBHOOK_BYTES = 256 * 1024;
-const MAXIMUM_HEADERS = 64;
 const MAXIMUM_HEADER_NAME_LENGTH = 128;
 const MAXIMUM_HEADER_VALUE_LENGTH = 8 * 1024;
 const rejectedReasons = new Set([
@@ -108,12 +108,13 @@ function normalizeRequest(
   if (
     !(value.rawBody instanceof Uint8Array) ||
     value.rawBody.byteLength < 1 ||
-    value.rawBody.byteLength > MAXIMUM_WEBHOOK_BYTES ||
+    value.rawBody.byteLength > BILLING_WEBHOOK_MAXIMUM_BYTES ||
     !record(value.headers)
   )
     return null;
   const entries = Object.entries(value.headers);
-  if (entries.length < 1 || entries.length > MAXIMUM_HEADERS) return null;
+  if (entries.length < 1 || entries.length > BILLING_WEBHOOK_MAXIMUM_HEADERS)
+    return null;
   const headers: Record<string, string> = {};
   for (const [rawName, rawValue] of entries) {
     const name = rawName.toLowerCase();

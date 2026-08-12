@@ -6,6 +6,8 @@ import type {
 } from "@/infrastructure/persistence/subscription-repository";
 
 export const BILLING_WEBHOOK_ORCHESTRATOR_VERSION = "1.0.0";
+export const BILLING_WEBHOOK_MAXIMUM_BYTES = 256 * 1024;
+export const BILLING_WEBHOOK_MAXIMUM_HEADERS = 64;
 
 export interface BillingWebhookAdapterRequest {
   readonly rawBody: Uint8Array;

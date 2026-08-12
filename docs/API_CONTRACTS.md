@@ -186,3 +186,19 @@ That role has no table privileges. The bounded security-definer function returns
 opaque account UUID or null and filters soft-deleted accounts; malformed privileged
 results, database/rollback failure, and pool state are never translated into a user
 identity or reflected response.
+
+`POST /api/webhooks/paddle` is the only implemented billing HTTP ingress. It runs in
+the Node.js runtime, accepts exactly `application/json` with optional UTF-8 charset,
+rejects declared or streamed bodies above 256 KiB, caps the incoming header count at
+64, and projects only `paddle-signature` into the verified orchestration boundary.
+Cookies, authorization values, tracing headers, and arbitrary provider headers are
+not retained or forwarded. The process-scoped service composes the strict server-only
+environment loader, Paddle verifier, least-privilege owner resolver, subscription
+writer, trusted clock, and bounded PostgreSQL pool.
+
+Responses are fixed privacy-safe JSON: acknowledged processing/conflict uses 200,
+invalid media or request shape uses 400/413/415, unavailable dependencies use 503,
+and unsupported methods use 405. Responses are no-store and carry defensive content,
+framing, referrer, and permissions headers. Missing or malformed configuration fails
+closed without disclosing which value failed. No Paddle API key, customer creation,
+checkout operation, or outbound provider call is part of this route.

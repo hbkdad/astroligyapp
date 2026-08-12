@@ -26,6 +26,23 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        source: "/api/webhooks/paddle",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, max-age=0, must-revalidate",
+          },
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          {
+            key: "Content-Security-Policy",
+            value:
+              "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+          },
+        ],
+      },
     ];
   },
 };

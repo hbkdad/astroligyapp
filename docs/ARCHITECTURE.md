@@ -352,6 +352,16 @@ tests/
   function's isolated NOLOGIN owner has only the required columns and RLS policies.
   Email, checkout metadata, webhook custom data, profile IDs, and browser claims are
   never ownership evidence.
+- Paddle webhook HTTP ingress: one Node.js Route Handler is the bounded transport
+  adapter for the verified pipeline. It validates media type, declared and streamed
+  body size, and header cardinality before forwarding only the exact raw bytes and
+  `paddle-signature`; browser cookies, authorization, debug, and tracing headers are
+  discarded. A process-scoped service owns a bounded PostgreSQL pool and composes the
+  strict server-only configuration, Paddle verifier, least-privilege owner resolver,
+  subscription writer, and clock. Configuration or dependency failure returns only
+  a sanitized retryable response. Framework and handler headers enforce no-store,
+  anti-framing, content-type sniffing, referrer, and permissions restrictions. No
+  outbound Paddle API call, checkout, or customer provisioning occurs at ingress.
 
 ## Data and cache principles
 

@@ -1,11 +1,11 @@
 # Project status
 
-Last updated: 2026-08-11
+Last updated: 2026-08-12
 
 ## Current position
 
-Status: Goal 50 complete; verified provider customers now resolve through an
-immutable, least-privilege binding to active internal account owners.
+Status: Goal 51 complete; the verified Paddle subscription pipeline now has one
+bounded, privacy-safe HTTP ingress that fails closed without live credentials.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 22-table normalized schema, checked-in SQL
@@ -95,6 +95,10 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 51: add strict server-only billing configuration, process-safe service
+      composition, and a bounded `/api/webhooks/paddle` POST Route Handler. Enforce
+      exact media type, streaming body/header limits, signature-only header
+      projection, fixed private responses, and fail-closed dependency behavior.
 - [x] Goal 50: add one immutable provider/customer-to-owner binding table with
       strict reference constraints, dual uniqueness, owner index, account
       cascade, forced RLS, and owner-only SELECT/INSERT privileges.
@@ -461,25 +465,25 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 51 — expose the verified Paddle webhook pipeline through a bounded HTTP
-Route Handler without live credentials or deployment.
+Goal 52 — define authenticated billing-customer provisioning orchestration before
+checkout, without live provider credentials or external account mutation.
 
 Deliverables:
 
-1. Define a strict server-only configuration loader for PostgreSQL, one Paddle
-   destination secret, and explicit Personal/Advanced price-reference lists. Reject
-   missing, public-prefixed, malformed, duplicate, or overlapping configuration
-   without echoing values.
-2. Compose the Goal 49 adapter, Goal 50 resolver, Goal 47 writer, and trusted clock
-   behind one process-safe dependency factory with explicit pool lifecycle and no
-   browser import.
-3. Add `/api/webhooks/paddle` POST with bounded streaming body/header collection,
-   safe content-type/method/cache/security behavior, and exact Goal 48 disposition
-   mapping. Do not buffer an oversized body or reflect provider/error detail.
-4. Verify locally signed HTTP requests, missing/invalid configuration, method and
-   content-type rejection, body/header limits, all dispositions, dependency failure,
-   response privacy, concurrency, and production build. Add no live credential,
-   provider API call, checkout, external account mutation, notification, or deploy.
+1. Define a provider-neutral customer-provisioning adapter and orchestration result
+   that require an already verified internal account owner plus server-trusted billing
+   contact input. Browser owner IDs, checkout metadata, and webhook custom data must
+   never establish ownership.
+2. Make exact replay idempotent, serialize or reconcile concurrent first creation,
+   and bind a provider-verified customer reference through the Goal 50 repository.
+   Specify safe handling for provider success followed by binding conflict/failure.
+3. Keep provider errors, contact details, customer references, and internal owner IDs
+   out of outward results and logs. Define retry/reconciliation evidence without
+   introducing a public route or assuming an authentication vendor.
+4. Verify with a deterministic fake provider, repository doubles, concurrency and
+   failure injection. Add no live credential, Paddle API call, customer/account
+   mutation, checkout, price creation, notification, production database change, or
+   deployment.
 
 ## Phase queue
 
@@ -1096,6 +1100,38 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 51 Paddle webhook HTTP ingress record
+
+- Boundary: `/api/webhooks/paddle` is a Node.js-only POST Route Handler. It accepts
+  exact JSON/UTF-8 media, rejects declared or streamed bodies over 256 KiB, caps
+  incoming headers at 64, and forwards only `paddle-signature` with the untouched
+  raw bytes. Cookies, authorization, tracing, and arbitrary headers do not enter the
+  provider adapter.
+- Configuration/composition: the server-only loader requires a PostgreSQL URL, one
+  Paddle destination secret, and nonempty canonical Personal/Advanced `pri_` lists.
+  Missing, malformed, duplicate, overlapping, or public-prefixed values fail with one
+  non-reflecting error. A process-scoped service composes the Goal 49 verifier, Goal
+  50 least-privilege resolver, Goal 47 writer, trusted clock, and a bounded pool with
+  explicit close behavior.
+- HTTP privacy/security: disposition mapping is fixed to private JSON responses;
+  processing/conflict acknowledgement returns 200, invalid request shape returns
+  400, unsupported media/body returns 415/413, and dependency/configuration failure
+  returns 503. No response contains a signature, body, provider/customer/subscription/
+  event reference, account ID, entitlement, configuration value, or exception text.
+  No-store, anti-framing, nosniff, referrer, and permissions headers are applied.
+- Verification: focused configuration/service/HTTP/orchestrator/adapter suites passed,
+  followed by 47 unit/contract files with 759 tests and all 25 PostgreSQL integration
+  tests. Coverage was 94.33% statements, 91.92% branches, 99.30% functions, and
+  95.44% lines. Formatting, ESLint, strict TypeScript, optimized build, Drizzle
+  checks, production audit, secret scan, and diff integrity passed.
+- Optimized smoke: the built server returned sanitized `503 {"status":"unavailable"}`
+  without local credentials, rejected GET with 405, and emitted no-store plus DENY
+  framing headers. The exact listener process was stopped after verification.
+- Scope/residual risk: no live credential, Paddle API/customer call, checkout, price,
+  external account mutation, notification, production database change, or deployment
+  was added. Real secret injection, managed PostgreSQL connectivity, provider webhook
+  registration, observability, and production delivery remain later release gates.
 
 ## Goal 50 billing customer ownership-binding record
 
