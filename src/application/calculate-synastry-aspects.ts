@@ -36,6 +36,8 @@ import {
 import { toZodiacPosition } from "@/domain/astro/zodiac";
 
 export const SYNASTRY_ASPECT_ENGINE_VERSION = "1.0.0";
+export const SYNASTRY_ASPECT_DISCLAIMER =
+  "These are deterministic cross-chart aspect facts, not a compatibility score, relationship prediction, or advice.";
 export const DEFAULT_SYNASTRY_ASPECT_POLICY: SynastryAspectPolicy = deepFreeze({
   id: "cross-chart-major-aspects",
   version: "1.0.0",
@@ -142,8 +144,7 @@ export class SynastryAspectEngine {
       aspectPolicy: structuredClone(this.policy),
       charts: sources,
       aspects,
-      disclaimer:
-        "These are deterministic cross-chart aspect facts, not a compatibility score, relationship prediction, or advice.",
+      disclaimer: SYNASTRY_ASPECT_DISCLAIMER,
     });
   }
 }

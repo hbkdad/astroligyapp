@@ -7,6 +7,8 @@ import type { CelestialBody, ProviderMetadata } from "@/domain/astro/contracts";
 import { findHouseNumber } from "@/domain/astro/house-strategies";
 
 export const HOUSE_OVERLAY_ENGINE_VERSION = "1.0.0";
+export const HOUSE_OVERLAY_DISCLAIMER =
+  "These are deterministic cross-chart house-placement facts, not a compatibility score, relationship prediction, or advice.";
 
 export interface HouseOverlayChartSource {
   readonly side: SynastryChartSide;
@@ -81,8 +83,7 @@ export class HouseOverlayEngine {
       },
       charts,
       overlays,
-      disclaimer:
-        "These are deterministic cross-chart house-placement facts, not a compatibility score, relationship prediction, or advice.",
+      disclaimer: HOUSE_OVERLAY_DISCLAIMER,
     });
   }
 }

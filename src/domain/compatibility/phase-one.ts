@@ -12,6 +12,8 @@ import { ZODIAC_SIGNS, type ZodiacSign } from "@/domain/astro/zodiac";
 import type { NumerologyResult } from "@/domain/numerology/contracts";
 
 export const PHASE_ONE_COMPATIBILITY_RESULT_VERSION = "1.0.0";
+export const PHASE_ONE_COMPATIBILITY_DISCLAIMER =
+  "These are deterministic comparison facts, not a relationship score, prediction, or advice.";
 export const ZODIAC_CLASSIFICATION_POLICY = Object.freeze({
   id: "tropical-element-modality",
   version: "1.0.0",
@@ -20,7 +22,7 @@ export const SUPPORTED_COMPATIBILITY_NUMEROLOGY_VALUES = Object.freeze([
   1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33,
 ] as const);
 
-const ZODIAC_CLASSIFICATIONS: Readonly<
+export const ZODIAC_CLASSIFICATIONS: Readonly<
   Record<
     ZodiacSign,
     Readonly<{ element: ZodiacElement; modality: ZodiacModality }>
@@ -121,10 +123,101 @@ export class PhaseOneCompatibilityStrategy implements CompatibilityStrategy {
       zodiac: { signs, elements, modalities },
       numerology: { lifePath, expression },
       trace,
-      disclaimer:
-        "These are deterministic comparison facts, not a relationship score, prediction, or advice.",
+      disclaimer: PHASE_ONE_COMPATIBILITY_DISCLAIMER,
     });
   }
+}
+
+export function validatePhaseOneCompatibilityResult(
+  result: PhaseOneCompatibilityResult,
+): void {
+  try {
+    if (
+      !result ||
+      typeof result !== "object" ||
+      result.version !== PHASE_ONE_COMPATIBILITY_RESULT_VERSION ||
+      result.strategy.id !== "phase-one-comparison" ||
+      result.strategy.version !== "1.0.0" ||
+      result.zodiacPolicy.id !== ZODIAC_CLASSIFICATION_POLICY.id ||
+      result.zodiacPolicy.version !== ZODIAC_CLASSIFICATION_POLICY.version ||
+      !validVersionText(result.numerologySource.strategyId) ||
+      !validVersionText(result.numerologySource.strategyVersion) ||
+      result.disclaimer !== PHASE_ONE_COMPATIBILITY_DISCLAIMER
+    )
+      invalid();
+    const signs = validateSignPair(result.zodiac.signs);
+    const expectedElements = pair(
+      ZODIAC_CLASSIFICATIONS[signs[0]].element,
+      ZODIAC_CLASSIFICATIONS[signs[1]].element,
+      textOrder,
+    );
+    const expectedModalities = pair(
+      ZODIAC_CLASSIFICATIONS[signs[0]].modality,
+      ZODIAC_CLASSIFICATIONS[signs[1]].modality,
+      textOrder,
+    );
+    if (
+      !sameValue(result.zodiac.elements, expectedElements) ||
+      !sameValue(result.zodiac.modalities, expectedModalities)
+    )
+      invalid();
+    validateNumerologyPairFact(result.numerology.lifePath);
+    validateNumerologyPairFact(result.numerology.expression);
+    const expectedTrace: readonly CompatibilityTraceStep[] = [
+      tracePair("canonicalize-zodiac-signs", result.zodiac.signs),
+      tracePair("compare-zodiac-elements", result.zodiac.elements),
+      tracePair("compare-zodiac-modalities", result.zodiac.modalities),
+      traceNumerology("compare-life-path-values", result.numerology.lifePath),
+      traceNumerology(
+        "compare-expression-values",
+        result.numerology.expression,
+      ),
+    ];
+    if (!sameValue(result.trace, expectedTrace)) invalid();
+  } catch (error) {
+    if (error instanceof InvalidCompatibilityInputError) throw error;
+    invalid();
+  }
+}
+
+function validateSignPair(
+  fact: CompatibilityPairFact<ZodiacSign>,
+): readonly [ZodiacSign, ZodiacSign] {
+  if (
+    !Array.isArray(fact.values) ||
+    fact.values.length !== 2 ||
+    !ZODIAC_SIGNS.includes(fact.values[0]) ||
+    !ZODIAC_SIGNS.includes(fact.values[1])
+  )
+    invalid();
+  const expected = pair(fact.values[0], fact.values[1], zodiacOrder);
+  if (!sameValue(fact, expected)) invalid();
+  return expected.values;
+}
+
+function validateNumerologyPairFact(fact: NumerologyPairFact): void {
+  if (
+    !Array.isArray(fact.values) ||
+    fact.values.length !== 2 ||
+    !SUPPORTED_COMPATIBILITY_NUMEROLOGY_VALUES.includes(
+      fact
+        .values[0] as (typeof SUPPORTED_COMPATIBILITY_NUMEROLOGY_VALUES)[number],
+    ) ||
+    !SUPPORTED_COMPATIBILITY_NUMEROLOGY_VALUES.includes(
+      fact
+        .values[1] as (typeof SUPPORTED_COMPATIBILITY_NUMEROLOGY_VALUES)[number],
+    ) ||
+    fact.values[0] > fact.values[1] ||
+    fact.equal !== (fact.values[0] === fact.values[1]) ||
+    fact.masterNumberCount !==
+      Number([11, 22, 33].includes(fact.values[0])) +
+        Number([11, 22, 33].includes(fact.values[1]))
+  )
+    invalid();
+}
+
+function sameValue(first: unknown, second: unknown): boolean {
+  return JSON.stringify(first) === JSON.stringify(second);
 }
 
 function validateRequest(

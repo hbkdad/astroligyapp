@@ -231,8 +231,12 @@ tests/
   cross-body aspect matrix without provider access. `HouseOverlayEngine` reuses
   that validation/canonicalization boundary and maps both canonical ten-body sets
   into the opposite chart's Whole Sign cusps. Both derived placement and cusp
-  traces remain private relationship data. Scores, relationship claims,
-  persistence, and public sharing remain separate later layers.
+  traces remain private relationship data. `composeCompatibilityFacts` strictly
+  revalidates all three result types, proves the overlay placements are the exact
+  speed-minimized synastry sources, binds canonical Sun signs to the phase-one
+  pair, and preserves the complete facts in a symmetric immutable aggregate.
+  Scores, relationship claims, persistence, and public sharing remain separate
+  later layers.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
 - Optional AI explanation remains deferred behind future validated input/output

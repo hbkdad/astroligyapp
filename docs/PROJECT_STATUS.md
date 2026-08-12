@@ -4,7 +4,7 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 34 complete; deterministic, symmetric cross-chart Whole Sign house-overlay facts are implemented and verified.
+Status: Goal 35 complete; phase-one, synastry, and Whole Sign overlay results now compose into one validated symmetric compatibility-fact aggregate.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,12 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 35: accept only exact, version-matched phase-one, synastry, and
+      house-overlay result shapes and independently revalidate their facts.
+- [x] Bind canonical Sun placements to the phase-one zodiac pair and require the
+      overlay placement sources to be exact privacy-minimized synastry projections.
+- [x] Preserve all child facts and provenance in one deeply immutable symmetric
+      aggregate while excluding raw birth/profile inputs and relationship claims.
 - [x] Goal 34: reuse the validated canonical relationship-chart boundary to
       project each chart's ten bodies into the other chart's Whole Sign houses.
 - [x] Produce twenty versioned bidirectional overlay facts with stable IDs/order,
@@ -332,20 +338,21 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 35 — compose one validated compatibility fact aggregate.
+Goal 36 — implement compatibility category scoring behind an injected policy.
 
 Deliverables:
 
-1. Accept only version-matched Goal 32 phase-one, Goal 33 synastry, and Goal 34
-   overlay results; recheck identities, canonical chart sources, and fact coverage.
-2. Bind zodiac signs to canonical Sun placements, verify overlay sources are an
-   exact privacy-minimized projection of synastry sources, and preserve all facts
-   and provenance in one deeply immutable symmetric aggregate.
-3. Verify missing/duplicate/reordered facts, cross-result source/version drift,
-   sign-placement mismatch, reversed-source symmetry, malformed claims, and
-   absence of raw birth/profile inputs.
-4. Add no compatibility category weights, interpretation, persistence, sharing
-   URL, UI, AI, entitlement, notification, or deployment.
+1. Define a versioned, provider-neutral scoring-policy contract whose category
+   IDs, baseline, bounds, fact selectors, contribution values, and confidence
+   rules are injected; do not select production weights in this goal.
+2. Evaluate only a validated Goal 35 aggregate, retain every matched source fact
+   and rule in an explainable trace, and return bounded deeply immutable results.
+3. Verify symmetry, deterministic ordering, exact boundary/clamp behavior,
+   unmatched facts, duplicate/unknown selectors, malformed policies, version
+   drift, misleading claims, and complete provenance.
+4. Label every result as a non-scientific product heuristic. Add no production
+   policy, relationship prediction, interpretation prose, persistence, sharing
+   URL, UI, AI, entitlement, notification, provider call, schema change, or deployment.
 
 ## Phase queue
 
@@ -786,6 +793,40 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 35 compatibility fact aggregate record
+
+- Commands: focused phase-one/synastry/overlay/aggregate suites; `npm run check`;
+  `npm run test:coverage`; `npm audit --omit=dev`; and `git diff --check` through
+  the `astro-validation` and `security-audit` procedures.
+- Boundary: `composeCompatibilityFacts` accepts only Goal 32/33/34 result shapes.
+  It reconstructs each public projection, rejects unknown fields, revalidates the
+  exact phase-one comparison trace, recomputes every cross-chart aspect and every
+  bidirectional Whole Sign overlay, and maps all failures to one generic error.
+- Cross-result identity: both chart sides must retain identical chart-engine and
+  position-provider provenance. Overlay placements must exactly equal synastry
+  placements after speed is deliberately removed. Canonical Sun longitudes are
+  converted through the existing tropical zodiac primitive and must equal the
+  canonical phase-one sign pair.
+- Symmetry/completeness: canonical child ordering is retained, so reversing all
+  source subjects produces byte-equivalent output. Tests reject lost, duplicated,
+  or reordered phase traces, synastry aspects, and overlays; child version drift;
+  shared-provider/placement drift; sign mismatch; and altered claims. The result
+  retains all three deeply frozen children plus exact fact counts and versions.
+- Privacy/security: the strict projection rejects extra fields, including an
+  injected birth date. Output contains no birth instant, timezone, observer,
+  coordinate source, numerology tokens, name, account/profile identity, category
+  weight, interpretation, or score. Derived relationship facts remain private and
+  no HTTP, auth, persistence, logging, cache, or sharing boundary was added. No
+  critical or high finding remains.
+- Evidence: 34 test files and 498 tests passed; coverage was 94.37% statements,
+  91.44% branches, 99.66% functions, and 95.15% lines. The aggregate composer had
+  93.22% statement, 88.76% branch, 100% function, and 93.45% line coverage. The
+  optimized build passed and the production dependency audit found zero
+  vulnerabilities.
+- Scope: no scoring policy/weight, interpretation, persistence, share token/URL,
+  UI, AI, entitlement, notification, provider call, schema change, production
+  service, or deployment was added.
 
 ## Goal 34 cross-chart house-overlay record
 
