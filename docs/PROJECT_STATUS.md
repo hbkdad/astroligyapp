@@ -4,8 +4,8 @@ Last updated: 2026-08-12
 
 ## Current position
 
-Status: Goal 56 complete; Better Auth 1.6.27 now runs behind isolated database-session,
-active-account, and verified-contact adapters without a public authentication route.
+Status: Goal 57 complete; Amazon SES API v2 in Canada Central is selected behind a
+privacy-safe authentication-email boundary without an external account or live send.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 22-table normalized schema, checked-in SQL
@@ -21,8 +21,9 @@ one immutable timeline-fact aggregate. Paddle is selected only for verified
 subscription-event ingestion. Better Auth 1.6.27 is installed with four isolated auth
 tables, strict server configuration, database sessions, and execute-only account and
 contact lookups. No live billing account, production data, managed database/auth
-infrastructure, public auth surface, AI, notification, transactional-email,
-location-resolution, or deployment provider is selected.
+infrastructure, public auth surface, AI, general notification, location-resolution,
+or deployment provider is selected. Authentication email has a provider decision but
+no SDK, account, DNS, credentials, infrastructure, adapter, persistence, or delivery.
 
 ## Completed
 
@@ -97,6 +98,15 @@ location-resolution, or deployment provider is selected.
 
 ## Recently completed
 
+- [x] Goal 57: compare Resend 6.19.0, Postmark 5.1.0, Amazon SES API v2 with
+      future AWS SDK 3.1108.0, and Canadian-hosted Cakemail using current primary
+      documentation across regional processing, delivery controls, pricing, API fit,
+      DNS, feedback, retention, security, production gates, maintenance, and exit.
+- [x] Accept ADR 0009 selecting the SES `ca-central-1` regional API behind an exact
+      provider-neutral request/result contract. Fix local templates, dedicated
+      SPF/DKIM/DMARC/custom-MAIL-FROM identity, no tracking, anti-enumerating outcomes,
+      content-free durable idempotency, conservative ambiguous-send handling, regional
+      suppression, and SNS-to-SQS feedback without installing or provisioning anything.
 - [x] Goal 56: pin Better Auth 1.6.27 and add its reviewed four-table Drizzle schema
       under `auth` through forward-only migration `0006_jazzy_carmella_unuscione`.
 - [x] Add strict rollover-secret/origin/proxy/cookie/session/verification/reset/rate
@@ -500,25 +510,24 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 57 — select the transactional authentication-email provider and define its
-privacy-safe delivery boundary without creating an external account or sending email.
+Goal 58 — implement the pure provider-neutral authentication-email contract and local
+template renderer without persistence, a provider SDK, external resources, or sending.
 
 Deliverables:
 
-1. Compare current Resend, Postmark, Amazon SES, and one credible Canadian-hosted option
-   using primary sources for Canada/data processing, deliverability controls, pricing,
-   SDK/API fit, domain verification, suppression/bounce/complaint handling, retention,
-   webhook security, rate limits, sandbox/production approval, maintenance, and exit.
-2. Select or explicitly defer a provider and exact SDK/API version. Define SPF, DKIM,
-   DMARC, return-path, sender-domain, link-host, template/version, localization,
-   anti-enumeration, retry/idempotency, suppression, and outage behavior for verification
-   and password-reset messages.
-3. Specify a provider-neutral dispatch/result contract that accepts only purpose,
-   recipient, absolute application URL, template version, and idempotency reference;
-   it must never log or return recipient, token, URL, provider payload, or credentials.
-4. Record the evidence and adapter plan in an ADR. Add no SDK/package, credential,
-   external account/domain/DNS, email, webhook, public auth route/UI, production data,
-   provider call, notification delivery, purchase, mutation, or deployment.
+1. Define strict immutable v1 request, safe disposition, dispatcher, and local-renderer
+   contracts with exact-field validation, bounded normalized email/idempotency values,
+   and canonical HTTPS origin plus purpose-path enforcement.
+2. Implement allowlisted `en-CA` verification and password-reset text/HTML templates
+   with deterministic versioning, correct HTML escaping, generic security copy, and no
+   name/profile/account/provider/tracking data or user-controlled subject/body.
+3. Add a privacy-safe orchestration seam for Better Auth's injected callbacks without
+   exposing a route or claiming delivery. Prove all results/errors remain free of
+   recipient, token/URL, rendered body, request fingerprint, provider payload, or secret.
+4. Apply `security-audit`, document the next persistence/idempotency boundary, and run
+   the full quality gate. Do not install an email SDK, add database state, create an
+   account/resource/DNS record, add credentials, call a provider, send email, or expose
+   public auth UI/routes.
 
 ## Phase queue
 
@@ -551,6 +560,9 @@ Deliverables:
   database sessions and live verified-user contact lookup. Managed auth
   infrastructure, stateless/cached sessions, and duplicated billing-contact storage
   are not selected. See ADR 0008.
+- Amazon SES API v2 in `ca-central-1` is selected only for authentication email behind
+  the ADR 0009 provider-neutral boundary. The future adapter pins AWS SDK 3.1108.0;
+  regional infrastructure, DNS, credentials, retention, and live delivery remain gates.
 - Longitudes normalize to `[0, 360)`. Zodiac and aspect calculations use
   provider-neutral degrees with no interpretation text or product weights.
 
@@ -563,9 +575,10 @@ Deliverables:
   ingress searches now use positional provider evaluations; mean-cycle age is
   not used as an event ephemeris. Public current-date routing is locally verified,
   while eventual production-host runtime and cache behavior remain release gates.
-- Managed database, payment-account, AI, transactional-email, monitoring, and
-  deployment providers remain intentionally undecided.
-- Better Auth still requires a selected transactional-email adapter, account-bootstrap
+- Managed database, payment-account, AI, monitoring, and deployment providers remain
+  intentionally undecided. Amazon SES is selected only for authentication email.
+- Better Auth still requires an implemented transactional-email contract, durable
+  delivery ledger, SES adapter/infrastructure, account-bootstrap
   orchestration, public route/UI review, deletion/retention orchestration, browser E2E,
   and production recovery testing. MFA and passkeys remain release-hardening decisions.
 - Production database role provisioning, TLS, pooling, migration timeouts,
@@ -586,6 +599,7 @@ Deliverables:
 | 2026-08-12 | Better Auth 1.6.27 PostgreSQL runtime path         | Unverified signup, injected verification, sign-in, live session, and immediate revoke passed  |
 | 2026-08-12 | Goal 56 migration/security database gate           | Oldest schema upgraded cumulatively; 33/33 auth/persistence isolation tests passed            |
 | 2026-08-12 | Goal 56 full application gate                      | 52 files/869 tests, strict checks, and optimized build passed                                 |
+| 2026-08-12 | Goal 57 decision plus full application gate        | SES Canada Central selected; 52 files/869 tests, strict checks, and optimized build passed    |
 | 2026-08-11 | `npm run db:check`                                 | Drizzle schema, migration journal, and generated snapshot are consistent                      |
 | 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 562 tests, and optimized production build         |
 | 2026-08-11 | `npm run test:coverage`                            | 94.04% statements, 91.04% branches, 99.73% functions, and 95.13% lines                        |
@@ -1143,6 +1157,44 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 57 authentication-email provider decision record
+
+- Current comparison: Resend 6.19.0 has native idempotency and signed webhooks, but
+  documents US storage for account data, email metadata, logs, and API records even
+  when regional sending is used. Postmark 5.1.0 has mature transactional controls but
+  no HMAC webhook signature and no demonstrated Canadian processing region. Cakemail
+  states Canadian hosting and bilingual Canadian support, but its public technical
+  material does not yet establish sufficiently precise idempotency, event security,
+  suppression export, production-control, SDK-maintenance, and incident guarantees.
+- Selection: ADR 0009 accepts SES API v2 only through `ca-central-1`; future package
+  pin `@aws-sdk/client-sesv2` 3.1108.0. This is a Canadian regional endpoint, not a
+  claim of Canadian corporate sovereignty or guaranteed end-to-end residency. Current
+  account plan/pricing, DPA, quotas, and production access must be rechecked before use.
+- Trust contract: dispatch accepts only purpose, normalized recipient, exact canonical
+  application action URL, local template version, and opaque idempotency reference.
+  Safe results never return or log recipient, token/URL, body, request fingerprint,
+  provider identity/payload, credentials, suppression detail, or exception text.
+- Delivery posture: use a dedicated auth sender and MAIL FROM domain, SPF, 2048-bit
+  Easy DKIM, staged aligned DMARC, local text/HTML templates, canonical application
+  links, and no open/click tracking or rewriting. Public auth responses remain
+  anti-enumerating across missing, verified, suppressed, rejected, and outage states.
+- Reliability boundary: SES has no general send idempotency key. A future content-free
+  ledger must reserve a domain-separated keyed request fingerprint before send, bind
+  the private provider message identity after acceptance, and refuse blind retry after
+  any ambiguous result. A later explicit resend creates a new capability/reference.
+- Feedback/security: every send requires a configuration set. Same-region SNS to
+  encrypted SQS carries at-least-once delivery/bounce/complaint/reject/delay/render
+  events without a public webhook; IAM separates send-only and queue-consumer roles.
+  Durable state excludes plaintext recipient, URL/token, body, and provider payload.
+- Scope result: no package, schema, credential, account, identity, DNS record, IAM
+  policy, configuration set, topic/queue, route, provider call, email, purchase,
+  production data, or deployment was added. Goal 58 begins with pure contracts and
+  local rendering only.
+- Verification result: formatting, ESLint, strict TypeScript, all 52 test files and
+  869 tests, and the optimized Next.js build passed. Secret-pattern scanning found no
+  credential material. The production audit has no high/critical findings; its four
+  known moderate Drizzle Kit development-loader findings remain documented above.
 
 ## Goal 56 Better Auth implementation record
 

@@ -252,3 +252,33 @@ adapter now validates a live database session with a ten-minute billing freshnes
 limit. Execute-only database functions then resolve the active internal account and
 one current verified email; raw auth rows, password/token fields, cookie claims, and
 duplicated contact storage remain outside the contract. No public route exposes it.
+
+## Selected authentication-email dispatch boundary
+
+`AuthenticationEmailDispatcher.dispatch(request)` will be a server-only,
+provider-neutral port. Its exact immutable request is limited to schema version
+`1.0.0`, `verify-email` or `reset-password` purpose, one normalized recipient, one
+absolute action URL on the configured canonical application origin and purpose path,
+one allowlisted local template version, and one opaque idempotency reference. It does
+not accept names, account/profile IDs, arbitrary subject/body, provider metadata,
+tags, credentials, or browser-supplied identity.
+
+The only safe dispositions are `accepted`, `rejected`, `retry`,
+`reconciliation-required`, and `suppressed`, each with a stable identity-free code.
+No result, log, metric, trace, or exception may expose recipient, action URL/token,
+provider message ID/payload, credentials, suppression detail, or request fingerprint.
+Better Auth and public auth responses remain anti-enumerating across every outcome.
+
+ADR 0009 selects a future Amazon SES API v2 adapter in `ca-central-1`, pinned at
+`@aws-sdk/client-sesv2` 3.1108.0 when implemented. It must use local versioned
+text/HTML templates, a dedicated authenticated sender domain, no tracking or link
+rewriting, and a required configuration set. Bounce/complaint and related feedback
+will arrive through same-region SNS to encrypted SQS, never a public webhook.
+
+Because SES has no general send idempotency key, a durable local ledger must reserve
+the opaque reference before provider work and compare a domain-separated keyed
+request fingerprint. Exact replay returns its existing safe state; a content collision
+or an ambiguous provider outcome requires reconciliation and must not trigger a blind
+resend. Durable storage may not contain a plaintext recipient, action URL/token,
+rendered body, or provider payload. No dispatcher, ledger, SDK, route, credential,
+external resource, DNS record, or live delivery is implemented by Goal 57.

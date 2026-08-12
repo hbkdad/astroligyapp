@@ -412,8 +412,11 @@ tests/
 
 - Runtime and deployment verification for the selected composed ephemeris
   adapter on the eventual production host.
-- Managed PostgreSQL, deployment, and transactional email providers. Better Auth is
-  selected as a self-hosted framework, not as a managed infrastructure provider.
+- Managed PostgreSQL and deployment providers. Better Auth is selected as a
+  self-hosted framework, not as a managed infrastructure provider. Amazon SES API v2
+  in Canada Central is selected for authentication email, but its account, production
+  access, infrastructure, DNS, credentials, retention operations, and adapter remain
+  unprovisioned.
 - Coordinate and timezone resolution providers for user-entered locations.
 - Browser end-to-end runner and observability stack.
 
@@ -433,6 +436,13 @@ tests/
   trusted billing email is read live only from the verified auth user row through
   execute-only roles. Public routes/UI and transactional delivery remain unexposed.
   No managed auth infrastructure is selected. See ADR 0008.
+- Authentication email: Amazon SES API v2 is selected behind a provider-neutral
+  dispatch/result contract, using only the `ca-central-1` regional endpoint. A future
+  adapter pins `@aws-sdk/client-sesv2` 3.1108.0, local versioned templates, dedicated
+  SPF/DKIM/DMARC/custom-MAIL-FROM identity, required configuration-set events, and
+  same-region SNS-to-SQS feedback. A durable content-free idempotency ledger must
+  prevent blind retries. No account, SDK, DNS, credential, queue, route, or send exists
+  yet. See ADR 0009.
 - Ephemeris: exact Astronomy Engine 2.1.19 for tropical positions and local
   angles, composed with Whole Sign strategy 1.0.0. No silent house-system
   fallback; exact poles fail explicitly. See ADR 0006.
