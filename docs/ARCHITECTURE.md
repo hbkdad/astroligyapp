@@ -362,6 +362,14 @@ tests/
   a sanitized retryable response. Framework and handler headers enforce no-store,
   anti-framing, content-type sniffing, referrer, and permissions restrictions. No
   outbound Paddle API call, checkout, or customer provisioning occurs at ingress.
+- Billing customer provisioning: a server-only provider-neutral orchestrator accepts
+  only a verified internal `AccountId` and server-trusted normalized contact. It
+  checks the immutable binding first, single-flights one owner/provider in-process,
+  delegates lookup/create/ambiguous-result reconciliation to a provider adapter, and
+  binds only its validated customer reference. Paddle has no general client-supplied
+  idempotency keys, so the abstraction does not claim create idempotency; concrete
+  adapters must lookup before creation and re-query after ambiguous failures. Safe
+  results expose only ready/reject/retry/reconcile codes and never identity or PII.
 
 ## Data and cache principles
 

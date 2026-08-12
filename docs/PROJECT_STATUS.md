@@ -4,8 +4,8 @@ Last updated: 2026-08-12
 
 ## Current position
 
-Status: Goal 51 complete; the verified Paddle subscription pipeline now has one
-bounded, privacy-safe HTTP ingress that fails closed without live credentials.
+Status: Goal 52 complete; authenticated billing-customer provisioning now has a
+provider-neutral, privacy-safe orchestration boundary without external mutation.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 22-table normalized schema, checked-in SQL
@@ -95,6 +95,13 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 52: define strict server-trusted billing contact and provider-neutral
+      find-or-provision contracts, preflight existing ownership, single-flight one
+      owner/provider in-process, bind only validated provider results, and return
+      identity-free ready/reject/retry/reconcile dispositions.
+- [x] Verify Paddle's lack of general client-supplied idempotency keys and correct
+      the abstraction to require provider lookup/create/ambiguous-result
+      reconciliation instead of promising unsupported create idempotency.
 - [x] Goal 51: add strict server-only billing configuration, process-safe service
       composition, and a bounded `/api/webhooks/paddle` POST Route Handler. Enforce
       exact media type, streaming body/header limits, signature-only header
@@ -465,25 +472,24 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 52 — define authenticated billing-customer provisioning orchestration before
-checkout, without live provider credentials or external account mutation.
+Goal 53 — implement the Paddle find-or-provision customer adapter with deterministic
+ambiguity recovery, without live credentials or external API calls.
 
 Deliverables:
 
-1. Define a provider-neutral customer-provisioning adapter and orchestration result
-   that require an already verified internal account owner plus server-trusted billing
-   contact input. Browser owner IDs, checkout metadata, and webhook custom data must
-   never establish ownership.
-2. Make exact replay idempotent, serialize or reconcile concurrent first creation,
-   and bind a provider-verified customer reference through the Goal 50 repository.
-   Specify safe handling for provider success followed by binding conflict/failure.
-3. Keep provider errors, contact details, customer references, and internal owner IDs
-   out of outward results and logs. Define retry/reconciliation evidence without
-   introducing a public route or assuming an authentication vendor.
-4. Verify with a deterministic fake provider, repository doubles, concurrency and
-   failure injection. Add no live credential, Paddle API call, customer/account
-   mutation, checkout, price creation, notification, production database change, or
-   deployment.
+1. Inspect exact Paddle Node SDK 3.10.0 customer list/create types and record current
+   official customer uniqueness, ID, error, permissions, and no-general-idempotency
+   behavior. Do not infer capabilities from other providers.
+2. Implement an injected Paddle adapter that searches by exact normalized email
+   before create, accepts exactly one active matching `ctm_` customer, and never sends
+   internal owner IDs, profile IDs, or ownership claims as provider custom data.
+3. On duplicate-customer response or ambiguous timeout/network failure, re-query and
+   return ready only when one exact customer is proven. Multiple/no-match ambiguity
+   must return reconciliation-required rather than retrying an unsafe create.
+4. Verify deterministic SDK doubles for zero/one/multiple matches, inactive/wrong
+   email/invalid IDs, create success, duplicate, timeout-before/after-create, malformed
+   responses, and privacy. Add no live credential, actual Paddle request, customer
+   mutation, checkout, price, public route, notification, database change, or deploy.
 
 ## Phase queue
 
@@ -1100,6 +1106,42 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 52 billing customer provisioning orchestration record
+
+- Boundary: `BillingCustomerProvisioner` accepts an exact-shape request containing
+  one runtime-validated branded internal account UUID and one normalized, frozen,
+  server-trusted billing email. It is not exposed through HTTP or a Server Action;
+  browser ownership, checkout/custom data, profiles, and provider claims are absent.
+- Orchestration: existing immutable binding is checked before provider work. Requests
+  for one owner/provider share one in-process flight, while different owners proceed
+  independently. Only a strict provider/customer result may reach Goal 50 binding;
+  existing/created, contact rejection, transient failure, malformed contracts,
+  ambiguity, and binding conflict have separate fixed private dispositions.
+- Provider correction: current Paddle documentation states arbitrary API operations
+  do not support client-supplied idempotency keys. The contract therefore requires a
+  provider adapter to find-or-provision and reconcile ambiguous creation; no hash or
+  custom-data ownership marker is presented as create idempotency. Goal 53 will prove
+  Paddle lookup/create/relookup behavior with injected SDK doubles before any call.
+- Security/privacy result: outputs are frozen versioned codes with no owner UUID,
+  email, provider, customer reference, exception, or provider detail. The boundary
+  has no logger and catches dependency errors. Durable provider/customer and owner/
+  provider uniqueness remains enforced by Goal 50, including cross-process races.
+- Verification: 31 focused adversarial tests passed, followed by 48 unit/contract
+  files with 790 tests. Formatting, ESLint, strict TypeScript, optimized build,
+  Drizzle consistency, production audit, and diff integrity passed. Coverage was
+  94.44% statements, 92.09% branches, 99.32% functions, and 95.53% lines; the new
+  provisioner had 100% statement/function/line and 98.71% branch coverage.
+- Sources reviewed 2026-08-12: Paddle's official SDK library guidance documents the
+  absence of arbitrary idempotency keys and recommends lookup before retrying create;
+  the customer create/reference pages define required email, customer uniqueness,
+  `ctm_` IDs, `customer.write`, and duplicate-customer behavior. References:
+  <https://developer.paddle.com/sdks/libraries/> and
+  <https://developer.paddle.com/api-reference/customers/create-customer/>.
+- Scope/residual risk: no live key, SDK network call, Paddle customer, checkout,
+  price, public mutation boundary, notification, database change, production state,
+  or deployment was added. Process single-flight is only a latency/race reduction;
+  concrete provider reconciliation plus durable binding uniqueness carry correctness.
 
 ## Goal 51 Paddle webhook HTTP ingress record
 

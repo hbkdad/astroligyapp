@@ -202,3 +202,20 @@ and unsupported methods use 405. Responses are no-store and carry defensive cont
 framing, referrer, and permissions headers. Missing or malformed configuration fails
 closed without disclosing which value failed. No Paddle API key, customer creation,
 checkout operation, or outbound provider call is part of this route.
+
+`BillingCustomerProvisioner.provision({ownerId, contact})` is the provider-neutral
+pre-checkout customer boundary. `ownerId` must be the opaque `AccountId` obtained
+after the verified-session/account-resolution boundary; the provisioner also checks
+its UUID shape at runtime. `contact.email` is exact-shape, normalized server-trusted
+input. Browser account IDs, profile IDs, checkout metadata, webhook custom data, and
+provider payloads are not accepted as ownership evidence.
+
+The provisioner checks the Goal 50 binding before provider work and single-flights
+same-process requests for one owner/provider. Its adapter contract is deliberately
+`findOrProvisionCustomer`, not an idempotent `create`: Paddle documents that its API
+does not support client-supplied idempotency keys for arbitrary operations. A
+provider adapter must therefore lookup before creation and reconcile an ambiguous
+create before returning one confirmed safe customer reference. The orchestrator then
+binds that reference through the immutable repository. Fixed ready/reject/retry/
+reconcile results contain no owner, email, provider, customer reference, exception,
+or provider detail. No public HTTP or Server Action exposes this boundary yet.
