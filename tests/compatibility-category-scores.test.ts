@@ -21,6 +21,12 @@ import {
   type CompatibilityContentProjection,
 } from "@/application/project-compatibility-content";
 import {
+  COMPATIBILITY_CONTENT_RENDERER_VERSION,
+  InvalidCompatibilityRenderInputError,
+  UNSUPPORTED_COMPATIBILITY_CONTENT_FALLBACK,
+  renderCompatibilityContent,
+} from "@/application/render-compatibility-content";
+import {
   composeCompatibilityFacts,
   type CompatibilityFactAggregate,
 } from "@/application/compose-compatibility-facts";
@@ -28,6 +34,13 @@ import { SynastryAspectEngine } from "@/application/calculate-synastry-aspects";
 import { findHouseNumber } from "@/domain/astro/house-strategies";
 import { toZodiacPosition, type ZodiacSign } from "@/domain/astro/zodiac";
 import { INITIAL_COMPATIBILITY_CATEGORY_POLICY } from "@/config/compatibility-category-policy";
+import {
+  COMPATIBILITY_CONTENT_LIBRARY_ID,
+  COMPATIBILITY_CONTENT_LIBRARY_VERSION,
+  DEFAULT_COMPATIBILITY_CONTENT_LIBRARY,
+  DeterministicCompatibilityContentLibrary,
+  type CompatibilityContentTemplate,
+} from "@/domain/compatibility/content-library";
 import { PhaseOneCompatibilityStrategy } from "@/domain/compatibility/phase-one";
 import type {
   CompatibilityCategoryDefinition,
@@ -42,6 +55,218 @@ const FIRST_LONGITUDES = [0, 18, 37, 59, 83, 111, 147, 191, 239, 301];
 const SECOND_LONGITUDES = [180, 198, 217, 239, 263, 291, 327, 11, 59, 121];
 
 describe("injected compatibility category scoring", () => {
+  it("covers every factual and category-tone key in the default en-CA library", () => {
+    const keys = [
+      "compatibility.fact.phase-one-pair",
+      "compatibility.fact.phase-one-numerology-pair",
+      "compatibility.fact.synastry-aspect",
+      "compatibility.fact.house-overlay",
+      ...[
+        "attraction",
+        "communication",
+        "emotional",
+        "long-term",
+        "chemistry",
+      ].flatMap((category) =>
+        ["supportive", "challenging", "neutral"].map(
+          (tone) => `compatibility.reflection.${category}.${tone}`,
+        ),
+      ),
+    ];
+    expect(DEFAULT_COMPATIBILITY_CONTENT_LIBRARY.id).toBe(
+      COMPATIBILITY_CONTENT_LIBRARY_ID,
+    );
+    expect(DEFAULT_COMPATIBILITY_CONTENT_LIBRARY.version).toBe(
+      COMPATIBILITY_CONTENT_LIBRARY_VERSION,
+    );
+    expect(DEFAULT_COMPATIBILITY_CONTENT_LIBRARY.locale).toBe("en-CA");
+    expect(
+      keys.every(
+        (key) => DEFAULT_COMPATIBILITY_CONTENT_LIBRARY.resolve(key).supported,
+      ),
+    ).toBe(true);
+    expect(DEFAULT_COMPATIBILITY_CONTENT_LIBRARY.resolve("unknown")).toEqual({
+      supported: false,
+      key: "unknown",
+      reason: "unsupported-key",
+    });
+  });
+
+  it("renders separate exact fact and tradition-framed reflection sections", () => {
+    const source = aggregate();
+    const scores = calculateCompatibilityCategoryScores(
+      source,
+      INITIAL_COMPATIBILITY_CATEGORY_POLICY,
+    );
+    const projection = projectCompatibilityContent(source, scores);
+    const rendered = renderCompatibilityContent(projection, source, scores);
+
+    expect(rendered).toMatchObject({
+      version: COMPATIBILITY_CONTENT_RENDERER_VERSION,
+      renderingMode: "deterministic-template",
+      disclaimer: COMPATIBILITY_CONTENT_DISCLAIMER,
+    });
+    expect(rendered.items).toHaveLength(projection.items.length);
+    expect(rendered.items[0]).toMatchObject({
+      id: projection.items[0]!.id,
+      categoryId: "attraction",
+      tone: "supportive",
+      fact: {
+        status: "rendered",
+        text: "Calculated cross-chart aspect: Sun is Trine Venus, with orb 1 degrees, phase Applying, and normalized strength 0.857143.",
+        provenance: {
+          sourceFactId: "synastry:chart-a:sun:chart-b:venus:trine",
+          ruleId: "attraction-sun-venus-trine",
+          factKey: "compatibility.fact.synastry-aspect",
+          reflectionKey: "compatibility.reflection.attraction.supportive",
+          projectionVersion: "1.0.0",
+          aggregateVersion: "1.0.0",
+          scoringResultVersion: "1.0.0",
+          scoringFormulaVersion: "1.0.0",
+          scoringPolicyVersion: "1.0.0",
+          libraryId: COMPATIBILITY_CONTENT_LIBRARY_ID,
+          libraryVersion: COMPATIBILITY_CONTENT_LIBRARY_VERSION,
+          locale: "en-CA",
+          rendererVersion: COMPATIBILITY_CONTENT_RENDERER_VERSION,
+        },
+      },
+      reflection: {
+        status: "rendered",
+        text: "Within astrology and numerology traditions, this configured Attraction factor is a Supportive reflection prompt; product impact is 4 with confidence 0.55.",
+      },
+    });
+    expect(rendered.items[0]!.fact).not.toBe(rendered.items[0]!.reflection);
+    expect(Object.isFrozen(rendered)).toBe(true);
+    expect(Object.isFrozen(rendered.items[0]!.fact.provenance)).toBe(true);
+    expect(JSON.stringify(rendered)).not.toMatch(
+      /birth|observer|timezone|coordinateSource|private-source-marker|soulmate|guaranteed|should marry/,
+    );
+  });
+
+  it("renders byte-equivalent sections when relationship inputs reverse", () => {
+    const first = chart("fixture-a", FIRST_LONGITUDES);
+    const second = chart("fixture-b", SECOND_LONGITUDES);
+    const render = (source: CompatibilityFactAggregate) => {
+      const scores = calculateCompatibilityCategoryScores(
+        source,
+        INITIAL_COMPATIBILITY_CATEGORY_POLICY,
+      );
+      return renderCompatibilityContent(
+        projectCompatibilityContent(source, scores),
+        source,
+        scores,
+      );
+    };
+    const forward = render(aggregateFor(first, second));
+    const reversed = render(aggregateFor(second, first));
+    expect(reversed).toEqual(forward);
+    expect(JSON.stringify(reversed)).toBe(JSON.stringify(forward));
+  });
+
+  it("uses fixed provenance-bearing fallbacks for unsupported keys", () => {
+    const source = aggregate();
+    const scores = calculateCompatibilityCategoryScores(
+      source,
+      INITIAL_COMPATIBILITY_CATEGORY_POLICY,
+    );
+    const projection = projectCompatibilityContent(source, scores);
+    const emptyLibrary = new DeterministicCompatibilityContentLibrary({
+      id: "empty-compatibility-library",
+      version: "1.0.0",
+      locale: "en-CA",
+      templates: [],
+    });
+    const rendered = renderCompatibilityContent(
+      projection,
+      source,
+      scores,
+      emptyLibrary,
+    );
+    expect(rendered.items[0]!.fact).toMatchObject({
+      status: "unsupported",
+      reason: "unsupported-key",
+      text: UNSUPPORTED_COMPATIBILITY_CONTENT_FALLBACK,
+      provenance: { libraryId: "empty-compatibility-library" },
+    });
+    expect(rendered.items[0]!.reflection).toMatchObject({
+      status: "unsupported",
+      text: UNSUPPORTED_COMPATIBILITY_CONTENT_FALLBACK,
+    });
+  });
+
+  it.each([
+    [
+      "interpretive fact",
+      (template: MutableCompatibilityTemplate) => {
+        template.text =
+          "Calculated {fact} values {firstValue} and {secondValue}, equality {equal}, means compatibility.";
+      },
+    ],
+    [
+      "unsafe reflection",
+      (template: MutableCompatibilityTemplate) => {
+        template.text =
+          "Within astrology and numerology traditions, this {categoryId} {tone} factor guarantees a soulmate with impact {impact} and confidence {confidence}.";
+      },
+    ],
+    [
+      "unknown placeholder",
+      (template: MutableCompatibilityTemplate) => {
+        template.text =
+          "Calculated {fact} values are {firstValue} and {secondValue}; equality is {unknown}.";
+      },
+    ],
+  ])("rejects unsafe or malformed template: %s", (kind, corrupt) => {
+    const key =
+      kind === "unsafe reflection"
+        ? "compatibility.reflection.attraction.supportive"
+        : "compatibility.fact.phase-one-pair";
+    const resolution = DEFAULT_COMPATIBILITY_CONTENT_LIBRARY.resolve(key);
+    expect(resolution.supported).toBe(true);
+    if (!resolution.supported) throw new Error("fixture template missing");
+    const template = structuredClone(
+      resolution.template,
+    ) as MutableCompatibilityTemplate;
+    corrupt(template);
+    expect(
+      () =>
+        new DeterministicCompatibilityContentLibrary({
+          id: "invalid-test-library",
+          version: "1.0.0",
+          locale: "en-CA",
+          templates: [template as CompatibilityContentTemplate],
+        }),
+    ).toThrow();
+  });
+
+  it("rejects mismatched library responses and drifted projections generically", () => {
+    const source = aggregate();
+    const scores = calculateCompatibilityCategoryScores(
+      source,
+      INITIAL_COMPATIBILITY_CATEGORY_POLICY,
+    );
+    const projection = projectCompatibilityContent(source, scores);
+    const mismatchedLibrary = {
+      id: "mismatched-library",
+      version: "1.0.0",
+      locale: "en-CA",
+      resolve: () => ({
+        supported: false as const,
+        key: "different-key",
+        reason: "unsupported-key" as const,
+      }),
+    };
+    expect(() =>
+      renderCompatibilityContent(projection, source, scores, mismatchedLibrary),
+    ).toThrow(InvalidCompatibilityRenderInputError);
+
+    const drifted = structuredClone(projection);
+    (drifted as unknown as { version: string }).version = "2.0.0";
+    expect(() => renderCompatibilityContent(drifted, source, scores)).toThrow(
+      InvalidCompatibilityRenderInputError,
+    );
+  });
+
   it("projects every selected contribution once into factual and reflection keys", () => {
     const source = aggregate();
     const scores = calculateCompatibilityCategoryScores(
@@ -800,4 +1025,11 @@ interface MutableProjection extends Omit<
   version: string;
   items: MutableProjectionItem[];
   disclaimer: string;
+}
+
+interface MutableCompatibilityTemplate extends Omit<
+  CompatibilityContentTemplate,
+  "text"
+> {
+  text: string;
 }

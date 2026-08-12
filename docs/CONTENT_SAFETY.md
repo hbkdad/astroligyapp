@@ -62,3 +62,9 @@ No AI interpretation adapter is selected or required. A future adapter may
 receive only validated structured render data, must return schema-validated
 output, and must pass equivalent claim-safety checks. Deterministic fallback
 content remains mandatory, and AI must never calculate or modify facts.
+
+Compatibility content follows the same boundary through a separate en-CA library.
+Its factual section exposes only projected pair/aspect/overlay values. Its reflection
+section begins with explicit astrology-and-numerology tradition framing and may
+describe only configured product factors. Soulmate, guaranteed/perfect-match,
+scientific-validity, and marry/leave/stay/divorce directives fail validation.

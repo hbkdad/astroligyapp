@@ -247,6 +247,10 @@ tests/
   and recomputed scores, then maps each contribution once into a fact-family key,
   category/tone reflection key, and minimal structured parameters. It composes no
   prose and excludes policy rationale and raw relationship inputs.
+  The compatibility en-CA library validates complete key/schema coverage and safe
+  single-line templates. `renderCompatibilityContent` resolves factual and
+  reflection sections independently, applies invariant six-decimal formatting,
+  emits provenance-bearing fixed fallbacks, and never recalculates a source fact.
   Relationship claims, persistence, and public sharing remain separate later layers.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.

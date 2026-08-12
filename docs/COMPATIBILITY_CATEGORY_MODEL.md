@@ -75,3 +75,17 @@ Before projection, the accepted Goal 35 aggregate and Goal 37 policy/scores are
 recomputed and required to match exactly. Missing, duplicated, reordered, unknown,
 unsupported, or version-drifted data fails closed. The projection contains no prose,
 policy rationale, raw birth/profile inputs, account identity, or public route data.
+
+## Deterministic content library and renderer 1.0.0
+
+The en-CA library covers ordinary and numerology phase-one pairs, synastry aspects,
+house overlays, and all five category by three tone reflection keys. Factual text
+exposes every declared value without inference. Reflection text begins with explicit
+astrology-and-numerology tradition framing and describes configured product factors,
+not relationship outcomes.
+
+The renderer requires exact parameters, finite numbers, safe plain text, and a
+validated Goal 38 projection. Numbers use at most six fractional digits. Fact and
+reflection sections are separate and carry the complete projection/source/policy/
+library/locale/renderer trace. Missing templates produce a fixed fallback rather
+than invented content.

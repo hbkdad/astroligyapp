@@ -4,7 +4,7 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 38 complete; validated compatibility contributions now project exactly once into safe factual and tradition-framed content keys with full provenance.
+Status: Goal 39 complete; compatibility content keys now render through a strict en-CA deterministic library into separate fact and tradition-framed reflection sections.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,12 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 39: define a versioned en-CA compatibility library covering four
+      factual schemas and all fifteen category/tone reflection keys.
+- [x] Render fact and reflection sections independently with exact parameters,
+      invariant formatting, fixed unsupported fallbacks, and complete provenance.
+- [x] Verify exact copy, coverage, symmetry, unsafe claims/templates, mismatched
+      resolution, version drift, immutability, and private-data exclusion.
 - [x] Goal 38: define versioned compatibility fact-family, category/tone
       reflection-key, and minimal structured-parameter projection contracts.
 - [x] Reconstruct the Goal 35 aggregate and Goal 37 score result before projecting
@@ -356,20 +362,18 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 39 — render deterministic compatibility fact and reflection sections.
+Goal 40 — compose one validated compatibility report payload.
 
 Deliverables:
 
-1. Define a separately versioned deterministic en-CA compatibility template library
-   for all Goal 38 factual families and category/tone reflection keys.
-2. Render visibly separate calculated-fact and tradition-framed reflection text
-   from validated parameters without recomputing facts or scores.
-3. Preserve projection/source/library/renderer provenance; verify exact parameter
-   coverage, stable output, unsupported fallbacks, escaping, claims safety,
-   symmetry, version drift, and immutability.
-4. Add no AI, deterministic relationship prediction/advice, persistence, sharing
-   URL, UI, entitlement, notification, provider call, schema change, production
-   service, or deployment.
+1. Compose the validated Goal 35 aggregate, Goal 37 scores, Goal 38 projection, and
+   Goal 39 rendered sections into one versioned, deeply immutable report payload.
+2. Recheck exact identities, versions, category and contribution coverage/order,
+   section provenance, claims disclaimer, and unsupported-content accounting.
+3. Verify symmetry, missing/duplicate/reordered children, source drift, malformed
+   text/provenance, raw-private-data exclusion, and stable reconstruction.
+4. Add no persistence, sharing URL, UI, AI, entitlement, notification, provider
+   call, schema change, production service, or deployment.
 
 ## Phase queue
 
@@ -810,6 +814,36 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 39 compatibility content-rendering record
+
+- Commands: focused compatibility aggregate/scoring/projection/library/renderer
+  suite; `npm run check`; `npm run test:coverage`; `npm audit --omit=dev`; and
+  `git diff --check` through `astro-validation` and `security-audit` procedures.
+- Library: `compatibility-reflection-en-ca` 1.0.0 covers four exact fact schemas
+  (ordinary phase pair, numerology phase pair, synastry aspect, house overlay) and
+  all fifteen category/tone reflection keys. Duplicate/unsupported keys, wrong
+  schemas/placeholders, inferred fact meaning, missing tradition framing, unsafe
+  claims, and unsafe metadata fail validation.
+- Renderer: version 1.0.0 first revalidates Goal 38, then resolves fact/reflection
+  independently. Supplied parameters must exactly equal template schemas. Finite
+  numbers use invariant six-decimal-maximum formatting; booleans and safe strings
+  are deterministic. Unsupported keys return one fixed fallback with provenance.
+- Separation/provenance: every rendered item keeps raw structured parameters beside
+  distinct calculated-fact and tradition-framed reflection sections. Both carry
+  item/category/source/rule/key, aggregate/projection/score/formula/policy,
+  library/locale, and renderer identities. No fact or score is recalculated.
+- Validation/security: all nineteen keys resolve; the representative first aspect
+  renders exact text and numeric precision. Tests cover byte symmetry, independent
+  fallbacks, interpretive fact rejection, soulmate/guarantee claim rejection,
+  malformed placeholders, mismatched resolution, drift, deep immutability, and
+  private-data exclusion. No critical or high finding remains.
+- Evidence: 35 test files and 535 tests passed; coverage was 93.99% statements,
+  91.01% branches, 99.70% functions, and 95.08% lines. Renderer coverage was 88.52%
+  statements, 80.43% branches, 100% functions, and 96.29% lines; library coverage
+  was 87.75%/85.36%/100%/87.23%. The build passed and audit found zero vulnerabilities.
+- Scope: no report composition, persistence, share token/URL, UI, AI, entitlement,
+  notification, provider call, schema change, production service, or deployment.
 
 ## Goal 38 compatibility content-projection record
 

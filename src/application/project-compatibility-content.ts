@@ -15,6 +15,7 @@ export const COMPATIBILITY_CONTENT_DISCLAIMER =
 
 export const COMPATIBILITY_FACT_CONTENT_KEYS = [
   "compatibility.fact.phase-one-pair",
+  "compatibility.fact.phase-one-numerology-pair",
   "compatibility.fact.synastry-aspect",
   "compatibility.fact.house-overlay",
 ] as const;
@@ -225,7 +226,10 @@ function phaseSource(
   return [
     `compatibility:phase-one:${name}`,
     {
-      factKey: "compatibility.fact.phase-one-pair",
+      factKey:
+        fact.masterNumberCount === undefined
+          ? "compatibility.fact.phase-one-pair"
+          : "compatibility.fact.phase-one-numerology-pair",
       parameters: {
         fact: name,
         firstValue: fact.values[0]!,
