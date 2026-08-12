@@ -46,8 +46,8 @@ These names express responsibilities, not committed public URLs.
 
 ## Implemented compatibility persistence boundary
 
-`CompatibilityReportRepository` is server-only and currently has no HTTP entry
-point. Its private methods require a verified opaque `AccountId` and execute under
+`CompatibilityReportRepository` is server-only. Its private methods require a
+verified opaque `AccountId` and execute under
 the transaction-local `app_user` role:
 
 - `create(owner, profiles, report)` validates and stores a complete Goal 40 report;
@@ -62,7 +62,23 @@ the transaction-local `app_user` role:
 The public resolver assumes `app_share_reader` in a local transaction, sets only a
 canonical digest context, and can select only the redacted payload and integrity
 digest through forced RLS. Stored integrity failure is an internal error; Goal 44's
-transport must map every unavailable case to one generic public response.
+transport maps every unavailable case to one generic public response.
+
+## Implemented public compatibility transport
+
+`GET /match/[token]` accepts only a canonical 43-character, 256-bit base64url
+capability. A malformed value is rejected before repository work. An active value
+returns a versioned read model rendered as escaped, script-free HTML; the raw token,
+digest, owner/profile references, private report, and calculation provenance never
+enter the document. Missing, expired, revoked, deleted, overloaded, integrity-
+invalid, and infrastructure-failed lookups all return the identical generic 404.
+
+The response is private/no-store and applies noindex/nofollow/noarchive/nosnippet,
+no-referrer, strict no-script/no-connect CSP, frame denial, same-origin resource
+policy, and restricted permissions. There is no canonical metadata, analytics,
+outbound link, client bundle, or token-bearing application log. A four-lookup
+process-local concurrency gate bounds repository pressure; a deployment edge may
+add distributed rate limiting without recording raw capabilities.
 
 ## Error contract
 

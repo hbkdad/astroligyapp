@@ -280,7 +280,15 @@ tests/
   transaction-local canonical token digest feeds a forced-RLS policy that admits
   only the matching public, unrevoked, unexpired row. The role cannot select the
   private report, token digest, owner/profile references, or general table rows.
-  No `SECURITY DEFINER` or `BYPASSRLS` dependency is used. HTTP remains a later layer.
+  No `SECURITY DEFINER` or `BYPASSRLS` dependency is used.
+- Public compatibility HTTP: `/match/[token]` is a Node Route Handler that rejects
+  noncanonical capabilities before storage access, admits at most four concurrent
+  process-local lookups, and maps every miss/failure to the same generic 404. It
+  renders escaped static HTML directly so the capability never enters React Server
+  Component or client payloads. Responses are private/no-store, noindex,
+  no-referrer, frame-denied, script-free under strict CSP, and load only the local
+  standalone stylesheet. Distributed edge rate limiting remains a deployment
+  control; it must not retain or log raw capabilities.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
 - Optional AI explanation remains deferred behind future validated input/output

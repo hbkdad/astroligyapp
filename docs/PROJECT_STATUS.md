@@ -4,8 +4,9 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 43 complete; owner-controlled compatibility reports and redacted
-shares now persist behind forced RLS and a digest-scoped public-read role.
+Status: Goal 44 complete; active privacy-safe compatibility shares now resolve
+through a hardened, script-free public HTTP route without reflecting bearer or
+private report material.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -94,6 +95,17 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 44: map only a validated active public payload into a versioned,
+      deeply immutable display model with no bearer, digest, private report, or
+      calculation provenance.
+- [x] Add a dynamic script-free `/match/[token]` Route Handler with one generic
+      404 for malformed, missing, expired, revoked, deleted, overloaded, failed,
+      or integrity-invalid shares.
+- [x] Apply no-store, noindex, no-referrer, CSP, framing, content-type, resource,
+      and permissions protections at both response and framework boundaries.
+- [x] Verify active and generic states against disposable PostgreSQL, exact
+      headers, token non-reflection, HTML escaping, bounded concurrency, keyboard
+      focus, desktop/mobile/200% reflow, reduced motion, and local-only resources.
 - [x] Goal 43: add forward-only migration `0002_curious_psynapse` with opaque
       private/public JSON payloads, explicit versions/state, integrity digest,
       lifecycle constraints, and stricter two-profile ownership policy.
@@ -393,22 +405,19 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 44 — expose privacy-safe compatibility shares over HTTP.
+Goal 45 — define the provider-neutral subscription entitlement policy.
 
 Deliverables:
 
-1. Map only a validated active Goal 43 public payload into a versioned immutable
-   public read model that contains no bearer token, digest, private report, or
-   calculation provenance.
-2. Add a dynamic `/match/[token]` server route and accessible responsive view with
-   one generic unavailable state for malformed, missing, expired, revoked,
-   deleted, or integrity-invalid shares.
-3. Apply no-store/noindex/no-referrer protections, avoid token-bearing logs,
-   analytics, canonical URLs, client bundles, and outbound links, and define a
-   bounded abuse-control boundary without weakening 256-bit enumeration resistance.
-4. Verify active/all-failure states, headers, token non-disclosure, clean server and
-   browser output, keyboard/mobile/desktop/200% text/reduced motion, and add no
-   owner mutation UI, production database/auth, AI, billing, notification, or deploy.
+1. Define versioned feature keys and configured Free, Personal, and Advanced
+   capability sets without prices or billing-provider plan names.
+2. Add one pure server-side policy that derives effective entitlements from a
+   validated provider-neutral subscription state and injected trusted clock.
+3. Fail closed for unknown features, plans, statuses, malformed dates, expired
+   access, configuration drift, and attempts to bypass the centralized policy.
+4. Verify tier inheritance, active/trialing/canceled/expired transitions, exact
+   period boundaries, immutable decisions, and add no provider SDK, webhook,
+   persistence migration, checkout UI, pricing, notification, or deployment.
 
 ## Phase queue
 
@@ -419,8 +428,8 @@ Deliverables:
 | 3     | Natal charts, transits, personal context, fixtures       | Complete    |
 | 4     | Interpretation, dashboard, and natal-chart foundation    | Complete    |
 | 5     | Timelines, daily/public readings, retention content      | Complete    |
-| 6     | Compatibility and privacy-safe sharing                   | In progress |
-| 7     | Subscriptions, entitlements, notifications               | Pending     |
+| 6     | Compatibility and privacy-safe sharing                   | Complete    |
+| 7     | Subscriptions, entitlements, notifications               | In progress |
 | 8     | SEO and useful public content                            | Pending     |
 | 9     | Security, privacy, performance, accessibility, QA        | Pending     |
 | 10    | Deployment and production verification                   | Pending     |
@@ -862,6 +871,41 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 44 public compatibility HTTP record
+
+- Commands: focused route/projection suites; Prettier, ESLint, strict TypeScript,
+  all unit tests, coverage, optimized production build, Drizzle check, disposable
+  PostgreSQL integration suite, production audit, secret-pattern scan, and
+  `git diff --check` through the `security-audit` and `ui-quality` procedures.
+- Transport: the Node-only `/match/[token]` Route Handler validates canonical
+  base64url shape before repository access and maps active payloads through a
+  versioned immutable display model. It renders escaped static HTML directly;
+  no React Server Component/client payload contains the capability.
+- Failure and abuse boundary: malformed, unknown, expired, revoked, deleted,
+  integrity-invalid, repository-failed, and process-overload states use the same
+  generic 404 document. The process admits four concurrent repository lookups and
+  retains no token, IP address, or caller identity in the gate.
+- Browser/HTTP evidence: a disposable PostgreSQL share returned 200 with five
+  semantic meters and twelve paired fact/reflection items. Raw response and DOM
+  contained no bearer or digest, no script, one same-page skip link, and only the
+  local stylesheet request. Headers enforced private/no-store, no-referrer,
+  noindex, strict no-script/no-connect CSP, frame denial, same-origin resources,
+  and restricted permissions. Missing and malformed bodies were byte-identical.
+- UI evidence: inspected 1440px desktop, 390px mobile, 200% equivalent 640px
+  reflow, and reduced motion. All had no horizontal overflow; the 47px skip target
+  focused the main report after activation. The active console had zero messages.
+  The generic 404 produced only the browser's expected failed-document status.
+- Verification result: 39 unit files and 571 tests passed; 16 PostgreSQL 18 tests
+  plus the legacy migration upgrade passed. Coverage was 94.09% statements,
+  91.02% branches, 99.73% functions, and 95.18% lines. Build, schema check, and
+  zero-vulnerability production audit passed.
+- Cleanup/scope: the browser fixture database, local server/browser, and temporary
+  raw token file were removed. No production database/auth, mutation UI, analytics,
+  AI, billing, notification, external provider, or deployment behavior was added.
+- Residual deployment control: the in-process concurrency gate is deliberately
+  not a distributed rate limiter. The eventual edge may add aggregate abuse
+  controls without logging or persisting raw capability URLs.
 
 ## Goal 43 compatibility persistence and share-security record
 
