@@ -129,5 +129,25 @@ Share capabilities use 32 bytes of cryptographic randomness encoded as canonical
 unpadded base64url. The raw token is shown only as the bearer capability; storage
 uses a domain-separated SHA-256 digest. Grant state is explicit, canonical UTC
 expiry is exclusive at its exact instant, and revocation moves the immutable grant
-from public to private. Malformed state and tokens fail closed. Persistence and the
-public HTTP route remain Goal 43 and later boundaries.
+from public to private. Malformed state and tokens fail closed.
+
+## Persistence boundary 1.0.0
+
+The compatibility repository persists a complete, revalidated Goal 40 report under
+the owner and two owner-verified birth-profile references. Private reports and
+redacted public payloads use preserved-order PostgreSQL `json`; their versions are
+stored beside them. Existing pre-Goal-43 writes remain private legacy rows, while
+all new repository writes require the complete report.
+
+Publishing reprojects Goal 42 inside the owner transaction, generates a new bearer,
+stores only its digest, and stores a separately domain-separated integrity digest
+for the exact redacted payload. Resolution checks that digest in constant time and
+then applies strict public-payload validation. Revoke clears the public payload and
+integrity digest while retaining the old capability digest with a revocation time;
+re-publish creates a new capability. Deletion removes both private and public state.
+
+Private operations use owner RLS with independent ownership checks for both birth
+profiles. Public reads use a NOLOGIN, transaction-local-digest RLS role with access
+only to redacted payload and integrity-digest columns. The public HTTP route remains
+Goal 44; tokens, digests, private reports, source IDs, and profile/account references
+must not enter its rendered output, metadata, logs, analytics, or outbound links.

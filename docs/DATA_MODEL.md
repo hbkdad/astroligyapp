@@ -143,7 +143,9 @@ AI text is downstream output and cannot replace calculation records.
 
 - `id`, owner, two private profile references
 - versioned calculation references and category contributions
-- explicit share state, random share-token hash, expiry/revocation timestamps
+- preserved-order complete private report JSON and report version
+- explicit share state, random share-token digest, expiry/revocation timestamps
+- optional preserved-order redacted public JSON, public version, and integrity digest
 
 Never place raw birth data in the share token or public representation.
 
@@ -153,6 +155,18 @@ is a separately validated redacted projection with sequential public factor IDs;
 it excludes private report children, calculation provenance, and internal IDs.
 Expiry is exclusive at the stored instant, revocation is irreversible for that
 grant, and access must recheck digest, explicit visibility, expiry, and revocation.
+
+Both birth-profile references must resolve through profiles owned by the report
+owner; owner ID alone is insufficient. Private operations use forced `app_user`
+RLS. Anonymous resolution uses a separate NOLOGIN role with SELECT on only the
+redacted payload and integrity-digest columns. Its forced-RLS policy also requires
+the transaction-local canonical token digest, public state, no revocation, and an
+unexpired timestamp. It cannot enumerate or select private report columns.
+
+Payload columns use PostgreSQL `json`, not `jsonb`, because the validated report
+contract currently requires exact serialized key order and these opaque payloads
+are never queried internally. The public integrity digest is domain-separated from
+the bearer-token digest and is verified before parsing stored public content.
 
 ### `subscription`
 

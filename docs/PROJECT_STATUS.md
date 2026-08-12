@@ -4,8 +4,8 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 42 complete; validated compatibility reports now project into a
-strictly redacted public payload with a server-only opaque-token lifecycle.
+Status: Goal 43 complete; owner-controlled compatibility reports and redacted
+shares now persist behind forced RLS and a digest-scoped public-read role.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -94,6 +94,14 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 43: add forward-only migration `0002_curious_psynapse` with opaque
+      private/public JSON payloads, explicit versions/state, integrity digest,
+      lifecycle constraints, and stricter two-profile ownership policy.
+- [x] Implement owner-scoped create/read/delete and publish/revoke operations plus
+      an RLS-scoped public resolver that receives only redacted payload columns.
+- [x] Verify legacy upgrade/backfill, overlap writes, unauthenticated/two-owner
+      isolation, cross-profile rejection, integrity tamper, digest collision
+      rollback, exact expiry/revocation, deletion/cascade, index use, and pool cleanup.
 - [x] Goal 42: reconstruct each Goal 40 report before projecting only selected
       scores, confidence, factor counts, rendered copy, locale, and disclaimer
       into a versioned, deeply immutable public-share payload.
@@ -385,20 +393,22 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 43 — persist owner-controlled compatibility reports and shares.
+Goal 44 — expose privacy-safe compatibility shares over HTTP.
 
 Deliverables:
 
-1. Add a forward-only compatibility-report migration and typed repository contract
-   for the complete private report, optional redacted Goal 42 payload, explicit
-   share lifecycle, and version metadata without storing raw bearer tokens.
-2. Implement owner-scoped create/read/delete, publish/revoke, and a narrowly
-   privileged digest lookup that can return only an active redacted payload.
-3. Verify unauthenticated and two-owner isolation, tampered payload rejection,
-   unique digest behavior, exact expiry/revocation, generic misses, deletion
-   cascades, rollback, and pooled identity cleanup in disposable PostgreSQL.
-4. Add no public HTTP route/UI, production auth/database, AI, billing,
-   notification, analytics, external provider, or deployment behavior.
+1. Map only a validated active Goal 43 public payload into a versioned immutable
+   public read model that contains no bearer token, digest, private report, or
+   calculation provenance.
+2. Add a dynamic `/match/[token]` server route and accessible responsive view with
+   one generic unavailable state for malformed, missing, expired, revoked,
+   deleted, or integrity-invalid shares.
+3. Apply no-store/noindex/no-referrer protections, avoid token-bearing logs,
+   analytics, canonical URLs, client bundles, and outbound links, and define a
+   bounded abuse-control boundary without weakening 256-bit enumeration resistance.
+4. Verify active/all-failure states, headers, token non-disclosure, clean server and
+   browser output, keyboard/mobile/desktop/200% text/reduced motion, and add no
+   owner mutation UI, production database/auth, AI, billing, notification, or deploy.
 
 ## Phase queue
 
@@ -456,6 +466,12 @@ Deliverables:
 
 | Date       | Evidence                                           | Result                                                                                        |
 | ---------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 2026-08-11 | PostgreSQL 18 migration-upgrade harness            | Legacy row/backfill, malformed cleanup, overlap write, and RLS-scoped reader passed           |
+| 2026-08-11 | `npm run test:database`                            | 16/16 persistence and share-security integration tests passed                                 |
+| 2026-08-11 | `npm run db:check`                                 | Drizzle schema, migration journal, and generated snapshot are consistent                      |
+| 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 562 tests, and optimized production build         |
+| 2026-08-11 | `npm run test:coverage`                            | 94.04% statements, 91.04% branches, 99.73% functions, and 95.13% lines                        |
+| 2026-08-11 | `npm audit --omit=dev`                             | Zero production dependency vulnerabilities                                                    |
 | 2026-08-11 | Public-share projection/token adversarial suite    | 7/7 redaction, tamper, entropy, digest, expiry, revocation, and failure tests passed          |
 | 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 561 tests, and optimized production build         |
 | 2026-08-11 | `npm run test:coverage`                            | 94.22% statements, 91.20% branches, 99.72% functions, and 95.32% lines                        |
@@ -846,6 +862,61 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 43 compatibility persistence and share-security record
+
+- Commands: `npm run db:generate`; SQL/snapshot inspection; `npm run db:check`;
+  `npm run test:database`; `npm run check`; `npm run test:coverage`;
+  `npm audit --omit=dev`; secret-pattern scan; and `git diff --check` through the
+  `database-migration` and `security-audit` procedures.
+- Migration: `0002_curious_psynapse` adds one enum and six nullable/defaulted
+  compatibility columns without changing old required columns: preserved-order
+  private report JSON/version, explicit share state, preserved-order public JSON/
+  version, and a public-payload integrity digest. Check constraints bind payload/
+  version pairs, canonical SHA-256 digests, and complete private/public/revoked
+  lifecycle shapes. New application writes always contain a complete Goal 40 report;
+  old application writes remain accepted as private legacy rows.
+- Legacy/backfill: a real previous-schema row upgraded in place. Canonical legacy
+  token hashes, which had no validated public payload or route, were retained but
+  irreversibly revoked/private; malformed or orphaned token fields were cleared.
+  A post-migration previous-version insert also succeeded. No real or production
+  data was touched.
+- Authorization: the owner policy now requires both referenced birth profiles to
+  belong to the transaction identity, closing a cross-profile object-reference gap
+  before the repository became reachable. `app_share_reader` is NOLOGIN, has no
+  table-level or private-report column access, and receives only the two redacted
+  public columns. Its tracked RLS policy requires a canonical transaction-local
+  token digest plus public, unrevoked, unexpired state. No `SECURITY DEFINER` or
+  `BYPASSRLS` assumption remains.
+- Repository: complete reports are reconstructed on write/read; redacted payloads
+  are reprojected on publish. Only a token digest is stored. A separate domain-
+  separated payload digest is checked with constant-time comparison before strict
+  persisted-payload validation. Publish/re-publish returns a new bearer once;
+  revoke clears public content, and deletion immediately removes public access.
+- Adversarial result: unauthenticated and Owner B reads/mutations saw no Owner A
+  report; cross-owner profile references failed RLS; wrong/malformed/old tokens,
+  exact expiry, revocation, deletion, malformed report/public JSON, claims/shape
+  tampering, duplicate digest, double revoke, and pooled role/GUC reuse failed
+  closed. Collision work rolled back, account deletion cascaded, and the RLS query
+  plan used `compatibility_report_share_token_uidx`. No critical/high finding remains.
+- Migration risk/recovery: nullable columns and the fast enum default preserve the
+  overlap window; constraint validation and policy DDL scan/lock the compatibility
+  table, while only rows with legacy share fields are updated and generate WAL.
+  Apply during a controlled low-traffic window with lock/statement monitoring and
+  pre-migration backup. Because canonical legacy capabilities are revoked, recovery
+  is backup restore before exposure or a reviewed forward-fix/new-token migration,
+  not a destructive down migration. Observe affected-row counts, lock waits,
+  constraint/unique violations, invalid-stored-payload errors, public misses, and
+  revoke/delete rates without logging tokens or payloads.
+- Evidence: the previous-schema upgrade and all 16 PostgreSQL 18 integration tests
+  passed; 38 unit test files and 562 tests passed. Coverage was 94.04% statements,
+  91.04% branches, 99.73% functions, and 95.13% lines. Drizzle check, optimized
+  build, and zero-vulnerability production audit passed.
+- Residual risk/scope: production runtime-role membership, TLS/pooling, migration
+  timeouts, backup/restore, managed-PostgreSQL parity, HTTP cache/referrer policy,
+  rate limits, and generic route errors remain deployment/Goal 44 gates. No public
+  route/UI, production database/auth, AI, billing, notification, analytics, external
+  provider, or deployment behavior was added.
 
 ## Goal 42 privacy-safe compatibility sharing record
 

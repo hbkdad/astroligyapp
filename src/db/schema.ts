@@ -9,6 +9,7 @@ import {
   foreignKey,
   check,
   numeric,
+  json,
   jsonb,
   date,
   integer,
@@ -27,6 +28,10 @@ export const publicationState = pgEnum("publication_state", [
   "draft",
   "published",
   "retired",
+]);
+export const compatibilityShareState = pgEnum("compatibility_share_state", [
+  "private",
+  "public",
 ]);
 export const subscriptionStatus = pgEnum("subscription_status", [
   "trialing",
@@ -172,6 +177,14 @@ export const compatibilityReport = pgTable(
     comparisonBirthProfileId: uuid("comparison_birth_profile_id").notNull(),
     calculationReferences: jsonb("calculation_references").notNull(),
     categoryContributions: jsonb("category_contributions").notNull(),
+    reportPayload: json("report_payload"),
+    reportVersion: text("report_version"),
+    shareState: compatibilityShareState("share_state")
+      .default("private")
+      .notNull(),
+    publicSharePayload: json("public_share_payload"),
+    publicShareVersion: text("public_share_version"),
+    publicSharePayloadDigest: text("public_share_payload_digest"),
     shareTokenHash: text("share_token_hash"),
     shareExpiresAt: timestamp("share_expires_at", {
       withTimezone: true,
@@ -215,12 +228,42 @@ export const compatibilityReport = pgTable(
       as: "permissive",
       for: "all",
       to: ["app_user"],
-      using: sql`(owner_user_id = app.current_user_id())`,
-      withCheck: sql`(owner_user_id = app.current_user_id())`,
+      using: sql`((owner_user_id = app.current_user_id()) AND (EXISTS ( SELECT 1
+   FROM (birth_profile primary_birth
+     JOIN profile primary_profile ON ((primary_profile.id = primary_birth.profile_id)))
+  WHERE ((primary_birth.id = compatibility_report.primary_birth_profile_id) AND (primary_profile.owner_user_id = app.current_user_id())))) AND (EXISTS ( SELECT 1
+   FROM (birth_profile comparison_birth
+     JOIN profile comparison_profile ON ((comparison_profile.id = comparison_birth.profile_id)))
+  WHERE ((comparison_birth.id = compatibility_report.comparison_birth_profile_id) AND (comparison_profile.owner_user_id = app.current_user_id())))))`,
+      withCheck: sql`((owner_user_id = app.current_user_id()) AND (EXISTS ( SELECT 1
+   FROM (birth_profile primary_birth
+     JOIN profile primary_profile ON ((primary_profile.id = primary_birth.profile_id)))
+  WHERE ((primary_birth.id = compatibility_report.primary_birth_profile_id) AND (primary_profile.owner_user_id = app.current_user_id())))) AND (EXISTS ( SELECT 1
+   FROM (birth_profile comparison_birth
+     JOIN profile comparison_profile ON ((comparison_profile.id = comparison_birth.profile_id)))
+  WHERE ((comparison_birth.id = compatibility_report.comparison_birth_profile_id) AND (comparison_profile.owner_user_id = app.current_user_id())))))`,
+    }),
+    pgPolicy("compatibility_report_public_share", {
+      as: "permissive",
+      for: "select",
+      to: ["app_share_reader"],
+      using: sql`((share_token_hash = app.current_share_token_hash()) AND (share_state = 'public') AND (share_revoked_at IS NULL) AND ((share_expires_at IS NULL) OR (share_expires_at > CURRENT_TIMESTAMP)))`,
     }),
     check(
       "compatibility_report_distinct_profiles_check",
       sql`primary_birth_profile_id <> comparison_birth_profile_id`,
+    ),
+    check(
+      "compatibility_report_payload_version_check",
+      sql`(report_payload IS NULL) = (report_version IS NULL)`,
+    ),
+    check(
+      "compatibility_report_token_digest_check",
+      sql`((share_token_hash IS NULL) OR (share_token_hash ~ '^sha256:[0-9a-f]{64}$')) AND ((public_share_payload_digest IS NULL) OR (public_share_payload_digest ~ '^sha256:[0-9a-f]{64}$'))`,
+    ),
+    check(
+      "compatibility_report_share_lifecycle_check",
+      sql`((share_state = 'public' AND report_payload IS NOT NULL AND public_share_payload IS NOT NULL AND public_share_version IS NOT NULL AND public_share_payload_digest IS NOT NULL AND share_token_hash IS NOT NULL AND share_revoked_at IS NULL) OR (share_state = 'private' AND public_share_payload IS NULL AND public_share_version IS NULL AND public_share_payload_digest IS NULL AND ((share_token_hash IS NULL AND share_expires_at IS NULL AND share_revoked_at IS NULL) OR (share_token_hash IS NOT NULL AND share_revoked_at IS NOT NULL))))`,
     ),
   ],
 );

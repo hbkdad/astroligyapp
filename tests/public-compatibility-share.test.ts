@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   PUBLIC_COMPATIBILITY_SHARE_VERSION,
   projectPublicCompatibilityShare,
+  validatePublicCompatibilitySharePayload,
 } from "@/application/project-public-compatibility-share";
 import { DEMO_COMPATIBILITY_REPORT } from "@/presentation/compatibility-demo";
 
@@ -28,6 +29,9 @@ describe("public compatibility share projection", () => {
     });
     expect(Object.isFrozen(share)).toBe(true);
     expect(Object.isFrozen(share.factors[0])).toBe(true);
+    expect(
+      validatePublicCompatibilitySharePayload(structuredClone(share)),
+    ).toEqual(share);
   });
 
   it("redacts private inputs, calculation data, provenance, and internal IDs", () => {
@@ -91,6 +95,31 @@ describe("public compatibility share projection", () => {
         unknown as unknown as typeof DEMO_COMPATIBILITY_REPORT,
       ),
     ).toThrow("invalid for public sharing");
+  });
+
+  it("rejects persisted shape, claims, accounting, and identifier tampering", () => {
+    const share = projectPublicCompatibilityShare(DEMO_COMPATIBILITY_REPORT);
+    const unknown = structuredClone(share) as unknown as Record<
+      string,
+      unknown
+    >;
+    unknown.sourceVersions = { aggregate: "private" };
+    expect(() => validatePublicCompatibilitySharePayload(unknown)).toThrow();
+
+    const claims = structuredClone(share);
+    (claims.factors[0]!.reflection as unknown as { text: string }).text =
+      "This relationship is guaranteed.";
+    expect(() => validatePublicCompatibilitySharePayload(claims)).toThrow();
+
+    const count = structuredClone(share);
+    (count.categories[0] as unknown as { factorCount: number }).factorCount +=
+      1;
+    expect(() => validatePublicCompatibilitySharePayload(count)).toThrow();
+
+    const identifier = structuredClone(share);
+    (identifier.factors[0] as unknown as { publicId: string }).publicId =
+      "synastry:private-source";
+    expect(() => validatePublicCompatibilitySharePayload(identifier)).toThrow();
   });
 });
 

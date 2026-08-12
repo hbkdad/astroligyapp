@@ -44,6 +44,26 @@ These names express responsibilities, not committed public URLs.
 | Billing webhook             | Route Handler                      | Provider signature | Apply idempotent subscription events                                   |
 | Notification job            | Internal application service       | Service identity   | Schedule preference-aware, timezone-aware delivery                     |
 
+## Implemented compatibility persistence boundary
+
+`CompatibilityReportRepository` is server-only and currently has no HTTP entry
+point. Its private methods require a verified opaque `AccountId` and execute under
+the transaction-local `app_user` role:
+
+- `create(owner, profiles, report)` validates and stores a complete Goal 40 report;
+- `findOwned(owner, reportId)` returns only an owned, revalidated report;
+- `deleteOwned(owner, reportId)` deletes only an owned report and any share state;
+- `publishOwned(owner, reportId, expiresAt)` returns one new raw bearer while
+  persisting only its digest and the Goal 42 redacted payload;
+- `revokeOwned(owner, reportId)` makes the capability private and clears public copy;
+- `resolveActivePublic(token)` returns only a validated active redacted payload or
+  `null` for malformed, unknown, expired, revoked, or deleted capabilities.
+
+The public resolver assumes `app_share_reader` in a local transaction, sets only a
+canonical digest context, and can select only the redacted payload and integrity
+digest through forced RLS. Stored integrity failure is an internal error; Goal 44's
+transport must map every unavailable case to one generic public response.
+
 ## Error contract
 
 External JSON endpoints will use a stable envelope once the first endpoint requiring input is implemented:

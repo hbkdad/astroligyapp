@@ -269,7 +269,18 @@ tests/
   256-bit opaque base64url tokens. Only a domain-separated SHA-256 digest enters
   storage. Immutable grants carry explicit public/private state, canonical expiry,
   and revocation; validation and constant-time digest matching precede every access.
-  Persistence and HTTP lookup remain separate later layers.
+- Compatibility persistence: `CompatibilityReportRepository` runs every private
+  operation inside the existing `app_user` identity transaction. Complete Goal 40
+  reports use preserved-order PostgreSQL `json` because reconstruction is byte-
+  exact; public payloads are separately projected, versioned, integrity-digested,
+  and stored as preserved-order `json`. The raw bearer is returned once and never
+  stored. Publish/revoke/delete are owner-scoped and account deletion cascades.
+- Public database read: the NOLOGIN `app_share_reader` role receives column-level
+  SELECT only for the redacted payload and its non-secret integrity digest. A
+  transaction-local canonical token digest feeds a forced-RLS policy that admits
+  only the matching public, unrevoked, unexpired row. The role cannot select the
+  private report, token digest, owner/profile references, or general table rows.
+  No `SECURITY DEFINER` or `BYPASSRLS` dependency is used. HTTP remains a later layer.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
 - Optional AI explanation remains deferred behind future validated input/output

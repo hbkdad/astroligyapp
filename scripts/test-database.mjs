@@ -26,6 +26,9 @@ function run(command, args, extraEnvironment = {}) {
 
 try {
   run("docker", [...composeArgs, "up", "--detach", "--wait"]);
+  run(process.execPath, ["scripts/test-compatibility-migration.mjs"], {
+    TEST_DATABASE_URL: testDatabaseUrl,
+  });
   run(process.execPath, ["node_modules/drizzle-kit/bin.cjs", "migrate"], {
     DATABASE_URL: testDatabaseUrl,
   });

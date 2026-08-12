@@ -1,15 +1,23 @@
 import { randomUUID } from "node:crypto";
 
 import { Pool, type PoolClient } from "pg";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
 
 import {
   AccountUnavailableError,
   bootstrapAccount,
   resolveActiveAccountId,
+  type AccountId,
 } from "@/infrastructure/auth/account";
 import type { ActiveSession } from "@/infrastructure/auth/session";
+import {
+  CompatibilityReportRepository,
+  InvalidStoredCompatibilityReportError,
+} from "@/infrastructure/persistence/compatibility-report-repository";
 import { withIdentityTransaction } from "@/infrastructure/persistence/identity-transaction";
+import { DEMO_COMPATIBILITY_REPORT } from "@/presentation/compatibility-demo";
 
 const connectionString = process.env.TEST_DATABASE_URL;
 
@@ -25,7 +33,13 @@ const ownerB = randomUUID();
 let profileA: string;
 let profileB: string;
 let birthProfileA: string;
+let birthProfileA2: string;
+let birthProfileB: string;
 let calculationRunA: string;
+let compatibilityReportA: string;
+let compatibilityReportA2: string;
+
+const compatibilityRepository = new CompatibilityReportRepository(pool);
 
 function activeSession(subject: string): ActiveSession {
   return {
@@ -84,6 +98,23 @@ beforeAll(async () => {
     [profileA],
   );
   birthProfileA = birth.rows[0]!.id;
+  const additionalBirths = await pool.query<{
+    id: string;
+    profile_id: string;
+  }>(
+    `insert into birth_profile
+       (profile_id, birth_date, timezone, birth_time_precision)
+     values ($1, '2001-01-01', 'America/Toronto', 'date-only'),
+            ($2, '2002-01-01', 'America/Toronto', 'date-only')
+     returning id, profile_id`,
+    [profileA, profileB],
+  );
+  birthProfileA2 = additionalBirths.rows.find(
+    (row) => row.profile_id === profileA,
+  )!.id;
+  birthProfileB = additionalBirths.rows.find(
+    (row) => row.profile_id === profileB,
+  )!.id;
 
   const run = await pool.query<{ id: string }>(
     `insert into calculation_run
@@ -156,6 +187,372 @@ describe("initial PostgreSQL migration", () => {
   });
 });
 
+describe("compatibility report persistence and public share boundary", () => {
+  it("round-trips a complete private report and fails closed across owners", async () => {
+    compatibilityReportA = await compatibilityRepository.create(
+      ownerA as AccountId,
+      {
+        primaryBirthProfileId: birthProfileA,
+        comparisonBirthProfileId: birthProfileA2,
+        report: DEMO_COMPATIBILITY_REPORT,
+      },
+    );
+    const owned = await compatibilityRepository.findOwned(
+      ownerA as AccountId,
+      compatibilityReportA,
+    );
+    expect(owned).toMatchObject({
+      id: compatibilityReportA,
+      primaryBirthProfileId: birthProfileA,
+      comparisonBirthProfileId: birthProfileA2,
+      share: { visibility: "private", expiresAt: null, revokedAt: null },
+    });
+    expect(owned?.report).toEqual(DEMO_COMPATIBILITY_REPORT);
+    expect(Object.isFrozen(owned)).toBe(true);
+    expect(
+      await compatibilityRepository.findOwned(
+        ownerB as AccountId,
+        compatibilityReportA,
+      ),
+    ).toBeNull();
+    expect(
+      await compatibilityRepository.deleteOwned(
+        ownerB as AccountId,
+        compatibilityReportA,
+      ),
+    ).toBe(false);
+    const unauthenticated = await asUser(null, (client) =>
+      client.query("select id from compatibility_report"),
+    );
+    expect(unauthenticated.rowCount).toBe(0);
+  });
+
+  it("rejects cross-owner birth-profile references at the RLS boundary", async () => {
+    await expect(
+      compatibilityRepository.create(ownerA as AccountId, {
+        primaryBirthProfileId: birthProfileA,
+        comparisonBirthProfileId: birthProfileB,
+        report: DEMO_COMPATIBILITY_REPORT,
+      }),
+    ).rejects.toMatchObject({ code: "42501" });
+
+    const count = await pool.query<{ count: string }>(
+      `select count(*)::text as count from compatibility_report
+       where owner_user_id = $1`,
+      [ownerA],
+    );
+    expect(count.rows[0]!.count).toBe("1");
+  });
+
+  it("publishes, resolves, expires, republishes, and revokes without storing the bearer", async () => {
+    const firstPublication = await compatibilityRepository.publishOwned(
+      ownerA as AccountId,
+      compatibilityReportA,
+      "2099-01-01T00:00:00.000Z",
+    );
+    expect(firstPublication?.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    const firstToken = firstPublication!.token;
+    const publicPayload =
+      await compatibilityRepository.resolveActivePublic(firstToken);
+    expect(publicPayload?.categories).toHaveLength(5);
+    expect(publicPayload?.factors).toHaveLength(12);
+    expect(JSON.stringify(publicPayload)).not.toContain("synastry:chart-a");
+    expect(
+      await compatibilityRepository.resolveActivePublic(
+        "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      ),
+    ).toBeNull();
+    expect(
+      await compatibilityRepository.resolveActivePublic("malformed"),
+    ).toBeNull();
+
+    const stored = await pool.query<{
+      row_text: string;
+      share_token_hash: string;
+    }>(
+      `select row_to_json(compatibility_report)::text as row_text,
+              share_token_hash
+       from compatibility_report where id = $1`,
+      [compatibilityReportA],
+    );
+    expect(stored.rows[0]!.row_text).not.toContain(firstToken);
+    expect(stored.rows[0]!.share_token_hash).toMatch(/^sha256:[a-f0-9]{64}$/);
+
+    await pool.query(
+      `update compatibility_report
+       set share_expires_at = CURRENT_TIMESTAMP
+       where id = $1`,
+      [compatibilityReportA],
+    );
+    expect(
+      await compatibilityRepository.resolveActivePublic(firstToken),
+    ).toBeNull();
+
+    const secondPublication = await compatibilityRepository.publishOwned(
+      ownerA as AccountId,
+      compatibilityReportA,
+      null,
+    );
+    expect(secondPublication!.token).not.toBe(firstToken);
+    expect(
+      await compatibilityRepository.resolveActivePublic(firstToken),
+    ).toBeNull();
+    expect(
+      await compatibilityRepository.resolveActivePublic(
+        secondPublication!.token,
+      ),
+    ).not.toBeNull();
+    expect(
+      await compatibilityRepository.revokeOwned(
+        ownerB as AccountId,
+        compatibilityReportA,
+      ),
+    ).toBe(false);
+    expect(
+      await compatibilityRepository.revokeOwned(
+        ownerA as AccountId,
+        compatibilityReportA,
+      ),
+    ).toBe(true);
+    expect(
+      await compatibilityRepository.resolveActivePublic(
+        secondPublication!.token,
+      ),
+    ).toBeNull();
+    expect(
+      await compatibilityRepository.revokeOwned(
+        ownerA as AccountId,
+        compatibilityReportA,
+      ),
+    ).toBe(false);
+
+    const revoked = await pool.query<{
+      share_state: string;
+      public_share_payload: unknown;
+      share_token_hash: string | null;
+      share_revoked_at: Date | null;
+    }>(
+      `select share_state, public_share_payload, share_token_hash, share_revoked_at
+       from compatibility_report where id = $1`,
+      [compatibilityReportA],
+    );
+    expect(revoked.rows[0]).toMatchObject({
+      share_state: "private",
+      public_share_payload: null,
+    });
+    expect(revoked.rows[0]!.share_token_hash).not.toBeNull();
+    expect(revoked.rows[0]!.share_revoked_at).toBeInstanceOf(Date);
+  });
+
+  it("rolls back digest collisions and rejects tampered stored payloads", async () => {
+    compatibilityReportA2 = await compatibilityRepository.create(
+      ownerA as AccountId,
+      {
+        primaryBirthProfileId: birthProfileA,
+        comparisonBirthProfileId: birthProfileA2,
+        report: DEMO_COMPATIBILITY_REPORT,
+      },
+    );
+    const publication = await compatibilityRepository.publishOwned(
+      ownerA as AccountId,
+      compatibilityReportA,
+      null,
+    );
+    const source = await pool.query<{
+      public_share_payload: unknown;
+      public_share_version: string;
+      public_share_payload_digest: string;
+      share_token_hash: string;
+    }>(
+      `select public_share_payload, public_share_version,
+              public_share_payload_digest, share_token_hash
+       from compatibility_report where id = $1`,
+      [compatibilityReportA],
+    );
+    await expect(
+      asUser(ownerA, (client) =>
+        client.query(
+          `update compatibility_report
+           set share_state = 'public', public_share_payload = $2::json,
+               public_share_version = $3, public_share_payload_digest = $4,
+               share_token_hash = $5,
+               share_revoked_at = null
+           where id = $1`,
+          [
+            compatibilityReportA2,
+            JSON.stringify(source.rows[0]!.public_share_payload),
+            source.rows[0]!.public_share_version,
+            source.rows[0]!.public_share_payload_digest,
+            source.rows[0]!.share_token_hash,
+          ],
+        ),
+      ),
+    ).rejects.toMatchObject({ code: "23505" });
+    const second = await compatibilityRepository.findOwned(
+      ownerA as AccountId,
+      compatibilityReportA2,
+    );
+    expect(second?.share.visibility).toBe("private");
+
+    await pool.query(
+      `update compatibility_report
+       set public_share_payload = '{"version":"1.0.0"}'::json
+       where id = $1`,
+      [compatibilityReportA],
+    );
+    await expect(
+      compatibilityRepository.resolveActivePublic(publication!.token),
+    ).rejects.toEqual(new InvalidStoredCompatibilityReportError());
+    await compatibilityRepository.revokeOwned(
+      ownerA as AccountId,
+      compatibilityReportA,
+    );
+
+    await pool.query(
+      `update compatibility_report
+       set report_payload = '{"invalid":true}'::json
+       where id = $1`,
+      [compatibilityReportA2],
+    );
+    await expect(
+      compatibilityRepository.findOwned(
+        ownerA as AccountId,
+        compatibilityReportA2,
+      ),
+    ).rejects.toEqual(new InvalidStoredCompatibilityReportError());
+  });
+
+  it("keeps the anonymous role execute-only, uses the digest index, and clears pooled role state", async () => {
+    const privileges = await pool.query<{
+      can_execute: boolean;
+      can_select: boolean;
+      can_select_public: boolean;
+      can_select_private: boolean;
+    }>(
+      `select
+         has_function_privilege(
+           'app_share_reader',
+           'app.current_share_token_hash()',
+           'EXECUTE'
+         ) as can_execute,
+         has_table_privilege(
+           'app_share_reader',
+           'compatibility_report',
+           'SELECT'
+         ) as can_select,
+         has_column_privilege(
+           'app_share_reader',
+           'compatibility_report',
+           'public_share_payload',
+           'SELECT'
+         ) as can_select_public,
+         has_column_privilege(
+           'app_share_reader',
+           'compatibility_report',
+           'report_payload',
+           'SELECT'
+         ) as can_select_private`,
+    );
+    expect(privileges.rows[0]).toEqual({
+      can_execute: true,
+      can_select: false,
+      can_select_public: true,
+      can_select_private: false,
+    });
+    const functionSecurity = await pool.query<{
+      prosecdef: boolean;
+      provolatile: string;
+      policy_count: string;
+    }>(
+      `select prosecdef, provolatile,
+              (select count(*)::text from pg_policies
+               where schemaname = 'public'
+                 and tablename = 'compatibility_report'
+                 and policyname = 'compatibility_report_public_share')
+                as policy_count
+       from pg_proc
+       where oid = 'app.current_share_token_hash()'::regprocedure`,
+    );
+    expect(functionSecurity.rows[0]).toEqual({
+      prosecdef: false,
+      provolatile: "s",
+      policy_count: "1",
+    });
+
+    const client = await pool.connect();
+    try {
+      await client.query("begin");
+      await client.query("set local role app_share_reader");
+      await client.query(
+        "select set_config('app.current_share_token_hash', $1, true)",
+        [`sha256:${"a".repeat(64)}`],
+      );
+      await client.query("set local enable_seqscan = off");
+      const plan = await client.query(
+        `explain (format json)
+         select public_share_payload, public_share_payload_digest
+         from compatibility_report`,
+      );
+      expect(JSON.stringify(plan.rows)).toContain(
+        "compatibility_report_share_token_uidx",
+      );
+    } finally {
+      await client.query("rollback");
+      client.release();
+    }
+
+    const singleConnectionPool = new Pool({ connectionString, max: 1 });
+    const isolatedRepository = new CompatibilityReportRepository(
+      singleConnectionPool,
+    );
+    await isolatedRepository.resolveActivePublic(
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    );
+    const state = await singleConnectionPool.query<{
+      current_user: string;
+      request_identity: string | null;
+      share_identity: string | null;
+    }>(
+      `select current_user,
+              nullif(current_setting('app.current_user_id', true), '')
+                as request_identity,
+              nullif(current_setting('app.current_share_token_hash', true), '')
+                as share_identity`,
+    );
+    expect(state.rows[0]).toEqual({
+      current_user: "cosmic",
+      request_identity: null,
+      share_identity: null,
+    });
+    await singleConnectionPool.end();
+  });
+
+  it("deletes an owned public report and immediately removes public access", async () => {
+    const reportId = await compatibilityRepository.create(ownerA as AccountId, {
+      primaryBirthProfileId: birthProfileA,
+      comparisonBirthProfileId: birthProfileA2,
+      report: DEMO_COMPATIBILITY_REPORT,
+    });
+    const publication = await compatibilityRepository.publishOwned(
+      ownerA as AccountId,
+      reportId,
+      null,
+    );
+    expect(
+      await compatibilityRepository.resolveActivePublic(publication!.token),
+    ).not.toBeNull();
+    expect(
+      await compatibilityRepository.deleteOwned(ownerA as AccountId, reportId),
+    ).toBe(true);
+    expect(
+      await compatibilityRepository.resolveActivePublic(publication!.token),
+    ).toBeNull();
+    expect(
+      await compatibilityRepository.deleteOwned(ownerA as AccountId, reportId),
+    ).toBe(false);
+  });
+});
+
 describe("two-owner row isolation", () => {
   it("fails closed without a request identity", async () => {
     const result = await asUser(null, (client) =>
@@ -185,10 +582,12 @@ describe("two-owner row isolation", () => {
     }));
 
     expect(a.profiles.rows.map((row) => row.id)).toEqual([profileA]);
-    expect(a.births.rows.map((row) => row.id)).toEqual([birthProfileA]);
+    expect(new Set(a.births.rows.map((row) => row.id))).toEqual(
+      new Set([birthProfileA, birthProfileA2]),
+    );
     expect(a.positions.rows.map((row) => row.body)).toEqual(["sun"]);
     expect(b.profiles.rows.map((row) => row.id)).toEqual([profileB]);
-    expect(b.births.rowCount).toBe(0);
+    expect(b.births.rows.map((row) => row.id)).toEqual([birthProfileB]);
     expect(b.positions.rowCount).toBe(0);
   });
 
@@ -308,17 +707,21 @@ describe("two-owner row isolation", () => {
       profiles: string;
       runs: string;
       positions: string;
+      compatibility_reports: string;
     }>(
       `select
          (select count(*) from profile where owner_user_id = $1)::text as profiles,
          (select count(*) from calculation_run where owner_user_id = $1)::text as runs,
-         (select count(*) from planet_position where calculation_run_id = $2)::text as positions`,
+         (select count(*) from planet_position where calculation_run_id = $2)::text as positions,
+         (select count(*) from compatibility_report where owner_user_id = $1)::text
+           as compatibility_reports`,
       [ownerA, calculationRunA],
     );
     expect(counts.rows[0]).toEqual({
       profiles: "0",
       runs: "0",
       positions: "0",
+      compatibility_reports: "0",
     });
   });
 });
