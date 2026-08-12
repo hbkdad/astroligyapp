@@ -4,8 +4,8 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 41 complete; the validated compatibility report now has a
-versioned read model and an accessible local-demo presentation route.
+Status: Goal 42 complete; validated compatibility reports now project into a
+strictly redacted public payload with a server-only opaque-token lifecycle.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -94,6 +94,14 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 42: reconstruct each Goal 40 report before projecting only selected
+      scores, confidence, factor counts, rendered copy, locale, and disclaimer
+      into a versioned, deeply immutable public-share payload.
+- [x] Exclude private chart geometry, raw inputs, account/profile data,
+      calculation provenance, internal source/rule IDs, and all token material.
+- [x] Define server-only 256-bit opaque token generation, domain-separated
+      SHA-256 storage digests, constant-time matching, canonical validation,
+      explicit public/private state, exact expiry, and irreversible revocation.
 - [x] Goal 41: map only a reconstructed Goal 40 report into a versioned,
       deeply immutable presentation model with five category summaries and
       twelve paired fact/reflection items.
@@ -377,19 +385,20 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 42 — define the privacy-safe compatibility share boundary.
+Goal 43 — persist owner-controlled compatibility reports and shares.
 
 Deliverables:
 
-1. Project only validated Goal 40 compatibility reports into a versioned,
-   immutable public-share payload that retains useful scores and rendered copy
-   while excluding private chart, calculation, account, and source identifiers.
-2. Define opaque high-entropy share-token generation, digest, validation,
-   expiry, and revocation contracts independently of HTTP and storage providers.
-3. Verify deterministic redaction, malformed/tampered input rejection, token
-   non-disclosure, expiry boundaries, immutability, and claims separation.
-4. Add no database migration, persistence adapter, public route, account/profile
-   loading, AI, entitlement enforcement, notification, or deployment.
+1. Add a forward-only compatibility-report migration and typed repository contract
+   for the complete private report, optional redacted Goal 42 payload, explicit
+   share lifecycle, and version metadata without storing raw bearer tokens.
+2. Implement owner-scoped create/read/delete, publish/revoke, and a narrowly
+   privileged digest lookup that can return only an active redacted payload.
+3. Verify unauthenticated and two-owner isolation, tampered payload rejection,
+   unique digest behavior, exact expiry/revocation, generic misses, deletion
+   cascades, rollback, and pooled identity cleanup in disposable PostgreSQL.
+4. Add no public HTTP route/UI, production auth/database, AI, billing,
+   notification, analytics, external provider, or deployment behavior.
 
 ## Phase queue
 
@@ -447,6 +456,10 @@ Deliverables:
 
 | Date       | Evidence                                           | Result                                                                                        |
 | ---------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 2026-08-11 | Public-share projection/token adversarial suite    | 7/7 redaction, tamper, entropy, digest, expiry, revocation, and failure tests passed          |
+| 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 561 tests, and optimized production build         |
+| 2026-08-11 | `npm run test:coverage`                            | 94.22% statements, 91.20% branches, 99.72% functions, and 95.32% lines                        |
+| 2026-08-11 | `npm audit --omit=dev`                             | Zero production dependency vulnerabilities                                                    |
 | 2026-08-11 | Compatibility presentation focused suite           | 56/56 mapping, semantic HTML, state, reconstruction, privacy, and failure tests passed        |
 | 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 554 tests, and optimized production build         |
 | 2026-08-11 | `ui-quality` compatibility browser gate            | Desktop/mobile/200% text, keyboard, touch targets, reduced motion, overflow, console passed   |
@@ -833,6 +846,41 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 42 privacy-safe compatibility sharing record
+
+- Commands: focused public-projection/token adversarial suite; `npm run check`;
+  `npm run test:coverage`; `npm audit --omit=dev`; secret-pattern scan; and
+  `git diff --check` through the `security-audit` procedure.
+- Assets/trust boundary: the complete report and its chart/calculation provenance
+  remain private. `projectPublicCompatibilityShare` accepts a Goal 40 report,
+  reconstructs it exactly, and publishes only five category summaries, twelve
+  sequentially relabelled factor pairs, locale, explanatory copy, and the claims
+  disclaimer. The public payload contains no source-version map or internal
+  calculation/provenance ID.
+- Token contract: the server-only module generates 32 random bytes with Node
+  cryptography and emits a canonical 43-character base64url capability. Storage
+  receives only a domain-separated SHA-256 digest. Matching uses constant-time
+  comparison after strict token/digest validation; malformed values fail closed.
+- Lifecycle: immutable grants explicitly mark `public` or `private`, accept only
+  canonical UTC instants, expire at the exact boundary, and become private on
+  irreversible revocation. Access checks validate the complete grant and raw token
+  on every call. No raw token appears in a grant or public payload.
+- Adversarial result: report/provenance/unknown-field drift, noncanonical tokens,
+  wrong tokens/digests, malformed state/dates/versions/clocks, exact expiry,
+  double revocation, and storage-state injection were rejected. Sixty-four generated
+  tokens were unique; each decodes to 32 bytes, giving a 256-bit enumeration space.
+  No critical or high finding remains.
+- Evidence: 38 test files and 561 tests passed. Coverage was 94.22% statements,
+  91.20% branches, 99.72% functions, and 95.32% lines; the share projection had
+  96.55% statement, 90.90% branch, 100% function/line coverage, and the token
+  module had 100% statement, branch, function, and line coverage. The optimized
+  build passed and the production audit found zero vulnerabilities.
+- Residual risk/scope: no public HTTP or persistence entry point exists yet. A
+  future route must use generic misses, rate limits, no token-bearing analytics or
+  logs, restrictive referrer/cache policy, owner-only publish/revoke/delete, and a
+  narrowly privileged digest lookup. No schema, database adapter, route/UI,
+  production service, AI, entitlement, notification, or deployment was added.
 
 ## Goal 41 compatibility presentation record
 

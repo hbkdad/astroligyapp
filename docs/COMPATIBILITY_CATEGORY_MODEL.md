@@ -110,5 +110,24 @@ meters, so colour and graphics are not required to interpret them.
 The mapper performs display-only formatting and deeply freezes its result. It does
 not expose chart placements, longitudes, speeds, cusps, birth/profile/account data,
 private numerology traces, or report-engine dependencies to React. Loading, locked,
-unavailable, error, empty, unsupported, and ready UI states are distinct. Public
-share redaction, tokens, persistence, and routes remain Goal 42 boundaries.
+unavailable, error, empty, unsupported, and ready UI states are distinct.
+
+## Public share projection and token contract 1.0.0
+
+The public projection reconstructs the complete Goal 40 report and requires exact
+equality before emitting deliberately selected output. It retains the five score,
+maximum, confidence, and factor-count summaries plus paired rendered fact and
+tradition-reflection copy. Factor IDs are replaced with ordered `factor-NN` labels.
+Only the payload version and locale remain as public metadata.
+
+The payload excludes the aggregate, score/projection/render children, source-version
+map, calculation provenance, internal source/rule/projection IDs, chart placements,
+longitudes, speeds, cusps, raw birth/profile/account data, private numerology traces,
+and all token material. It is deterministic and deeply immutable.
+
+Share capabilities use 32 bytes of cryptographic randomness encoded as canonical
+unpadded base64url. The raw token is shown only as the bearer capability; storage
+uses a domain-separated SHA-256 digest. Grant state is explicit, canonical UTC
+expiry is exclusive at its exact instant, and revocation moves the immutable grant
+from public to private. Malformed state and tokens fail closed. Persistence and the
+public HTTP route remain Goal 43 and later boundaries.

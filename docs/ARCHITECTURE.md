@@ -260,7 +260,16 @@ tests/
   The static compatibility route consumes this immutable model; React owns no
   calculation, scoring, projection, rendering-template, provider, or private-input
   dependency.
-  Relationship claims, persistence, and public sharing remain separate later layers.
+  `projectPublicCompatibilityShare` separately reconstructs the complete report and
+  emits only selected scores, confidence, factor counts, rendered fact/reflection
+  copy, locale, and disclaimer. It replaces internal factor IDs with sequential
+  public IDs and omits chart geometry, calculation provenance, source/rule IDs,
+  account/profile data, raw inputs, and token state.
+- Compatibility share capabilities: a server-only cryptographic boundary generates
+  256-bit opaque base64url tokens. Only a domain-separated SHA-256 digest enters
+  storage. Immutable grants carry explicit public/private state, canonical expiry,
+  and revocation; validation and constant-time digest matching precede every access.
+  Persistence and HTTP lookup remain separate later layers.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.
 - Optional AI explanation remains deferred behind future validated input/output

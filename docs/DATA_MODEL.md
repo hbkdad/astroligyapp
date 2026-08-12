@@ -147,6 +147,13 @@ AI text is downstream output and cannot replace calculation records.
 
 Never place raw birth data in the share token or public representation.
 
+The share capability contract uses 32 cryptographically random bytes encoded as
+canonical base64url. Store only its domain-separated SHA-256 digest. Public output
+is a separately validated redacted projection with sequential public factor IDs;
+it excludes private report children, calculation provenance, and internal IDs.
+Expiry is exclusive at the stored instant, revocation is irreversible for that
+grant, and access must recheck digest, explicit visibility, expiry, and revocation.
+
 ### `subscription`
 
 - `id`, `user_account_id`
