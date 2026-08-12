@@ -370,6 +370,12 @@ tests/
   idempotency keys, so the abstraction does not claim create idempotency; concrete
   adapters must lookup before creation and re-query after ambiguous failures. Safe
   results expose only ready/reject/retry/reconcile codes and never identity or PII.
+- Paddle customer adapter: the exact SDK 3.10.0 customer resource is injected behind
+  the Goal 52 contract. The adapter queries active customers by exact normalized
+  email with a two-result bound, accepts only one canonical `ctm_` match, and creates
+  once only when none exists. Create sends email alone, with no ownership custom
+  data. Every potentially ambiguous create failure or malformed success is followed
+  by one lookup; no unique proof means manual reconciliation, never blind retry.
 
 ## Data and cache principles
 

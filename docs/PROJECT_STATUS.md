@@ -4,8 +4,8 @@ Last updated: 2026-08-12
 
 ## Current position
 
-Status: Goal 52 complete; authenticated billing-customer provisioning now has a
-provider-neutral, privacy-safe orchestration boundary without external mutation.
+Status: Goal 53 complete; Paddle customer lookup/create ambiguity is now isolated in
+a deterministic injected adapter with no live API request.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 22-table normalized schema, checked-in SQL
@@ -95,6 +95,12 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 53: implement an SDK-3.10.0-compatible Paddle customer adapter that
+      queries active exact-email matches before create, accepts only one canonical
+      `ctm_` identity, sends email alone, and never blindly retries create.
+- [x] Re-query after duplicate, timeout/network/authentication, malformed success,
+      or other ambiguous create outcomes; require one exact active match or return
+      reconciliation-required with no provider/error/identity reflection.
 - [x] Goal 52: define strict server-trusted billing contact and provider-neutral
       find-or-provision contracts, preflight existing ownership, single-flight one
       owner/provider in-process, bind only validated provider results, and return
@@ -472,24 +478,24 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 53 — implement the Paddle find-or-provision customer adapter with deterministic
-ambiguity recovery, without live credentials or external API calls.
+Goal 54 — compose verified session, active account, trusted billing contact, and
+customer provisioning behind one authenticated application boundary.
 
 Deliverables:
 
-1. Inspect exact Paddle Node SDK 3.10.0 customer list/create types and record current
-   official customer uniqueness, ID, error, permissions, and no-general-idempotency
-   behavior. Do not infer capabilities from other providers.
-2. Implement an injected Paddle adapter that searches by exact normalized email
-   before create, accepts exactly one active matching `ctm_` customer, and never sends
-   internal owner IDs, profile IDs, or ownership claims as provider custom data.
-3. On duplicate-customer response or ambiguous timeout/network failure, re-query and
-   return ready only when one exact customer is proven. Multiple/no-match ambiguity
-   must return reconciliation-required rather than retrying an unsafe create.
-4. Verify deterministic SDK doubles for zero/one/multiple matches, inactive/wrong
-   email/invalid IDs, create success, duplicate, timeout-before/after-create, malformed
-   responses, and privacy. Add no live credential, actual Paddle request, customer
-   mutation, checkout, price, public route, notification, database change, or deploy.
+1. Define a server-trusted billing-contact resolver that consumes only a verified
+   `ActiveSession` and resolved internal `AccountId`; request bodies, query values,
+   cookies, profiles, and browser claims must not supply or override billing email.
+2. Compose `requireActiveSession`, active-account resolution, trusted-contact lookup,
+   and Goal 52 provisioning into one versioned server application service with fixed
+   authentication/reject/retry/reconcile/ready results and no identity or PII.
+3. Distinguish invalid/missing contact from transient contact-source, account, and
+   provider failures without exposing which credential, subject, account, email, or
+   customer failed. Do not select an authentication vendor or add a public endpoint.
+4. Verify expired/revoked/malformed sessions, deleted/missing account, invalid/trusted
+   contact, dependency exceptions, exact call order, no downstream work after failure,
+   concurrency, and response privacy. Add no live credential/API call, customer,
+   checkout, price, notification, database change, public mutation, or deployment.
 
 ## Phase queue
 
@@ -1106,6 +1112,46 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 53 Paddle customer provider adapter record
+
+- Research/SDK evidence: official Paddle pages reviewed 2026-08-12 confirm exact
+  email filtering, active-default listing, unique seller customer emails, canonical
+  `ctm_` IDs, `customer.read`/`customer.write`, duplicate code
+  `customer_already_exists`, and no arbitrary client idempotency keys. Installed SDK
+  3.10.0 exports matching `ListCustomerQueryParameters`,
+  `CreateCustomerRequestBody`, async `CustomerCollection`, and coded `ApiError`.
+- Lookup/create rule: the injected adapter requests exact email, active status, and a
+  two-result page. One valid normalized-email/canonical-ID match returns ready; two,
+  malformed, wrong-email, archived, or invalid-ID results require reconciliation.
+  Zero results permit exactly one create call containing email only—no custom data,
+  account/profile/subject, or ownership marker.
+- Ambiguity recovery: definite invalid/domain email codes reject safely. Duplicate,
+  network, authentication, timeout, unknown exception, or malformed create result is
+  treated as potentially mutating and receives one exact re-query. Only one proven
+  active customer returns ready; otherwise the adapter requires reconciliation and
+  never issues another create.
+- Security result: runtime requests are exact/lowercase/valid-email shaped; real SDK
+  resource compatibility is compile-time asserted. Outputs are frozen and contain
+  only status plus a validated customer reference for the internal provisioner. SDK
+  error detail, email, and ambiguous candidates never enter outward dispositions or
+  logs. Goal 52 composition binds only the strict `paddle`/customer identity.
+- Verification: 29 adapter cases plus 31 provisioning cases passed, followed by 49
+  unit/contract files and 819 tests. Formatting, ESLint, strict TypeScript, optimized
+  build, Drizzle consistency, production audit, secret scan, and diff integrity
+  passed. Coverage was 94.52% statements, 92.22% branches, 99.33% functions, and
+  95.59% lines; the new adapter had 100% statement, branch, function, and line
+  coverage. The unchanged maximum-body webhook test retained all assertions and was
+  given a 10-second case budget because V8 coverage instrumentation exceeded its
+  generic 5-second timeout; it passes normally in about 2.7 seconds.
+- Sources: <https://developer.paddle.com/api-reference/customers/list-customers/>,
+  <https://developer.paddle.com/api-reference/customers/create-customer/>,
+  <https://developer.paddle.com/errors/customers/customer_already_exists/>, and
+  <https://developer.paddle.com/sdks/libraries/>.
+- Scope/residual risk: every SDK object was an in-memory deterministic double. No API
+  key, Paddle request/customer, external mutation, checkout, price, public route,
+  notification, database change, production state, or deployment was added. Live
+  permission/configuration and provider behavior remain production release gates.
 
 ## Goal 52 billing customer provisioning orchestration record
 

@@ -262,7 +262,7 @@ describe("Paddle webhook HTTP boundary", () => {
     );
     expect(response.status).toBe(200);
     expect(process).toHaveBeenCalledTimes(1);
-  });
+  }, 10_000);
 
   it("projects only the required signature header into the billing pipeline", async () => {
     const process = vi.fn(async (value: unknown) => {

@@ -219,3 +219,17 @@ create before returning one confirmed safe customer reference. The orchestrator 
 binds that reference through the immutable repository. Fixed ready/reject/retry/
 reconcile results contain no owner, email, provider, customer reference, exception,
 or provider detail. No public HTTP or Server Action exposes this boundary yet.
+
+`createPaddleCustomerProviderAdapter(client)` implements that find-or-provision
+contract against the exact Paddle Node SDK 3.10.0 customer resource shape. It lists
+`active` customers using the exact email filter and a two-result page, accepts only
+one normalized-email match with a canonical `ctm_` ID, and skips create when that
+match exists. With no match it sends only `{email}`—never internal owner/profile IDs
+or `customData`—and validates the create response.
+
+Definite Paddle email rejection codes map to `invalid-contact`. Duplicate, network,
+authentication, malformed-response, or other potentially ambiguous create results
+trigger one exact re-query. Only one proven active match becomes `ready`; zero,
+multiple, malformed, archived, wrong-email, invalid-ID, or failed re-query returns
+`reconciliation-required`. The adapter never makes a second create attempt and never
+reflects SDK error data.
