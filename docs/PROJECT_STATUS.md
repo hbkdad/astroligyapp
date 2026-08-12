@@ -1218,7 +1218,7 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   SQS queue, credential, live client call, email, route/UI, production data, purchase,
   or deployment was created. Every adapter test uses injected fakes.
 - Verification: exact SDK metadata/version, configuration, regional client/no retry,
-  command fields, all replay/suppression/error paths, and privacy exclusions pass 31
+  command fields, all replay/suppression/error paths, and privacy exclusions pass 32
   focused cases. Drizzle consistency, cumulative upgrade, and 41 PostgreSQL tests pass.
   Coverage passed 55 files/952 tests at 94.12% statements, 92.17% branches, 99.30%
   functions, and 95.54% lines; the adapter is 87.67% statements, 92.55% branches,
