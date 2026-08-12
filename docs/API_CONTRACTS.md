@@ -418,3 +418,28 @@ state is outside this local transaction; the fixed result is then
 receipts and keyed suppression are retained because they are not linked to the account and
 remain safety/abuse controls. No Paddle/AWS call, live deletion, public route, UI, provider
 identity, account UUID, subject, email, session, or exception is exposed by this contract.
+
+## Better Auth public HTTP boundary
+
+The public catch-all exists only at `/api/auth/[...all]` and delegates through
+`createBetterAuthHttpHandler`; it never exports Better Auth's broad stock Next.js adapter.
+The exact selected and rejected endpoint inventory is maintained in
+`BETTER_AUTH_HTTP_SURFACE.md`. The boundary fixes canonical URL/origin/fetch-site rules,
+path-specific methods, strict body shapes, a 4 KiB streaming limit, bounded headers, local
+callbacks, and removal of ambiguous forwarding, authorization, and method-override headers
+before the package handler runs.
+
+Package responses are projections, not transparent pass-through. Signup, recovery request,
+verification request, password reset, and sign-out return fixed states. Sign-in returns a
+fixed authenticated/rejected/verification-required state. Session read returns only name,
+normalized email, and current verification state; it removes auth/session IDs, token,
+timestamps, IP, user-agent, and package metadata. Redirects must remain on the canonical
+origin. Every response is no-store and carries the common restrictive security headers;
+no CORS response is emitted.
+
+The route's lazy process service composes the isolated Better Auth database, delivery
+ledger, suppression reader, durable idempotency, and SES Canada Central adapter from
+server-only configuration. It performs no work during build and no network call during
+construction. Missing/malformed configuration or dependency failure becomes one fixed 503.
+No live email, external resource, credential, production mutation, or deployment is part of
+this contract checkpoint.

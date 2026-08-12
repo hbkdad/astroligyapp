@@ -181,6 +181,7 @@ export function createBetterAuthOptions(
         "/send-verification-email": { window: 60 * 10, max: 5 },
       },
     },
+    logger: { disabled: true },
     advanced: {
       useSecureCookies: configuration.production,
       disableCSRFCheck: false,

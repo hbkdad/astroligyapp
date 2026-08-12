@@ -163,6 +163,7 @@ describe("Better Auth server configuration", () => {
         "/send-verification-email": { window: 600, max: 5 },
       },
     });
+    expect(options.logger).toEqual({ disabled: true });
     expect(options.advanced).toMatchObject({
       useSecureCookies: true,
       disableCSRFCheck: false,

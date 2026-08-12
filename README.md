@@ -39,6 +39,10 @@ Read these in order before substantial work:
 4. `docs/MASTER_BUILD_SPEC.md`
 5. `docs/ARCHITECTURE.md` and accepted ADRs
 
-PostgreSQL and Drizzle are selected as the portable persistence contract. No
-managed database, production ephemeris, authentication, billing, AI,
-notification, or deployment provider has been selected yet.
+PostgreSQL and Drizzle are the portable persistence contract. Self-hosted Better Auth is
+selected behind an explicit email/password HTTP allowlist, Astronomy Engine is selected
+behind the provider-neutral ephemeris boundary, Paddle is selected only for verified
+subscription-event ingestion, and Amazon SES Canada Central is selected behind the
+authentication-email adapter. Managed database/deployment, live provider resources,
+credentials, AI, general notification, and production deployment remain unselected or
+unprovisioned; see `docs/PROJECT_STATUS.md` for current gates.

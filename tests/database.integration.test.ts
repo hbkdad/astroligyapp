@@ -23,6 +23,7 @@ import {
 } from "@/infrastructure/auth/better-auth-adapters";
 import { betterAuthSchema } from "@/db/auth-schema";
 import { createBetterAuth } from "@/server/better-auth-configuration";
+import { createBetterAuthHttpHandler } from "@/server/better-auth-http";
 import { bootstrapAccountForRequest } from "@/server/authenticated-account-bootstrap";
 import { deleteAccountForRequest } from "@/server/authenticated-account-deletion";
 import type { AuthenticationEmailRequest } from "@/server/authentication-email";
@@ -90,6 +91,10 @@ const auth = createBetterAuth(
     ],
     production: false,
   },
+);
+const authHttp = createBetterAuthHttpHandler(
+  "https://app.example.test",
+  () => ({ handle: (request) => auth.handler(request) }),
 );
 const ownerA = randomUUID();
 const ownerB = randomUUID();
@@ -537,6 +542,211 @@ describe("initial PostgreSQL migration", () => {
     expect(names).toContain("authentication_email_feedback_retention_idx");
     expect(names).toContain("authentication_email_suppression_recipient_uidx");
     expect(names).toContain("authentication_email_suppression_retention_idx");
+  });
+});
+
+function authHttpPost(
+  path: string,
+  body?: Readonly<Record<string, unknown>>,
+  cookie?: string,
+  ipAddress = "198.51.100.40",
+): Promise<Response> {
+  const raw = body === undefined ? undefined : JSON.stringify(body);
+  return authHttp(
+    new Request(`https://app.example.test${path}`, {
+      method: "POST",
+      headers: {
+        origin: "https://app.example.test",
+        "sec-fetch-site": "same-origin",
+        "x-forwarded-for": ipAddress,
+        ...(raw === undefined
+          ? {}
+          : {
+              "content-type": "application/json",
+              "content-length": String(Buffer.byteLength(raw)),
+            }),
+        ...(cookie ? { cookie } : {}),
+      },
+      ...(raw === undefined ? {} : { body: raw }),
+    }),
+  );
+}
+
+function authHttpGet(
+  path: string,
+  cookie?: string,
+  site = "same-origin",
+): Promise<Response> {
+  return authHttp(
+    new Request(`https://app.example.test${path}`, {
+      headers: {
+        "sec-fetch-site": site,
+        ...(cookie ? { cookie } : {}),
+      },
+    }),
+  );
+}
+
+describe("Better Auth public HTTP lifecycle", () => {
+  it("signs up, verifies, signs in, projects a session, signs out, and anti-enumerates duplicates", async () => {
+    const email = `http-${randomUUID()}@example.test`;
+    const password = "http-integration-password-123";
+    const messagesBefore = authEmailMessages.length;
+    const signUp = await authHttpPost("/api/auth/sign-up/email", {
+      name: "HTTP fixture",
+      email,
+      password,
+      callbackURL: "/account",
+    });
+    expect(signUp.status).toBe(200);
+    expect(await signUp.json()).toEqual({ status: "accepted" });
+    expect(signUp.headers.get("set-cookie")).toBeNull();
+    expect(authEmailMessages).toHaveLength(messagesBefore + 1);
+
+    const duplicate = await authHttpPost("/api/auth/sign-up/email", {
+      name: "HTTP fixture",
+      email,
+      password,
+      callbackURL: "/account",
+    });
+    expect(duplicate.status).toBe(signUp.status);
+    expect(await duplicate.json()).toEqual({ status: "accepted" });
+    const users = await pool.query<{ id: string; email_verified: boolean }>(
+      `select id, email_verified from auth."user" where email = $1`,
+      [email],
+    );
+    expect(users.rowCount).toBe(1);
+    expect(users.rows[0]!.email_verified).toBe(false);
+
+    const verification = new URL(authEmailMessages.at(-1)!.actionUrl);
+    const verified = await authHttpGet(
+      `${verification.pathname}${verification.search}`,
+      undefined,
+      "cross-site",
+    );
+    expect(verified.status).toBe(302);
+    expect(verified.headers.get("location")).toBe("/account");
+
+    const wrongExisting = await authHttpPost("/api/auth/sign-in/email", {
+      email,
+      password: "wrong-password-value-123",
+    });
+    const wrongMissing = await authHttpPost("/api/auth/sign-in/email", {
+      email: `missing-${randomUUID()}@example.test`,
+      password: "wrong-password-value-123",
+    });
+    expect(wrongExisting.status).toBe(wrongMissing.status);
+    expect(await wrongExisting.json()).toEqual({ status: "rejected" });
+    expect(await wrongMissing.json()).toEqual({ status: "rejected" });
+
+    const signIn = await authHttpPost("/api/auth/sign-in/email", {
+      email,
+      password,
+    });
+    expect(signIn.status).toBe(200);
+    expect(await signIn.json()).toEqual({ status: "authenticated" });
+    const setCookie = signIn.headers.get("set-cookie")!;
+    expect(setCookie).toMatch(/HttpOnly/i);
+    expect(setCookie).toMatch(/SameSite=Lax/i);
+    expect(setCookie).toMatch(/Path=\//i);
+    const cookie = setCookie.split(";", 1)[0]!;
+
+    const session = await authHttpGet("/api/auth/get-session", cookie);
+    expect(session.status).toBe(200);
+    const projected = await session.json();
+    expect(projected).toEqual({
+      status: "authenticated",
+      user: { name: "HTTP fixture", email, emailVerified: true },
+    });
+    expect(JSON.stringify(projected)).not.toMatch(/token|session|ipAddress/);
+    expect(JSON.stringify(projected)).not.toContain(users.rows[0]!.id);
+
+    const signOut = await authHttpPost("/api/auth/sign-out", undefined, cookie);
+    expect(await signOut.json()).toEqual({ status: "accepted" });
+    const signedOutSession = await authHttpGet("/api/auth/get-session", cookie);
+    expect(await signedOutSession.json()).toEqual({ status: "anonymous" });
+    await pool.query(`delete from auth."user" where id = $1`, [
+      users.rows[0]!.id,
+    ]);
+  });
+
+  it("anti-enumerates reset requests, keeps tokens in the recovery flow, and revokes sessions", async () => {
+    const email = `reset-http-${randomUUID()}@example.test`;
+    const password = "reset-http-password-123";
+    const replacement = "reset-http-replacement-456";
+    const signUp = await auth.api.signUpEmail({
+      body: { name: "Reset HTTP fixture", email, password },
+    });
+    await pool.query(
+      `update auth."user" set email_verified = true where id = $1`,
+      [signUp.user.id],
+    );
+    const signIn = await authHttpPost("/api/auth/sign-in/email", {
+      email,
+      password,
+    });
+    const cookie = signIn.headers.get("set-cookie")!.split(";", 1)[0]!;
+    const messagesBefore = authEmailMessages.length;
+    const existing = await authHttpPost("/api/auth/request-password-reset", {
+      email,
+      redirectTo: "/account/reset-password",
+    });
+    const missing = await authHttpPost("/api/auth/request-password-reset", {
+      email: `missing-${randomUUID()}@example.test`,
+      redirectTo: "/account/reset-password",
+    });
+    expect(existing.status).toBe(missing.status);
+    expect(await existing.json()).toEqual({ status: "accepted" });
+    expect(await missing.json()).toEqual({ status: "accepted" });
+    expect(authEmailMessages).toHaveLength(messagesBefore + 1);
+
+    const resetLink = new URL(authEmailMessages.at(-1)!.actionUrl);
+    const callback = await authHttpGet(
+      `${resetLink.pathname}${resetLink.search}`,
+      undefined,
+      "cross-site",
+    );
+    expect(callback.status).toBe(302);
+    const callbackLocation = new URL(callback.headers.get("location")!);
+    expect(callbackLocation.pathname).toBe("/account/reset-password");
+    const token = callbackLocation.searchParams.get("token")!;
+    expect(token).toMatch(/^[A-Za-z0-9_-]{24}$/);
+
+    const reset = await authHttpPost("/api/auth/reset-password", {
+      newPassword: replacement,
+      token,
+    });
+    expect(await reset.json()).toEqual({ status: "accepted" });
+    const oldSession = await authHttpGet("/api/auth/get-session", cookie);
+    expect(await oldSession.json()).toEqual({ status: "anonymous" });
+    const newSignIn = await authHttpPost("/api/auth/sign-in/email", {
+      email,
+      password: replacement,
+    });
+    expect(await newSignIn.json()).toEqual({ status: "authenticated" });
+    await pool.query(`delete from auth."user" where id = $1`, [signUp.user.id]);
+  });
+
+  it("enforces the selected sign-in rate-limit seam with fixed private output", async () => {
+    const ip = `198.51.100.${Math.floor(Math.random() * 100 + 100)}`;
+    const responses: Response[] = [];
+    for (let attempt = 0; attempt < 11; attempt += 1) {
+      responses.push(
+        await authHttpPost(
+          "/api/auth/sign-in/email",
+          {
+            email: `rate-${randomUUID()}@example.test`,
+            password: "rate-limit-password-123",
+          },
+          undefined,
+          ip,
+        ),
+      );
+    }
+    expect(
+      responses.filter((response) => response.status === 429),
+    ).toHaveLength(1);
+    expect(await responses.at(-1)!.json()).toEqual({ status: "rate-limited" });
   });
 });
 

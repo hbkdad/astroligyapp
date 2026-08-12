@@ -406,6 +406,21 @@ tests/
   receipts and keyed recipient suppression remain independent safety ledgers. Their future
   owner/maintenance expiry procedures must be explicit; account deletion cannot silently
   weaken suppression or claim external billing deletion.
+- Public authentication HTTP: the dynamic Node.js catch-all does not expose Better Auth's
+  complete adapter. A project-owned allowlist admits only reviewed email/password,
+  verification/reset, cookie-session read, and sign-out paths, while current-password proof
+  stays server-only. Request validation precedes lazy service construction; unsafe paths,
+  methods, origins, callbacks, forwarding headers, shapes, and sizes never reach auth or the
+  database.
+- Auth HTTP output: public responses are purpose-specific projections. Session and auth
+  identifiers, bearer/session tokens, request IP/user-agent, provider details, recovery
+  tokens, and exceptions never cross the boundary. Same-origin redirects and session
+  cookies are preserved under no-store, no-referrer, anti-frame, and non-CORS headers.
+- Auth HTTP runtime: one lazy process service owns bounded pools for the isolated auth,
+  delivery-ledger, and feedback/suppression roles plus the regional SES client. Build and
+  construction make no external call. The current memory limiter is a local safety seam,
+  not proof of distributed production abuse control; ingress IP trust, shared limiting,
+  sensitive-URL log redaction, browser E2E, and live recovery remain release gates.
 
 ## Data and cache principles
 

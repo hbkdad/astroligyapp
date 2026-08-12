@@ -4,8 +4,8 @@ Last updated: 2026-08-12
 
 ## Current position
 
-Status: Goal 63 complete; verified Better Auth users can authorize one transactional local
-account erasure with current-password proof, explicit intent, safe retention, and no public route.
+Status: Goal 64 complete; the first public Better Auth HTTP surface is an explicit,
+privacy-projecting email/password allowlist rather than the package's broad router.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -20,8 +20,8 @@ transit, lunar, station, and explicit numerology events can now be composed into
 one immutable timeline-fact aggregate. Paddle is selected only for verified
 subscription-event ingestion. Better Auth 1.6.27 is installed with four isolated auth
 tables, strict server configuration, database sessions, and execute-only account and
-contact lookups. No live billing account, production data, managed database/auth
-infrastructure, public auth surface, AI, general notification, location-resolution,
+contact lookups plus a hardened public email/password HTTP boundary. No live billing
+account, production data, managed database/auth infrastructure, account UI, AI, general notification, location-resolution,
 or deployment provider is selected. Authentication email has a provider decision, exact
 SDK/adapter, and injected feedback/suppression seam, but no account, DNS, credentials,
 AWS infrastructure, signature implementation, queue polling, or live delivery.
@@ -99,6 +99,14 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 64: inventory exact Better Auth 1.6.27 routes and publish only reviewed email
+      signup/signin, verification, password-reset, GET session, and sign-out operations.
+      Current-password verification remains server-only; social/provider, account-linking,
+      broad user/session mutation, diagnostics, and the stock Next.js adapter remain blocked.
+- [x] Add a strict dynamic Node.js App Router boundary with canonical origin/fetch-site,
+      path/method/body/query/header limits, forwarding-header stripping, relative callbacks,
+      no-store security headers, privacy projections, disabled package logs, lazy bounded
+      process dependencies, anti-enumeration, recovery/revocation, and rate-limit proof.
 - [x] Goal 63: require an exact same-origin deletion command, recent live email-verified
       Better Auth session, independently resolved active account, canonical explicit intent,
       and current-password reauthentication before any local state changes.
@@ -557,22 +565,22 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 64 — define and verify the minimum public Better Auth HTTP boundary without adding
-account UI, live email, external resources, production data changes, or deployment.
+Goal 65 — implement the accessible account entry and recovery UI against the reviewed auth
+HTTP contract without live email, external resources, production changes, or deployment.
 
 Deliverables:
 
-1. Inventory Better Auth's exact 1.6.27 handler surface and select only required email/password,
-   verification, reset, session, sign-out, and current-password operations. Reject unintended
-   provider, telemetry, account-linking, or administrative exposure.
-2. Add the smallest reviewed App Router handler boundary with canonical origin/proxy rules,
-   bounded request handling, safe headers, anti-enumerating failures, and no browser-owned
-   internal identity. Keep account bootstrap/deletion as separate trusted workflows.
-3. Prove method/path allowlisting, hostile origin/forwarded headers, malformed/oversized bodies,
-   cookie/session attributes, verification/reset token handling, revocation, rate-limit seams,
-   and response privacy using local deterministic tests and disposable PostgreSQL only.
-4. Apply `security-audit`, document residual CSRF/abuse/recovery/browser-E2E gates, set the next
-   single auth workflow goal, and run every gate. Do not send live email, create credentials or
+1. Add focused sign-in, signup, verify-email guidance, forgot-password, and reset-password
+   states using semantic forms, password-manager-compatible autocomplete, safe generic copy,
+   and the exact Goal 64 response projection. Do not expose auth/internal IDs or retain tokens.
+2. Integrate session-aware navigation and signed-out/signed-in presentation without making
+   browser state authoritative. Keep account bootstrap/deletion and protected product data as
+   later server compositions rather than direct client mutations.
+3. Prove validation, loading/retry/rate-limit/recovery states, keyboard/focus, screen-reader
+   names/status, 200% text, mobile/desktop layout, reduced motion, no token leakage, and mocked
+   browser journeys while backend integration remains covered by disposable PostgreSQL.
+4. Apply `ui-quality` and `security-audit`, document remaining live-email/proxy/shared-limit/
+   recovery gates, set one next goal, and run every gate. Do not call SES, create credentials or
    infrastructure, modify production data, purchase, or deploy.
 
 ## Phase queue
@@ -623,8 +631,9 @@ Deliverables:
   while eventual production-host runtime and cache behavior remain release gates.
 - Managed database, payment-account, AI, monitoring, and deployment providers remain
   intentionally undecided. Amazon SES is selected only for authentication email.
-- Better Auth still requires public route/UI review, browser E2E, and production recovery
-  testing. The SES SNS signature authenticator and
+- Better Auth still requires account UI/browser E2E and production recovery testing. The
+  current per-process memory limiter requires a shared production control, and ingress must
+  prove trusted client-IP rewriting. The SES SNS signature authenticator and
   regional queue infrastructure remain external gates. MFA and passkeys remain
   release-hardening decisions.
 - Production database role provisioning, TLS, pooling, migration timeouts,
@@ -662,6 +671,9 @@ Deliverables:
 | 2026-08-12 | Goal 63 migration and PostgreSQL gate              | Oldest schema upgraded cumulatively; 55/55 deletion/retention/isolation tests passed          |
 | 2026-08-12 | Goal 63 focused and coverage gates                 | 49 focused cases; 60 files/1035 tests at 93.42% statements and 91.59% branches passed         |
 | 2026-08-12 | Goal 63 full application gate                      | Formatting, lint, strict TypeScript, 60 files/1035 tests, and optimized build passed          |
+| 2026-08-12 | Goal 64 PostgreSQL auth HTTP gate                  | 58/58 integration cases; signup/verify/signin/reset/revoke/rate-limit lifecycle passed        |
+| 2026-08-12 | Goal 64 focused and coverage gates                 | 73 focused cases; 62 files/1091 tests at 92.86% statements and 91.40% branches passed         |
+| 2026-08-12 | Goal 64 full application and built-route gates     | Strict checks/build passed; built route returned fixed secure 503 without runtime credentials |
 | 2026-08-11 | `npm run db:check`                                 | Drizzle schema, migration journal, and generated snapshot are consistent                      |
 | 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 562 tests, and optimized production build         |
 | 2026-08-11 | `npm run test:coverage`                            | 94.04% statements, 91.04% branches, 99.73% functions, and 95.13% lines                        |
@@ -1219,6 +1231,52 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 64 minimal Better Auth public HTTP record
+
+- Surface inventory: exact installed Better Auth 1.6.27 route sources and the stock Next.js
+  adapter were reviewed in `BETTER_AUTH_HTTP_SURFACE.md`. Only email signup/signin,
+  verification send/consume, reset request/link/consume, GET session, and sign-out are public.
+  Social OAuth/callback, provider/account linking and tokens, user/change-email/delete,
+  change/set password, broad session mutation, diagnostics, and POST session are blocked.
+  `verifyPassword` remains server-only for Goal 63.
+- Request boundary: `createBetterAuthHttpHandler` fixes HTTPS canonical origin, path/method,
+  fetch-site/origin, exact endpoint-specific JSON/query shapes, relative callbacks, 4 KiB
+  streaming bodies, 64 bounded headers, and no bearer or method override. Host/protocol/
+  original/rewrite forwarding fields are removed before dispatch; unknown paths and wrong
+  methods never construct the process service.
+- Output/privacy: signup/recovery/verification/reset/signout and auth failures are fixed
+  projections. Session output contains only name, normalized email, and current verified
+  state; auth/user/session IDs, session token, IP/user-agent, timestamps, provider details,
+  raw package errors, recovery tokens, and exceptions are removed. Redirects must resolve to
+  the canonical origin. Cookies retain package attributes while all responses are no-store,
+  non-CORS, no-referrer, anti-frame, and content-sniffing protected.
+- Runtime: the dynamic Node.js catch-all lazily composes isolated bounded pools for Better
+  Auth, the email delivery ledger, and feedback/suppression plus durable idempotency and the
+  selected SES Canada Central client. Missing/unsafe server-only configuration becomes fixed
+  503, package logging is disabled to prevent its duplicate-signup email log, build performs
+  no configuration/database/AWS work, and construction makes no network call.
+- Security audit: assets are passwords, verification/reset capability URLs, session cookies,
+  verified email, auth identity, client IP, and public response privacy. Adversarial tests
+  cover all blocked package paths, every method, hostile origins/redirects/identity fields,
+  forwarding ambiguity, authorization/method override, malformed/mismatched/oversized body,
+  header cardinality, unsafe redirects, dependency failure, cookie preservation, package-log
+  disablement, and response redaction. No critical/high finding remains.
+- Verification: 73 focused boundary/configuration/service cases pass. The cumulative
+  PostgreSQL 18 path and all 58 integration cases pass, including duplicate signup and reset
+  anti-enumeration, real verification links, generic wrong known/unknown signin, cookie-only
+  signin, safe session projection, signout, recovery-token flow, password replacement,
+  immediate session revocation, and the 10/minute rate-limit seam. Coverage passes 62 files/
+  1091 tests at 92.86% statements, 91.40% branches, 99.10% functions, and 94.61% lines.
+  The full formatting, lint, strict TypeScript, test, and optimized-build gate passes; the
+  built dynamic route returns fixed no-store/anti-frame 503 without runtime credentials and
+  emits no server header.
+- Residual gates: memory limiting is per process; production needs shared/edge control or a
+  topology proof. Ingress must overwrite the configured IP header and match trusted proxies.
+  Access logs/traces/analytics/support/error tooling must redact verification/reset path/query
+  tokens. Account UI/browser E2E, live SES/SNS, credentials, proxy verification, distributed
+  abuse tests, and production recovery remain unverified. No external call/resource,
+  production data mutation, purchase, or deployment occurred.
 
 ## Goal 63 verified-session account-deletion and retention record
 
