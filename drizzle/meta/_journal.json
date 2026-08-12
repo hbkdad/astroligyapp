@@ -57,6 +57,20 @@
       "when": 1786512532324,
       "tag": "0007_nasty_mister_sinister",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786514267567,
+      "tag": "0008_amused_bloodscream",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1786514775401,
+      "tag": "0009_deep_leper_queen",
+      "breakpoints": true
     }
   ]
 }

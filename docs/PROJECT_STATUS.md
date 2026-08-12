@@ -4,12 +4,12 @@ Last updated: 2026-08-12
 
 ## Current position
 
-Status: Goal 60 complete; the exact SES v2 Canada Central adapter composes local
-templates, suppression, and durable idempotency through a single injected fake-tested send.
+Status: Goal 61 complete; authenticated SES configuration-set feedback now produces only
+content-free delivery state, deduplication receipts, and keyed permanent suppression.
 
 The project now has the portable application baseline plus a PostgreSQL 18
-contract, Drizzle ORM/Kit, a typed 23-table public schema plus four isolated auth
-tables, checked-in SQL migrations, forced row-level security on 22 public tables, a server-only
+contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
+tables, checked-in SQL migrations, forced row-level security on 24 public tables, a server-only
 verified-session boundary, identity-scoped transactions, account bootstrap,
 deterministic zodiac/aspect primitives, lunar phase geometry, a traceable
 Pythagorean numerology strategy, and a strict ephemeris adapter validation
@@ -22,8 +22,9 @@ subscription-event ingestion. Better Auth 1.6.27 is installed with four isolated
 tables, strict server configuration, database sessions, and execute-only account and
 contact lookups. No live billing account, production data, managed database/auth
 infrastructure, public auth surface, AI, general notification, location-resolution,
-or deployment provider is selected. Authentication email has a provider decision but
-an exact SDK/adapter but no account, DNS, credentials, infrastructure, or live delivery.
+or deployment provider is selected. Authentication email has a provider decision, exact
+SDK/adapter, and injected feedback/suppression seam, but no account, DNS, credentials,
+AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Completed
 
@@ -98,6 +99,14 @@ an exact SDK/adapter but no account, DNS, credentials, infrastructure, or live d
 
 ## Recently completed
 
+- [x] Goal 61: validate one bounded non-raw SNS-to-SQS notification envelope for the
+      configured `ca-central-1` topic and normalize exact SES delivery, bounce,
+      complaint, reject, delivery-delay, and rendering-failure configuration-set events
+      only after an injected authenticator succeeds.
+- [x] Add content-free keyed event receipts and keyed recipient suppression through
+      migrations `0008_amused_bloodscream` and `0009_deep_leper_queen`, forced RLS, a
+      dedicated NOLOGIN consumer role, at-least-once concurrency control, safe terminal
+      state precedence, and an exact Goal 60 `isSuppressed` resolver.
 - [x] Goal 60: pin `@aws-sdk/client-sesv2` 3.1108.0 and implement a strict server-only
       adapter fixed to `ca-central-1`, one normalized authentication sender, one required
       configuration set, local Simple text/HTML, and an SDK client with retries disabled.
@@ -533,26 +542,26 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 61 — implement provider-neutral SES feedback normalization and durable local
-suppression processing from injected queue messages without creating AWS resources.
+Goal 62 — compose first verified-session internal-account bootstrap behind a dedicated
+least-privilege database boundary without exposing a public authentication route.
 
 Deliverables:
 
-1. Define strict provider-neutral delivery/bounce/complaint/reject/delay/render-failure
-   events and validate the exact SES configuration-set event shapes expected through
-   same-region SNS-to-SQS. Accept only bounded known versions/types/message IDs and
-   never persist or return raw queue/SNS/SES payload, recipient, diagnostic text, or IP.
-2. Add a content-free append-only feedback receipt and keyed-recipient suppression table
-   behind a dedicated NOLOGIN queue-consumer role. Deduplicate at least-once events and
-   suppress on permanent bounce/complaint only; delivery/delay/reject/render failure
-   update safe delivery state without unsuppressing.
-3. Implement injected-message orchestration with safe acknowledge/retry/reconcile
-   outcomes. Prove cumulative upgrade, malformed/tampered/duplicate/out-of-order events,
-   two-recipient privacy, isolation, concurrency, constraints, retention/deletion,
-   rollback, index plans, and exact Goal 60 suppression lookup.
-4. Apply `database-migration` and `security-audit`, set the next authentication workflow
-   goal, and run every gate. Do not create AWS/SNS/SQS/IAM/DNS resources, credentials,
-   poll a live queue, send email, expose a public webhook/auth route/UI, purchase, or deploy.
+1. Define one exact server-only bootstrap request/result contract that accepts identity
+   only from a currently verified Better Auth database session. Browser subject, account
+   UUID, email/profile fields, cookies outside the verifier, and arbitrary redirects must
+   never select or create the internal account.
+2. Replace direct migrator-owned bootstrap SQL with a dedicated NOLOGIN role and narrow
+   execute-only database function or equivalent transaction boundary. Preserve atomic
+   subject uniqueness, concurrent idempotency, deleted-account nonreactivation, and no
+   raw auth-table or unrelated `user_account` privileges.
+3. Compose verification, bootstrap, active-account resolution, and identity-scoped
+   transaction readiness with fixed anti-enumerating outcomes. Prove invalid/expired/
+   revoked/unverified sessions, concurrency, deletion, rollback, pooled-state cleanup,
+   two-account isolation, constraints, and cumulative migration behavior.
+4. Apply `database-migration` and `security-audit`, set the next single auth workflow
+   goal, and run every gate. Do not expose Better Auth/public routes, pages, forms, session
+   cookies, email delivery, external resources, production data, purchase, or deployment.
 
 ## Phase queue
 
@@ -602,9 +611,10 @@ Deliverables:
   while eventual production-host runtime and cache behavior remain release gates.
 - Managed database, payment-account, AI, monitoring, and deployment providers remain
   intentionally undecided. Amazon SES is selected only for authentication email.
-- Better Auth still requires SES feedback/suppression infrastructure, account-bootstrap
-  orchestration, public route/UI review, deletion/retention orchestration, browser E2E,
-  and production recovery testing. MFA and passkeys remain release-hardening decisions.
+- Better Auth still requires verified-session account-bootstrap orchestration, public
+  route/UI review, deletion/retention orchestration, browser E2E, and production recovery
+  testing. The SES SNS signature authenticator and regional queue infrastructure remain
+  external gates. MFA and passkeys remain release-hardening decisions.
 - Production database role provisioning, TLS, pooling, migration timeouts,
   backup/restore, and managed-provider parity remain release gates.
 - Drizzle Kit has four moderate findings through a legacy esbuild development loader.
@@ -631,6 +641,9 @@ Deliverables:
 | 2026-08-12 | Goal 59 full application gate                      | Formatting, lint, strict TypeScript, 54 files/921 tests, and optimized build passed           |
 | 2026-08-12 | Goal 60 fake-client and coverage gates             | 32 focused cases; coverage 55 files/952 tests at 94.12% statements and 92.17% branches        |
 | 2026-08-12 | Goal 60 full application gate                      | Formatting, lint, strict TypeScript, 55 files/953 tests, and optimized build passed           |
+| 2026-08-12 | Goal 61 migration and PostgreSQL gate              | Oldest schema upgraded cumulatively; 49/49 concurrency, privacy, RLS, rollback tests passed   |
+| 2026-08-12 | Goal 61 focused and coverage gates                 | 29 focused cases; 56 files/982 tests at 93.44% statements and 91.53% branches passed          |
+| 2026-08-12 | Goal 61 full application gate                      | Formatting, lint, strict TypeScript, 56 files/982 tests, and optimized build passed           |
 | 2026-08-11 | `npm run db:check`                                 | Drizzle schema, migration journal, and generated snapshot are consistent                      |
 | 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 562 tests, and optimized production build         |
 | 2026-08-11 | `npm run test:coverage`                            | 94.04% statements, 91.04% branches, 99.73% functions, and 95.13% lines                        |
@@ -1189,6 +1202,64 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
 
+## Goal 61 authentication-email feedback and suppression record
+
+- Sources: AWS documents the default non-raw SNS envelope delivered to SQS, the SES
+  configuration-set event object fields, and the distinction between permanent and
+  transient bounce behavior. The implementation follows the regional envelope and six
+  selected event types from the [SNS-to-SQS guide](https://docs.aws.amazon.com/sns/latest/dg/subscribe-sqs-queue-to-sns-topic.html),
+  [SES event contents](https://docs.aws.amazon.com/ses/latest/dg/event-publishing-retrieving-sns-contents.html),
+  and [SES event examples](https://docs.aws.amazon.com/ses/latest/dg/event-publishing-retrieving-sns-examples.html).
+  Raw SNS delivery, Send/Open/Click/Subscription events, original headers, and public
+  HTTP webhooks are outside the accepted contract.
+- Ingress: one UUID plus one bounded queue body is accepted. The nested SNS notification
+  must match the configured Canada Central topic, regional certificate host, exact
+  subscription ARN prefix, known signature version, and bounded signature/message. An
+  injected authenticator must approve the frozen signature projection before SES JSON is
+  parsed. Authentication outage returns retry; malformed, tampered, unsigned, unmatched,
+  or unknown content returns reconciliation without provider detail.
+- Normalization: the configured sender, identity ARN, AWS account, configuration-set tag,
+  provider message reference, one destination, and the exact event-specific object are
+  validated. Only provider-neutral delivery/bounce/complaint/reject/delay/render-failure,
+  timestamp, recipient for transient HMAC derivation, and permanent-bounce flag cross the
+  repository seam. Raw queue/SNS/SES JSON, SMTP/diagnostic text, IP, recipient, provider
+  reference, and feedback IDs are neither returned nor written to the new tables.
+- Migration: `0008_amused_bloodscream` adds a unique private provider-reference lookup,
+  content-free append-only feedback receipts, keyed recipient suppression, constraints,
+  foreign key, retention/correlation indexes, forced RLS, and a NOLOGIN feedback-consumer
+  role. `0009_deep_leper_queen` adds its narrow delivery-row policy. The consumer can
+  SELECT/INSERT receipts and suppression plus SELECT/UPDATE delivery; it cannot update or
+  delete receipts/suppression or access these tables as `app_user`.
+- Processing: domain-separated HMACs with retained-key lookup deduplicate SNS identity and
+  recipient. Advisory locks and row locks serialize at-least-once concurrency. Permanent
+  bounce and complaint suppress exactly once; transient bounce does not. Complaint,
+  permanent-bounce, provider-reject, and rendering-failure states cannot regress through
+  late delivery/delay. Every authenticated event appends applied/stale/unmatched state;
+  duplicate returns acknowledge without a second row.
+- Retention: receipt age and suppression age have explicit maintenance indexes, while the
+  runtime role remains append-only/no-delete. Receipt deletion and deliberate suppression
+  erasure require an owner-controlled maintenance operation. Retained HMAC keys must stay
+  available until rows are deliberately re-keyed or erased.
+- Security audit: assets are recipient deliverability, provider correlation, and feedback
+  authenticity. Trust order is strict envelope -> injected signature verification -> SES
+  normalization -> transaction. No log call, raw payload persistence, recipient column,
+  IP/diagnostic storage, public route, queue poll, AWS credential, network certificate
+  fetch, or live resource exists. No critical/high finding remains; concrete SNS signature
+  verification, IAM/queue policy, DLQ/alarm, and production retention execution remain
+  external gates.
+- Verification: 29 focused normalization/configuration/repository cases and the 32 Goal 60
+  adapter cases pass. The cumulative PostgreSQL 18 upgrade and all 49 integration tests
+  pass across malformed constraints, concurrent duplicate, out-of-order events,
+  two-recipient privacy, suppression isolation, rollback, privilege denial, and exact
+  dedupe/correlation/retention index plans. Coverage passes 56 files/982 tests at 93.44%
+  statements, 91.53% branches, 99.33% functions, and 95.04% lines; the new processor is
+  84.35% statements, 84.38% branches, 100% functions, and 88.01% lines. The full gate
+  passes formatting, ESLint, strict TypeScript, all 56 files/982 tests, and the optimized
+  Next.js build.
+- Scope: no AWS account, SNS topic, SQS/DLQ, IAM role/policy, SES identity/configuration
+  change, DNS record, credential, live signature fetch, queue poll, send, public route/UI,
+  production data, purchase, or deployment was created.
+
 ## Goal 60 Amazon SES authentication-email adapter record
 
 - Package/configuration: exact Apache-2.0 `@aws-sdk/client-sesv2` 3.1108.0 supports the
@@ -1212,8 +1283,8 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   server-only and accepts an already strict request; configuration, reservation, and
   suppression must all pass before the provider boundary. Results contain no recipient,
   URL/token, content, SES message ID, provider detail, credential, or exception. No
-  critical/high finding remains. Queue feedback authenticity, durable suppression,
-  production IAM/DNS/quota, and delivery testing remain Goal 61/external gates.
+  critical/high finding remains. Concrete SNS signature verification, production
+  IAM/SNS/SQS/DNS/quota, and delivery testing remain external gates.
 - Scope: no AWS account, identity, configuration set, IAM role, DNS record, SNS topic,
   SQS queue, credential, live client call, email, route/UI, production data, purchase,
   or deployment was created. Every adapter test uses injected fakes.

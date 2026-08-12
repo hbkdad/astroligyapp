@@ -325,3 +325,38 @@ address, list management, tracking, or custom headers. A valid accepted SES mess
 is bound privately. Definite SES request/quota rejection maps to rejected/retry;
 network/timeout, unknown error, malformed success, or suppression outage maps to
 reconciliation-required. No path calls send twice or reflects SDK details.
+
+## Authentication-email feedback boundary
+
+`createAuthenticationEmailFeedbackProcessor` consumes only an injected SQS message
+projection containing one UUID and one bounded body. The body must be the default
+non-raw SNS `Notification` envelope for the configured `ca-central-1` topic. Topic,
+timestamp, signature version, signature, regional certificate URL, unsubscribe ARN,
+and nested SES message are validated before an injected authenticator sees the frozen
+signature input. Authentication failure or malformed/unknown SES content never reaches
+persistence. The processor returns only fixed `acknowledge`, `retry`, or `reconcile`
+dispositions and identity-free codes.
+
+The nested configuration-set event accepts exactly `Delivery`, `Bounce`, `Complaint`,
+`Reject`, `DeliveryDelay`, or `Rendering Failure`, one configured source/identity/account,
+one destination, one bounded provider message reference, and the required configuration-set
+tag. Provider diagnostics, SMTP responses, IPs, raw envelopes, recipient, and provider
+identity are discarded after validation and never appear in a result or new feedback row.
+The injected authenticator remains the future certificate/signature implementation seam;
+no certificate fetch, queue poll, AWS credential, or live resource exists.
+
+`AuthenticationEmailFeedbackRepository` HMACs SNS event identity and normalized recipient
+under separate domain labels with retained-key rollover. It serializes at-least-once
+events, appends one content-free receipt, correlates through the delivery ledger's private
+provider reference, and records only event type, safe processing outcome, timestamps, and
+an optional internal delivery UUID. Permanent bounce and complaint insert a keyed
+suppression; transient bounce and delivery/delay/reject/render-failure never suppress or
+unsuppress. Terminal complaint/permanent-bounce/reject/render states cannot be regressed by
+late delivery or delay.
+
+The dedicated `app_auth_email_feedback_consumer` NOLOGIN role can select/insert receipts,
+select/insert suppression, and select/update delivery state. It cannot update/delete the
+append-only receipts, mutate/delete suppression, access user/auth tables, or expose either
+table to `app_user`. `isSuppressed(recipient)` searches every retained keyed digest and is
+the concrete Goal 60 suppression resolver. Receipt retention and suppression erasure are
+explicit owner/maintenance operations; key retirement must not strand retained digests.

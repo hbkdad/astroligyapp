@@ -443,13 +443,17 @@ tests/
   framework token; the dispatcher receives a frozen validated request and every unsafe
   outcome fails generically. The SES adapter pins `@aws-sdk/client-sesv2` 3.1108.0,
   dedicated SPF/DKIM/DMARC/custom-MAIL-FROM identity, required configuration-set
-  events, and same-region SNS-to-SQS feedback. The durable service-only ledger now
+  events, and same-region SNS-to-SQS feedback. The durable service-only delivery ledger now
   reserves separate versioned HMAC reference/request digests, supports retained-key
   rollover, serializes concurrency, and turns abandoned/late work into reconciliation
-  without storing recipient, capability, content, or account identity. No concrete
+  without storing recipient, capability, content, or account identity. The concrete
   dispatcher uses a single-attempt injected regional client and only local Simple
-  content after durable reservation and suppression lookup. No account, DNS, credential,
-  queue, route, or live send exists yet. See ADR 0009.
+  content after durable reservation and keyed suppression lookup. An injected feedback
+  processor now validates the fixed regional SNS envelope plus six SES configuration-set
+  event types, delegates signature authenticity, and writes content-free HMAC-deduplicated
+  receipts and permanent-bounce/complaint suppression through a separate least-privilege
+  role. Raw payloads, recipients, diagnostics, and IPs are discarded. No account, DNS,
+  credential, SNS/SQS resource, queue poll, route, or live send exists yet. See ADR 0009.
 - Ephemeris: exact Astronomy Engine 2.1.19 for tropical positions and local
   angles, composed with Whole Sign strategy 1.0.0. No silent house-system
   fallback; exact poles fail explicitly. See ADR 0006.

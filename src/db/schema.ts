@@ -479,6 +479,12 @@ export const authenticationEmailDelivery = pgTable(
       "btree",
       table.referenceDigest.asc().nullsLast().op("text_ops"),
     ),
+    uniqueIndex("authentication_email_delivery_provider_reference_uidx")
+      .using(
+        "btree",
+        table.providerMessageReference.asc().nullsLast().op("text_ops"),
+      )
+      .where(sql`provider_message_reference IS NOT NULL`),
     index("authentication_email_delivery_recovery_idx").using(
       "btree",
       table.state.asc().nullsLast().op("text_ops"),
@@ -488,6 +494,13 @@ export const authenticationEmailDelivery = pgTable(
       as: "permissive",
       for: "all",
       to: ["app_auth_email_runtime"],
+      using: sql`true`,
+      withCheck: sql`true`,
+    }),
+    pgPolicy("authentication_email_delivery_feedback_consumer", {
+      as: "permissive",
+      for: "all",
+      to: ["app_auth_email_feedback_consumer"],
       using: sql`true`,
       withCheck: sql`true`,
     }),
@@ -517,7 +530,7 @@ export const authenticationEmailDelivery = pgTable(
     ),
     check(
       "authentication_email_delivery_state_check",
-      sql`state IN ('reserved', 'accepted', 'rejected', 'retry', 'reconciliation-required', 'suppressed')`,
+      sql`state IN ('reserved', 'accepted', 'rejected', 'retry', 'reconciliation-required', 'suppressed', 'delivered', 'transient-bounce', 'permanent-bounce', 'complaint', 'delivery-delayed', 'provider-rejected', 'rendering-failed')`,
     ),
     check(
       "authentication_email_delivery_provider_reference_check",
@@ -529,7 +542,121 @@ export const authenticationEmailDelivery = pgTable(
     ),
     check(
       "authentication_email_delivery_lifecycle_check",
-      sql`(state = 'reserved' AND completed_at IS NULL AND provider_message_reference IS NULL) OR (state = 'accepted' AND completed_at IS NOT NULL AND provider_message_reference IS NOT NULL) OR (state IN ('rejected', 'retry', 'suppressed') AND completed_at IS NOT NULL AND provider_message_reference IS NULL) OR (state = 'reconciliation-required' AND completed_at IS NOT NULL)`,
+      sql`(state = 'reserved' AND completed_at IS NULL AND provider_message_reference IS NULL) OR (state IN ('accepted', 'delivered', 'transient-bounce', 'permanent-bounce', 'complaint', 'delivery-delayed', 'provider-rejected', 'rendering-failed') AND completed_at IS NOT NULL AND provider_message_reference IS NOT NULL) OR (state IN ('rejected', 'retry', 'suppressed') AND completed_at IS NOT NULL AND provider_message_reference IS NULL) OR (state = 'reconciliation-required' AND completed_at IS NOT NULL)`,
+    ),
+  ],
+);
+
+export const authenticationEmailFeedbackReceipt = pgTable(
+  "authentication_email_feedback_receipt",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    deliveryId: uuid("delivery_id"),
+    eventKeyVersion: integer("event_key_version").notNull(),
+    eventDigest: text("event_digest").notNull(),
+    eventType: text("event_type").notNull(),
+    outcome: text().notNull(),
+    occurredAt: timestamp("occurred_at", {
+      withTimezone: true,
+      mode: "string",
+    }).notNull(),
+    receivedAt: timestamp("received_at", {
+      withTimezone: true,
+      mode: "string",
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("authentication_email_feedback_event_uidx").using(
+      "btree",
+      table.eventDigest.asc().nullsLast().op("text_ops"),
+    ),
+    index("authentication_email_feedback_delivery_idx").using(
+      "btree",
+      table.deliveryId.asc().nullsLast().op("uuid_ops"),
+      table.occurredAt.asc().nullsLast().op("timestamptz_ops"),
+    ),
+    index("authentication_email_feedback_retention_idx").using(
+      "btree",
+      table.receivedAt.asc().nullsLast().op("timestamptz_ops"),
+    ),
+    foreignKey({
+      columns: [table.deliveryId],
+      foreignColumns: [authenticationEmailDelivery.id],
+      name: "authentication_email_feedback_delivery_fk",
+    }),
+    pgPolicy("authentication_email_feedback_consumer", {
+      as: "permissive",
+      for: "all",
+      to: ["app_auth_email_feedback_consumer"],
+      using: sql`true`,
+      withCheck: sql`true`,
+    }),
+    check(
+      "authentication_email_feedback_key_version_check",
+      sql`event_key_version >= 0`,
+    ),
+    check(
+      "authentication_email_feedback_digest_check",
+      sql`event_digest ~ '^hmac-sha256:[0-9]+:[0-9a-f]{64}$' AND split_part(event_digest, ':', 2)::integer = event_key_version`,
+    ),
+    check(
+      "authentication_email_feedback_type_check",
+      sql`event_type IN ('delivery', 'bounce', 'complaint', 'reject', 'delay', 'render-failure')`,
+    ),
+    check(
+      "authentication_email_feedback_outcome_check",
+      sql`outcome IN ('applied', 'stale', 'unmatched')`,
+    ),
+    check(
+      "authentication_email_feedback_timeline_check",
+      sql`occurred_at <= received_at + interval '5 minutes'`,
+    ),
+  ],
+);
+
+export const authenticationEmailSuppression = pgTable(
+  "authentication_email_suppression",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    recipientKeyVersion: integer("recipient_key_version").notNull(),
+    recipientDigest: text("recipient_digest").notNull(),
+    reason: text().notNull(),
+    suppressedAt: timestamp("suppressed_at", {
+      withTimezone: true,
+      mode: "string",
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("authentication_email_suppression_recipient_uidx").using(
+      "btree",
+      table.recipientDigest.asc().nullsLast().op("text_ops"),
+    ),
+    index("authentication_email_suppression_retention_idx").using(
+      "btree",
+      table.suppressedAt.asc().nullsLast().op("timestamptz_ops"),
+    ),
+    pgPolicy("authentication_email_suppression_consumer", {
+      as: "permissive",
+      for: "all",
+      to: ["app_auth_email_feedback_consumer"],
+      using: sql`true`,
+      withCheck: sql`true`,
+    }),
+    check(
+      "authentication_email_suppression_key_version_check",
+      sql`recipient_key_version >= 0`,
+    ),
+    check(
+      "authentication_email_suppression_digest_check",
+      sql`recipient_digest ~ '^hmac-sha256:[0-9]+:[0-9a-f]{64}$' AND split_part(recipient_digest, ':', 2)::integer = recipient_key_version`,
+    ),
+    check(
+      "authentication_email_suppression_reason_check",
+      sql`reason IN ('permanent-bounce', 'complaint')`,
     ),
   ],
 );

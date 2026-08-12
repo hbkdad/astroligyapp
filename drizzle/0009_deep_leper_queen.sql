@@ -1,0 +1,1 @@
+CREATE POLICY "authentication_email_delivery_feedback_consumer" ON "authentication_email_delivery" AS PERMISSIVE FOR ALL TO "app_auth_email_feedback_consumer" USING (true) WITH CHECK (true);

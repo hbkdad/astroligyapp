@@ -19,6 +19,7 @@ import {
 import { betterAuthSchema } from "@/db/auth-schema";
 import { createBetterAuth } from "@/server/better-auth-configuration";
 import type { AuthenticationEmailRequest } from "@/server/authentication-email";
+import { AuthenticationEmailFeedbackRepository } from "@/server/authentication-email-feedback";
 import { AuthenticationEmailIdempotencyRepository } from "@/server/authentication-email-idempotency";
 import type { ActiveSession } from "@/infrastructure/auth/session";
 import {
@@ -99,6 +100,22 @@ const authEmailIdempotency = new AuthenticationEmailIdempotencyRepository(
   },
   "https://app.example.test",
   () => authEmailNow,
+);
+const authEmailFeedbackKey = createHash("sha256")
+  .update("database-auth-email-feedback-key")
+  .digest("base64url");
+const authEmailFeedbackNow = new Date("2026-08-12T14:00:00.000Z");
+const authEmailFeedback = new AuthenticationEmailFeedbackRepository(
+  pool,
+  {
+    keys: [{ version: 1, value: authEmailFeedbackKey }],
+    topicArn: "arn:aws:sns:ca-central-1:123456789012:authentication-feedback",
+    identityArn:
+      "arn:aws:ses:ca-central-1:123456789012:identity/auth.example.test",
+    sender: "security@auth.example.test",
+    configurationSet: "authentication-events",
+  },
+  () => authEmailFeedbackNow,
 );
 
 function authEmailRequest(
@@ -286,8 +303,8 @@ describe("initial PostgreSQL migration", () => {
        from pg_class c join pg_namespace n on n.oid = c.relnamespace
        where n.nspname = 'public' and c.relrowsecurity and c.relforcerowsecurity`,
     );
-    expect(Number(tables.rows[0]!.count)).toBe(23);
-    expect(Number(forcedPolicies.rows[0]!.count)).toBe(22);
+    expect(Number(tables.rows[0]!.count)).toBe(25);
+    expect(Number(forcedPolicies.rows[0]!.count)).toBe(24);
   });
 
   it("isolates the exact Better Auth schema and runtime privileges", async () => {
@@ -319,6 +336,13 @@ describe("initial PostgreSQL migration", () => {
       email_runtime_write: boolean;
       email_runtime_delete: boolean;
       app_user_email_table: boolean;
+      feedback_consumer_receipt_read: boolean;
+      feedback_consumer_receipt_insert: boolean;
+      feedback_consumer_receipt_mutate: boolean;
+      feedback_consumer_suppression_read: boolean;
+      feedback_consumer_suppression_insert: boolean;
+      feedback_consumer_suppression_mutate: boolean;
+      feedback_consumer_delivery_update: boolean;
     }>(
       `select
          has_schema_privilege('app_user', 'auth', 'USAGE') as app_user_schema,
@@ -364,7 +388,35 @@ describe("initial PostgreSQL migration", () => {
          ) as email_runtime_delete,
          has_table_privilege(
            'app_user', 'authentication_email_delivery', 'SELECT'
-         ) as app_user_email_table`,
+         ) as app_user_email_table,
+         has_table_privilege(
+           'app_auth_email_feedback_consumer',
+           'authentication_email_feedback_receipt', 'SELECT'
+         ) as feedback_consumer_receipt_read,
+         has_table_privilege(
+           'app_auth_email_feedback_consumer',
+           'authentication_email_feedback_receipt', 'INSERT'
+         ) as feedback_consumer_receipt_insert,
+         has_table_privilege(
+           'app_auth_email_feedback_consumer',
+           'authentication_email_feedback_receipt', 'UPDATE,DELETE'
+         ) as feedback_consumer_receipt_mutate,
+         has_table_privilege(
+           'app_auth_email_feedback_consumer',
+           'authentication_email_suppression', 'SELECT'
+         ) as feedback_consumer_suppression_read,
+         has_table_privilege(
+           'app_auth_email_feedback_consumer',
+           'authentication_email_suppression', 'INSERT'
+         ) as feedback_consumer_suppression_insert,
+         has_table_privilege(
+           'app_auth_email_feedback_consumer',
+           'authentication_email_suppression', 'UPDATE,DELETE'
+         ) as feedback_consumer_suppression_mutate,
+         has_table_privilege(
+           'app_auth_email_feedback_consumer',
+           'authentication_email_delivery', 'UPDATE'
+         ) as feedback_consumer_delivery_update`,
     );
     expect(privileges.rows[0]).toEqual({
       app_user_schema: false,
@@ -381,6 +433,13 @@ describe("initial PostgreSQL migration", () => {
       email_runtime_write: true,
       email_runtime_delete: false,
       app_user_email_table: false,
+      feedback_consumer_receipt_read: true,
+      feedback_consumer_receipt_insert: true,
+      feedback_consumer_receipt_mutate: false,
+      feedback_consumer_suppression_read: true,
+      feedback_consumer_suppression_insert: true,
+      feedback_consumer_suppression_mutate: false,
+      feedback_consumer_delivery_update: true,
     });
   });
 
@@ -419,7 +478,15 @@ describe("initial PostgreSQL migration", () => {
     expect(names).toContain("billing_customer_binding_provider_customer_uidx");
     expect(names).toContain("billing_customer_binding_owner_provider_uidx");
     expect(names).toContain("authentication_email_delivery_reference_uidx");
+    expect(names).toContain(
+      "authentication_email_delivery_provider_reference_uidx",
+    );
     expect(names).toContain("authentication_email_delivery_recovery_idx");
+    expect(names).toContain("authentication_email_feedback_event_uidx");
+    expect(names).toContain("authentication_email_feedback_delivery_idx");
+    expect(names).toContain("authentication_email_feedback_retention_idx");
+    expect(names).toContain("authentication_email_suppression_recipient_uidx");
+    expect(names).toContain("authentication_email_suppression_retention_idx");
   });
 });
 
@@ -1833,6 +1900,291 @@ describe("authentication email privacy-minimized idempotency ledger", () => {
     expect(JSON.stringify(planRows)).toContain(
       "authentication_email_delivery_recovery_idx",
     );
+  });
+});
+
+describe("authentication email feedback and suppression ledger", () => {
+  const reference = (seed: string) =>
+    createHash("sha256").update(`feedback:${seed}`).digest("base64url");
+  const event = (
+    providerMessageReference: string,
+    type:
+      | "delivery"
+      | "bounce"
+      | "complaint"
+      | "reject"
+      | "delay"
+      | "render-failure",
+    recipient: string,
+    overrides: Record<string, unknown> = {},
+  ) =>
+    ({
+      version: "1.0.0",
+      eventId: randomUUID(),
+      providerMessageReference,
+      type,
+      occurredAt: new Date("2026-08-12T13:59:00.000Z"),
+      recipient,
+      permanent: type === "complaint",
+      ...overrides,
+    }) as never;
+
+  async function acceptedDelivery(
+    seed: string,
+    providerMessageReference: string,
+    recipient: string,
+  ) {
+    authEmailNow = new Date("2026-08-12T13:30:00.000Z");
+    const request = authEmailRequest(reference(seed), recipient);
+    await authEmailIdempotency.reserve(request);
+    await authEmailIdempotency.complete(
+      request,
+      {
+        version: "1.0.0",
+        disposition: "accepted",
+        code: "EMAIL_ACCEPTED",
+      },
+      providerMessageReference,
+    );
+  }
+
+  it("deduplicates concurrent permanent bounce feedback and suppresses exactly once", async () => {
+    const recipient = "feedback-bounce@example.test";
+    const providerReference = "ses-feedback-bounce-001";
+    await acceptedDelivery("permanent-bounce", providerReference, recipient);
+    const feedback = event(providerReference, "bounce", recipient, {
+      permanent: true,
+    });
+    const outcomes = await Promise.all([
+      authEmailFeedback.process(feedback),
+      authEmailFeedback.process(feedback),
+    ]);
+    expect(outcomes.sort()).toEqual(["applied", "duplicate"]);
+    await expect(authEmailFeedback.isSuppressed(recipient)).resolves.toBe(true);
+    const stored = await pool.query<{
+      state: string;
+      receipts: string;
+      suppressions: string;
+    }>(
+      `select d.state,
+              (select count(*) from authentication_email_feedback_receipt
+               where delivery_id = d.id)::text as receipts,
+              (select count(*) from authentication_email_suppression)::text
+                as suppressions
+       from authentication_email_delivery d
+       where d.provider_message_reference = $1`,
+      [providerReference],
+    );
+    expect(stored.rows[0]).toMatchObject({
+      state: "permanent-bounce",
+      receipts: "1",
+    });
+    expect(Number(stored.rows[0]!.suppressions)).toBeGreaterThan(0);
+  });
+
+  it("keeps suppression and terminal state across duplicate and out-of-order events", async () => {
+    const recipient = "feedback-order@example.test";
+    const providerReference = "ses-feedback-order-001";
+    await acceptedDelivery("out-of-order", providerReference, recipient);
+    const complaint = event(providerReference, "complaint", recipient);
+    await expect(authEmailFeedback.process(complaint)).resolves.toBe("applied");
+    await expect(
+      authEmailFeedback.process(
+        event(providerReference, "delivery", recipient, {
+          occurredAt: new Date("2026-08-12T13:58:00.000Z"),
+        }),
+      ),
+    ).resolves.toBe("stale");
+    await expect(
+      authEmailFeedback.process(
+        event(providerReference, "delay", recipient, {
+          occurredAt: new Date("2026-08-12T13:57:00.000Z"),
+        }),
+      ),
+    ).resolves.toBe("stale");
+    const state = await pool.query<{ state: string }>(
+      `select state from authentication_email_delivery
+       where provider_message_reference = $1`,
+      [providerReference],
+    );
+    expect(state.rows[0]!.state).toBe("complaint");
+    await expect(authEmailFeedback.isSuppressed(recipient)).resolves.toBe(true);
+  });
+
+  it("tracks transient bounce then delivery without suppressing the recipient", async () => {
+    const recipient = "feedback-transient@example.test";
+    const providerReference = "ses-feedback-transient-001";
+    await acceptedDelivery("transient-bounce", providerReference, recipient);
+    await expect(
+      authEmailFeedback.process(
+        event(providerReference, "bounce", recipient, { permanent: false }),
+      ),
+    ).resolves.toBe("applied");
+    await expect(authEmailFeedback.isSuppressed(recipient)).resolves.toBe(
+      false,
+    );
+    await expect(
+      authEmailFeedback.process(
+        event(providerReference, "delivery", recipient),
+      ),
+    ).resolves.toBe("applied");
+    const state = await pool.query<{ state: string }>(
+      `select state from authentication_email_delivery
+       where provider_message_reference = $1`,
+      [providerReference],
+    );
+    expect(state.rows[0]!.state).toBe("delivered");
+  });
+
+  it("keeps two recipients unlinkable and suppresses only the authenticated recipient", async () => {
+    const first = "feedback-private-a@example.test";
+    const second = "feedback-private-b@example.test";
+    await acceptedDelivery("privacy-a", "ses-feedback-private-a", first);
+    await acceptedDelivery("privacy-b", "ses-feedback-private-b", second);
+    await authEmailFeedback.process(
+      event("ses-feedback-private-b", "bounce", second, { permanent: true }),
+    );
+    await expect(authEmailFeedback.isSuppressed(first)).resolves.toBe(false);
+    await expect(authEmailFeedback.isSuppressed(second)).resolves.toBe(true);
+    const receipts = await pool.query(
+      "select * from authentication_email_feedback_receipt",
+    );
+    const suppressions = await pool.query(
+      "select * from authentication_email_suppression",
+    );
+    const serialized = JSON.stringify([receipts.rows, suppressions.rows]);
+    expect(serialized).not.toContain(first);
+    expect(serialized).not.toContain(second);
+    expect(serialized).not.toContain("ses-feedback-private-b");
+    expect(serialized).toMatch(/hmac-sha256:1:[0-9a-f]{64}/);
+  });
+
+  it("records unmatched feedback without provider identity and deduplicates it", async () => {
+    const feedback = event(
+      "ses-feedback-does-not-exist",
+      "delivery",
+      "unmatched@example.test",
+    );
+    await expect(authEmailFeedback.process(feedback)).resolves.toBe(
+      "unmatched",
+    );
+    await expect(authEmailFeedback.process(feedback)).resolves.toBe(
+      "duplicate",
+    );
+    const receipt = await pool.query<Record<string, unknown>>(
+      `select * from authentication_email_feedback_receipt
+       where outcome = 'unmatched' order by received_at desc limit 1`,
+    );
+    expect(receipt.rows[0]!.delivery_id).toBeNull();
+    expect(JSON.stringify(receipt.rows[0])).not.toContain(
+      "ses-feedback-does-not-exist",
+    );
+    expect(JSON.stringify(receipt.rows[0])).not.toContain(
+      "unmatched@example.test",
+    );
+  });
+
+  it("rolls back delivery and suppression when the append-only receipt violates its timeline", async () => {
+    const recipient = "feedback-rollback@example.test";
+    const providerReference = "ses-feedback-rollback-001";
+    await acceptedDelivery("feedback-rollback", providerReference, recipient);
+    await expect(
+      authEmailFeedback.process(
+        event(providerReference, "complaint", recipient, {
+          occurredAt: new Date("2026-08-13T14:00:00.000Z"),
+        }),
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
+    const state = await pool.query<{ state: string }>(
+      `select state from authentication_email_delivery
+       where provider_message_reference = $1`,
+      [providerReference],
+    );
+    expect(state.rows[0]!.state).toBe("accepted");
+    await expect(authEmailFeedback.isSuppressed(recipient)).resolves.toBe(
+      false,
+    );
+  });
+
+  it("denies public mutation and proves consumer and retention access paths", async () => {
+    await expect(
+      asUser(ownerA, (client) =>
+        client.query("select id from authentication_email_feedback_receipt"),
+      ),
+    ).rejects.toMatchObject({ code: "42501" });
+    const consumer = await pool.connect();
+    try {
+      await consumer.query("begin");
+      await consumer.query("set local role app_auth_email_feedback_consumer");
+      await expect(
+        consumer.query("delete from authentication_email_feedback_receipt"),
+      ).rejects.toMatchObject({ code: "42501" });
+      await consumer.query("rollback");
+    } finally {
+      consumer.release();
+    }
+
+    const maintenance = await pool.connect();
+    try {
+      await maintenance.query("begin");
+      await maintenance.query("set local enable_seqscan = off");
+      const feedbackPlan = await maintenance.query(
+        `explain (format json) delete from authentication_email_feedback_receipt
+         where received_at < '2026-01-01T00:00:00Z'`,
+      );
+      const suppressionPlan = await maintenance.query(
+        `explain (format json) select id from authentication_email_suppression
+         where suppressed_at < '2026-01-01T00:00:00Z'`,
+      );
+      const eventPlan = await maintenance.query(
+        `explain (format json) select id from authentication_email_feedback_receipt
+         where event_digest = 'hmac-sha256:1:${"0".repeat(64)}'`,
+      );
+      const deliveryPlan = await maintenance.query(
+        `explain (format json) select id from authentication_email_delivery
+         where provider_message_reference = 'ses-feedback-index-probe'`,
+      );
+      const recipientPlan = await maintenance.query(
+        `explain (format json) select id from authentication_email_suppression
+         where recipient_digest = 'hmac-sha256:1:${"0".repeat(64)}'`,
+      );
+      expect(JSON.stringify(feedbackPlan.rows)).toContain(
+        "authentication_email_feedback_retention_idx",
+      );
+      expect(JSON.stringify(suppressionPlan.rows)).toContain(
+        "authentication_email_suppression_retention_idx",
+      );
+      expect(JSON.stringify(eventPlan.rows)).toContain(
+        "authentication_email_feedback_event_uidx",
+      );
+      expect(JSON.stringify(deliveryPlan.rows)).toContain(
+        "authentication_email_delivery_provider_reference_uidx",
+      );
+      expect(JSON.stringify(recipientPlan.rows)).toContain(
+        "authentication_email_suppression_recipient_uidx",
+      );
+      await maintenance.query("rollback");
+    } finally {
+      maintenance.release();
+    }
+  });
+
+  it("enforces keyed digest, event, outcome, and suppression constraints", async () => {
+    await expect(
+      pool.query(
+        `insert into authentication_email_feedback_receipt
+           (event_key_version, event_digest, event_type, outcome,
+            occurred_at, received_at)
+         values (1, 'raw-event-id', 'open', 'accepted', now(), now())`,
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
+    await expect(
+      pool.query(
+        `insert into authentication_email_suppression
+           (recipient_key_version, recipient_digest, reason)
+         values (1, 'hmac-sha256:1:${"0".repeat(64)}', 'transient-bounce')`,
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
   });
 });
 
