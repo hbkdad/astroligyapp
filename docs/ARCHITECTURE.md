@@ -403,7 +403,8 @@ tests/
 
 - Runtime and deployment verification for the selected composed ephemeris
   adapter on the eventual production host.
-- Authentication and managed PostgreSQL providers.
+- Managed PostgreSQL, deployment, and transactional email providers. Better Auth is
+  selected as a self-hosted framework, not as a managed infrastructure provider.
 - Coordinate and timezone resolution providers for user-entered locations.
 - Browser end-to-end runner and observability stack.
 
@@ -418,6 +419,10 @@ tests/
 - Persistence: PostgreSQL 18 contract, Drizzle ORM/Kit, `pg`, checked-in SQL
   migrations, forced row-level security, and real disposable PostgreSQL tests.
   See ADR 0003.
+- Authentication: exact Better Auth 1.6.27 selected for a future self-hosted,
+  database-session implementation in an isolated PostgreSQL schema. Protected work
+  remains behind `SessionVerifier`; trusted billing email will be read live only from
+  the verified auth user row. No managed auth infrastructure is selected. See ADR 0008.
 - Ephemeris: exact Astronomy Engine 2.1.19 for tropical positions and local
   angles, composed with Whole Sign strategy 1.0.0. No silent house-system
   fallback; exact poles fail explicitly. See ADR 0006.

@@ -218,7 +218,8 @@ provider adapter must therefore lookup before creation and reconcile an ambiguou
 create before returning one confirmed safe customer reference. The orchestrator then
 binds that reference through the immutable repository. Fixed ready/reject/retry/
 reconcile results contain no owner, email, provider, customer reference, exception,
-or provider detail. No public HTTP or Server Action exposes this boundary yet.
+or provider detail. No public HTTP or Server Action exposes this boundary yet. ADR
+0008 now selects Better Auth for a future adapter, but this contract imports no vendor.
 
 `createPaddleCustomerProviderAdapter(client)` implements that find-or-provision
 contract against the exact Paddle Node SDK 3.10.0 customer resource shape. It lists
@@ -246,4 +247,6 @@ The versioned result is restricted to `ready`, `authenticate`, `reject`, `retry`
 missing/invalid contact and contact-source outage, account failure, provisioning
 failure, and reconciliation remain distinguishable without returning subject,
 session, owner, email, provider, customer, exception, or entitlement data. No route,
-Server Action, authentication vendor, or contact storage is selected by this contract.
+Server Action or contact storage is selected by this contract. ADR 0008 selects
+Better Auth 1.6.27 for the future adapter and a live verified-user lookup rather than
+duplicated contact storage; neither is installed or exposed by this boundary.

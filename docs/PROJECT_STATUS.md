@@ -4,8 +4,8 @@ Last updated: 2026-08-12
 
 ## Current position
 
-Status: Goal 54 complete; verified session, active account, trusted contact, and
-customer provisioning now compose through one private application boundary.
+Status: Goal 55 complete; Better Auth 1.6.27 and a live verified-user billing-contact
+lookup are selected in ADR 0008 without package installation or external mutation.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 22-table normalized schema, checked-in SQL
@@ -18,9 +18,10 @@ the launch ephemeris boundary, and the natal engine now composes validated
 placements, houses, and aspects with complete calculation provenance. Bounded
 transit, lunar, station, and explicit numerology events can now be composed into
 one immutable timeline-fact aggregate. Paddle is selected only for verified
-subscription-event ingestion; no live billing account, production data, managed
-database, authentication, AI, notification, location-resolution, or deployment
-provider is selected.
+subscription-event ingestion. Better Auth 1.6.27 is selected for a future self-hosted
+authentication adapter, but is not installed or configured. No live billing account,
+production data, managed database/auth infrastructure, AI, notification,
+transactional-email, location-resolution, or deployment provider is selected.
 
 ## Completed
 
@@ -95,6 +96,14 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 55: compare Auth.js 4.24.15, Better Auth 1.6.27, Clerk 7.7.4,
+      and Supabase SSR 0.12.4/JS 2.112.3 using current official documentation and
+      registry metadata across compatibility, verification, revocation/deletion,
+      security, Canada operation, pricing, portability, maintenance, and exit.
+- [x] Accept ADR 0008 selecting self-hosted Better Auth with database sessions and
+      live least-privilege `emailVerified` contact lookup. Reject cookie/profile claims,
+      duplicated contact storage, stateless/cached sessions, managed auth infrastructure,
+      unverified email changes, and implicit billing-customer rebinding.
 - [x] Goal 54: compose provider-neutral session verification, active internal account
       resolution, trusted server contact resolution, and Goal 52 provisioning in an
       exact trust order with fixed identity-free application outcomes.
@@ -484,25 +493,28 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 55 — select the launch authentication and trusted billing-contact source through
-current evidence, without creating an external account or deployment.
+Goal 56 — install Better Auth and implement its isolated database/session/contact
+adapters without exposing public authentication routes or sending email.
 
 Deliverables:
 
-1. Compare current Auth.js, Better Auth, Clerk, and Supabase Auth using primary
-   sources for Next.js 16/React 19 support, server-side session verification, verified
-   primary-email evidence, PostgreSQL portability, account deletion/revocation,
-   security controls, Canadian operation, pricing, lock-in, and maintenance.
-2. Decide whether trusted billing contact is read live from signed verified claims or
-   synchronized into a least-privilege internal record. Define email-change,
-   reverification, deletion, stale-session, and provider-outage behavior; browser
-   profile/email fields must never become trusted merely because the user is signed in.
-3. Record the decision or explicit deferral in an ADR with exact versions, cost and
-   operational assumptions, secret/cookie/CSRF/session boundaries, migration/exit
-   strategy, and the adapter plan for existing `SessionVerifier` plus Goal 54 ports.
-4. Use official documentation only and add no package, credential, external account,
-   production data, authentication deployment, Paddle call, customer, checkout,
-   notification, database migration, public mutation, or deploy.
+1. Install exact `better-auth` 1.6.27 and generate/review its minimum email/password,
+   database-session schema through Drizzle. Isolate auth tables/privileges, check in one
+   forward-only migration, and preserve upgrade from every existing migration without
+   interactive production schema mutation.
+2. Add a strict server-only configuration factory for secret rollover, explicit base
+   URL/trusted origins, database sessions, seven-day expiry, one-day update, ten-minute
+   freshness, mandatory email verification, password reset, secure host-only cookies,
+   rate limits, and disabled stateless/cookie-cache/managed-infrastructure behavior.
+   Inject email dispatch; do not send it.
+3. Implement Better Auth `SessionVerifier`, active-account adapter, and the ADR 0008
+   live verified-contact resolver behind least privilege. No cookie existence, request
+   email/profile, stale cache, or raw auth table shape may authorize Goal 54.
+4. Verify migrations, auth-table isolation, exact session states, immediate revocation,
+   expiry/freshness, unverified/changed/deleted email, account deletion, two-owner
+   isolation, pool cleanup, configuration privacy, and Goal 54 composition. Add no live
+   credential, external account/email, public auth route, Paddle call/customer,
+   checkout, notification, production mutation, or deployment.
 
 ## Phase queue
 
@@ -531,6 +543,10 @@ Deliverables:
 - Do not extract packages or services until an ADR 0002 extraction trigger is demonstrated.
 - Authentication providers adapt to `SessionVerifier`; cookie presence and
   browser-owned identities never authorize protected server work.
+- Exact Better Auth 1.6.27 is selected for a future self-hosted email/password
+  adapter using database sessions and live verified-user contact lookup. Managed
+  auth infrastructure, stateless/cached sessions, and duplicated billing-contact
+  storage are not selected. See ADR 0008.
 - Longitudes normalize to `[0, 360)`. Zodiac and aspect calculations use
   provider-neutral degrees with no interpretation text or product weights.
 
@@ -543,11 +559,12 @@ Deliverables:
   ingress searches now use positional provider evaluations; mean-cycle age is
   not used as an event ephemeris. Public current-date routing is locally verified,
   while eventual production-host runtime and cache behavior remain release gates.
-- Authentication, managed database, payment, AI, email, monitoring, and
+- Managed database, payment-account, AI, transactional-email, monitoring, and
   deployment providers remain intentionally undecided.
-- Authentication-provider selection still requires sign-in methods, MFA or
-  passkey requirements, account recovery, revocation semantics, pricing, data
-  residency, email ownership, and deployment-fit decisions.
+- Better Auth implementation still requires exact generated-schema review,
+  migration/isolation testing, email dispatch injection, password policy, account
+  bootstrap/deletion orchestration, recent-auth evidence, browser E2E, and recovery
+  testing. MFA and passkeys remain release-hardening decisions.
 - Production database role provisioning, TLS, pooling, migration timeouts,
   backup/restore, and managed-provider parity remain release gates.
 - Drizzle Kit has four moderate development-only audit findings through a legacy
@@ -1119,6 +1136,49 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 55 authentication-selection record
+
+- Evidence/version result: official documentation plus current registry metadata
+  were reviewed on 2026-08-12 for Auth.js 4.24.15, Better Auth 1.6.27, Clerk
+  Next.js 7.7.4, and Supabase SSR 0.12.4/JS 2.112.3. The comparison covered the
+  repository's exact Next.js 16/React 19/Node 24/Drizzle/PostgreSQL baseline,
+  server verification, email evidence, revocation/deletion, security, Canadian
+  operation, list pricing, maintenance, portability, and exit.
+- Decision: ADR 0008 selects exact Better Auth 1.6.27, self-hosted in the eventual
+  application PostgreSQL, with database sessions in an isolated `auth` schema.
+  Launch scope is email/password with mandatory verification and reset. Auth.js is
+  rejected for a new build because its project recommends Better Auth; Clerk is a
+  managed fallback but not the portability/Canada-control baseline; Supabase Auth is
+  deferred unless Supabase later wins the managed PostgreSQL decision.
+- Session/request boundary: protected work requires a live database-backed session
+  behind `SessionVerifier`; cookie presence, profile fields, request claims, and
+  cached/stateless sessions cannot authorize it. The selected profile is seven-day
+  expiry, one-day rolling update, ten-minute freshness for sensitive work, explicit
+  base URL/trusted origins, host-only secure cookies, built-in CSRF/origin controls,
+  rate limiting, secret rollover, and private/no-store responses.
+- Trusted-contact result: billing code receives only a normalized email from a live,
+  least-privilege lookup of the verified session's current Better Auth user row after
+  active internal-account resolution. It requires `emailVerified`; source outage
+  retries without claim/cache fallback. Email is not duplicated into application
+  storage and never rebinds an existing Paddle customer.
+- Lifecycle result: email change is disabled until current- and new-address
+  verification plus other-session revocation exists. Password reset revokes other
+  sessions. Deletion first disables the internal account, then revokes sessions and
+  deletes the auth user through a recoverable audited workflow. A later explicit
+  reverification ceremony must produce reviewed freshness evidence; session age alone
+  must not fabricate it.
+- Security-audit result: the decision fails closed for missing, expired, revoked,
+  deleted, malformed, mismatched, stale, unverified, unavailable, and email-changed
+  states. Auth rows remain separate from application ownership, secrets/PII cannot
+  enter logs or public results, and billing receives no general password/account/token
+  table access. No critical/high decision-level finding remains; implementation risks
+  are carried into Goal 56 and later release gates.
+- Scope/verification: this checkpoint changes documentation only. Formatting, the
+  full repository gate, production dependency audit, secret scan, link/source review,
+  and diff integrity were required before commit. No package, migration, credential,
+  external account, live email, public auth route, Paddle call/customer, production
+  state, or deployment was added.
 
 ## Goal 54 authenticated billing provisioning record
 
