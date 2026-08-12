@@ -4,8 +4,8 @@ Last updated: 2026-08-12
 
 ## Current position
 
-Status: Goal 55 complete; Better Auth 1.6.27 and a live verified-user billing-contact
-lookup are selected in ADR 0008 without package installation or external mutation.
+Status: Goal 56 complete; Better Auth 1.6.27 now runs behind isolated database-session,
+active-account, and verified-contact adapters without a public authentication route.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 22-table normalized schema, checked-in SQL
@@ -18,10 +18,11 @@ the launch ephemeris boundary, and the natal engine now composes validated
 placements, houses, and aspects with complete calculation provenance. Bounded
 transit, lunar, station, and explicit numerology events can now be composed into
 one immutable timeline-fact aggregate. Paddle is selected only for verified
-subscription-event ingestion. Better Auth 1.6.27 is selected for a future self-hosted
-authentication adapter, but is not installed or configured. No live billing account,
-production data, managed database/auth infrastructure, AI, notification,
-transactional-email, location-resolution, or deployment provider is selected.
+subscription-event ingestion. Better Auth 1.6.27 is installed with four isolated auth
+tables, strict server configuration, database sessions, and execute-only account and
+contact lookups. No live billing account, production data, managed database/auth
+infrastructure, public auth surface, AI, notification, transactional-email,
+location-resolution, or deployment provider is selected.
 
 ## Completed
 
@@ -96,6 +97,12 @@ transactional-email, location-resolution, or deployment provider is selected.
 
 ## Recently completed
 
+- [x] Goal 56: pin Better Auth 1.6.27 and add its reviewed four-table Drizzle schema
+      under `auth` through forward-only migration `0006_jazzy_carmella_unuscione`.
+- [x] Add strict rollover-secret/origin/proxy/cookie/session/verification/reset/rate
+      configuration with no cookie cache, secondary storage, social provider, telemetry,
+      public route, or live email. Implement recent live session, execute-only active
+      account, and execute-only current verified-contact adapters for Goal 54.
 - [x] Goal 55: compare Auth.js 4.24.15, Better Auth 1.6.27, Clerk 7.7.4,
       and Supabase SSR 0.12.4/JS 2.112.3 using current official documentation and
       registry metadata across compatibility, verification, revocation/deletion,
@@ -493,28 +500,25 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 56 — install Better Auth and implement its isolated database/session/contact
-adapters without exposing public authentication routes or sending email.
+Goal 57 — select the transactional authentication-email provider and define its
+privacy-safe delivery boundary without creating an external account or sending email.
 
 Deliverables:
 
-1. Install exact `better-auth` 1.6.27 and generate/review its minimum email/password,
-   database-session schema through Drizzle. Isolate auth tables/privileges, check in one
-   forward-only migration, and preserve upgrade from every existing migration without
-   interactive production schema mutation.
-2. Add a strict server-only configuration factory for secret rollover, explicit base
-   URL/trusted origins, database sessions, seven-day expiry, one-day update, ten-minute
-   freshness, mandatory email verification, password reset, secure host-only cookies,
-   rate limits, and disabled stateless/cookie-cache/managed-infrastructure behavior.
-   Inject email dispatch; do not send it.
-3. Implement Better Auth `SessionVerifier`, active-account adapter, and the ADR 0008
-   live verified-contact resolver behind least privilege. No cookie existence, request
-   email/profile, stale cache, or raw auth table shape may authorize Goal 54.
-4. Verify migrations, auth-table isolation, exact session states, immediate revocation,
-   expiry/freshness, unverified/changed/deleted email, account deletion, two-owner
-   isolation, pool cleanup, configuration privacy, and Goal 54 composition. Add no live
-   credential, external account/email, public auth route, Paddle call/customer,
-   checkout, notification, production mutation, or deployment.
+1. Compare current Resend, Postmark, Amazon SES, and one credible Canadian-hosted option
+   using primary sources for Canada/data processing, deliverability controls, pricing,
+   SDK/API fit, domain verification, suppression/bounce/complaint handling, retention,
+   webhook security, rate limits, sandbox/production approval, maintenance, and exit.
+2. Select or explicitly defer a provider and exact SDK/API version. Define SPF, DKIM,
+   DMARC, return-path, sender-domain, link-host, template/version, localization,
+   anti-enumeration, retry/idempotency, suppression, and outage behavior for verification
+   and password-reset messages.
+3. Specify a provider-neutral dispatch/result contract that accepts only purpose,
+   recipient, absolute application URL, template version, and idempotency reference;
+   it must never log or return recipient, token, URL, provider payload, or credentials.
+4. Record the evidence and adapter plan in an ADR. Add no SDK/package, credential,
+   external account/domain/DNS, email, webhook, public auth route/UI, production data,
+   provider call, notification delivery, purchase, mutation, or deployment.
 
 ## Phase queue
 
@@ -543,10 +547,10 @@ Deliverables:
 - Do not extract packages or services until an ADR 0002 extraction trigger is demonstrated.
 - Authentication providers adapt to `SessionVerifier`; cookie presence and
   browser-owned identities never authorize protected server work.
-- Exact Better Auth 1.6.27 is selected for a future self-hosted email/password
-  adapter using database sessions and live verified-user contact lookup. Managed
-  auth infrastructure, stateless/cached sessions, and duplicated billing-contact
-  storage are not selected. See ADR 0008.
+- Exact Better Auth 1.6.27 implements the self-hosted email/password adapter using
+  database sessions and live verified-user contact lookup. Managed auth
+  infrastructure, stateless/cached sessions, and duplicated billing-contact storage
+  are not selected. See ADR 0008.
 - Longitudes normalize to `[0, 360)`. Zodiac and aspect calculations use
   provider-neutral degrees with no interpretation text or product weights.
 
@@ -561,16 +565,16 @@ Deliverables:
   while eventual production-host runtime and cache behavior remain release gates.
 - Managed database, payment-account, AI, transactional-email, monitoring, and
   deployment providers remain intentionally undecided.
-- Better Auth implementation still requires exact generated-schema review,
-  migration/isolation testing, email dispatch injection, password policy, account
-  bootstrap/deletion orchestration, recent-auth evidence, browser E2E, and recovery
-  testing. MFA and passkeys remain release-hardening decisions.
+- Better Auth still requires a selected transactional-email adapter, account-bootstrap
+  orchestration, public route/UI review, deletion/retention orchestration, browser E2E,
+  and production recovery testing. MFA and passkeys remain release-hardening decisions.
 - Production database role provisioning, TLS, pooling, migration timeouts,
   backup/restore, and managed-provider parity remain release gates.
-- Drizzle Kit has four moderate development-only audit findings through a legacy
-  esbuild loader. There are no high/critical findings and the production
-  dependency audit is clean; do not expose the migration tool as a network
-  service, and recheck on every dependency update.
+- Drizzle Kit has four moderate findings through a legacy esbuild development loader.
+  Better Auth declares Drizzle Kit as an optional peer, so npm 11 now includes the same
+  four findings in `--omit=dev` audit accounting even though `npm explain` locates the
+  vulnerable esbuild only beneath the migration CLI loader. There are no high/critical
+  findings; never expose Drizzle Kit as a network service and recheck each update.
 - Product name, branding, final plans, and pricing are not implementation blockers for the deterministic foundation.
 
 ## Evidence log
@@ -579,6 +583,9 @@ Deliverables:
 | ---------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | 2026-08-11 | PostgreSQL 18 migration-upgrade harness            | Legacy row/backfill, malformed cleanup, overlap write, and RLS-scoped reader passed           |
 | 2026-08-11 | `npm run test:database`                            | 16/16 persistence and share-security integration tests passed                                 |
+| 2026-08-12 | Better Auth 1.6.27 PostgreSQL runtime path         | Unverified signup, injected verification, sign-in, live session, and immediate revoke passed  |
+| 2026-08-12 | Goal 56 migration/security database gate           | Oldest schema upgraded cumulatively; 33/33 auth/persistence isolation tests passed            |
+| 2026-08-12 | Goal 56 full application gate                      | 52 files/869 tests, strict checks, and optimized build passed                                 |
 | 2026-08-11 | `npm run db:check`                                 | Drizzle schema, migration journal, and generated snapshot are consistent                      |
 | 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 562 tests, and optimized production build         |
 | 2026-08-11 | `npm run test:coverage`                            | 94.04% statements, 91.04% branches, 99.73% functions, and 95.13% lines                        |
@@ -1136,6 +1143,53 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 56 Better Auth implementation record
+
+- Package/schema: exact `better-auth` 1.6.27 is pinned. Drizzle generated migration
+  `0006_jazzy_carmella_unuscione` from the package's four required email/password
+  models: `auth.user`, `auth.session`, `auth.account`, and `auth.verification`.
+  Existing public tables/rows are untouched; foreign-key deletion cascades auth
+  sessions/accounts from the auth user.
+- Database isolation: `app_auth_runtime` receives CRUD only in `auth` and cannot read
+  `public.user_account`; `app_user` receives no auth-schema usage. Separate
+  execute-only account/contact roles call security-definer functions whose noninheriting
+  owners have column-level reads only. The migration owner does not retain either
+  function-owner role.
+- Configuration: the server-only factory validates exact origins, descending unique
+  rollover keys, explicit production proxy/IP trust, secure host-only `HttpOnly`
+  `SameSite=Lax` cookies, seven-day expiry, one-day refresh, ten-minute freshness,
+  mandatory verification, 12-128-character passwords, reset revocation, endpoint rate
+  limits, and generic non-reflecting failures. Cookie cache, secondary storage, social
+  providers, cross-subdomain cookies, telemetry, change-email, and deletion endpoints
+  are disabled. Delivery is injected and no email was sent.
+- Adapter/trust chain: `BetterAuthBillingSessionVerifier` accepts only the official
+  live `getSession` result with matching user/session IDs, valid dates, future expiry,
+  and a creation time no older than ten minutes. Account and contact adapters use
+  transaction-local execute-only roles; the contact function independently rechecks
+  subject, session ID, expiry, freshness, internal owner/deletion, current user,
+  `email_verified`, and strict email shape before returning one lowercased address.
+- Adversarial result: official package signup/sign-in/session/revoke passed against
+  PostgreSQL. Missing/malformed/mismatched/future/stale/expired/revoked sessions,
+  unverified/malformed/changed email, cross-owner pairs, deleted accounts/users,
+  direct table access, auth deletion cascades, runtime-role scope, and pooled-role
+  cleanup all failed closed. Goal 54's browser-decoy and non-reflecting composition
+  suite remained green.
+- Migration/recovery: the oldest supported checked-in schema upgraded cumulatively
+  through every later migration with representative legacy rows and overlap writes
+  intact; no ownership/contact row was fabricated. The change is additive and requires
+  no backfill or rewrite. Deploy migration before auth code, provision distinct login
+  roles, and leave public routes disabled until delivery exists. On failure, disable
+  new auth traffic and ship a forward fix; do not roll back after auth rows exist.
+- Verification: `db:check`, the real migration-upgrade harness, 33 PostgreSQL 18
+  integration tests, formatting, ESLint, strict TypeScript, 52 unit files/869 tests,
+  coverage, and optimized build passed. Coverage was 94.44% statements, 92.32%
+  branches, 99.24% functions, and 95.59% lines. Audit has no high/critical finding;
+  npm's optional-peer graph reports the four recorded Drizzle Kit/esbuild moderates.
+- Scope/residual risk: no credential, external account, domain/DNS, email, public auth
+  route/UI, live Paddle call/customer, checkout, production database mutation,
+  notification, purchase, or deploy occurred. Transactional delivery selection,
+  bootstrap/deletion orchestration, browser E2E, and production backup/restore remain.
 
 ## Goal 55 authentication-selection record
 

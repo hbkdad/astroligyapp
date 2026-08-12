@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 
+import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool, type PoolClient } from "pg";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
@@ -11,6 +12,12 @@ import {
   resolveActiveAccountId,
   type AccountId,
 } from "@/infrastructure/auth/account";
+import {
+  BetterAuthActiveBillingAccountResolver,
+  BetterAuthTrustedBillingContactResolver,
+} from "@/infrastructure/auth/better-auth-adapters";
+import { betterAuthSchema } from "@/db/auth-schema";
+import { createBetterAuth } from "@/server/better-auth-configuration";
 import type { ActiveSession } from "@/infrastructure/auth/session";
 import {
   CompatibilityReportRepository,
@@ -41,8 +48,33 @@ if (!connectionString) {
 }
 
 const pool = new Pool({ connectionString });
+const authEmailMessages: Array<Readonly<{ to: string; url: string }>> = [];
+const auth = createBetterAuth(
+  drizzle(pool, { schema: betterAuthSchema }),
+  {
+    sendVerification: async (message) => {
+      authEmailMessages.push(message);
+    },
+    sendPasswordReset: async (message) => {
+      authEmailMessages.push(message);
+    },
+  },
+  {
+    baseUrl: "http://127.0.0.1:3000",
+    trustedOrigins: ["http://127.0.0.1:3000"],
+    secrets: [
+      {
+        version: 1,
+        value: "database-integration-only-secret-value-00000001",
+      },
+    ],
+    production: false,
+  },
+);
 const ownerA = randomUUID();
 const ownerB = randomUUID();
+const authSessionA = "auth-session-owner-a";
+const authSessionB = "auth-session-owner-b";
 let profileA: string;
 let profileB: string;
 let birthProfileA: string;
@@ -56,6 +88,8 @@ const compatibilityRepository = new CompatibilityReportRepository(pool);
 const subscriptionRepository = new SubscriptionRepository(pool);
 const billingBindingRepository = new BillingCustomerBindingRepository(pool);
 const billingOwnerResolver = new BillingCustomerOwnerResolver(pool);
+const authContactResolver = new BetterAuthTrustedBillingContactResolver(pool);
+const authAccountResolver = new BetterAuthActiveBillingAccountResolver(pool);
 
 function subscriptionEvent(
   overrides: Partial<NormalizedSubscriptionEvent> = {},
@@ -79,6 +113,16 @@ function activeSession(subject: string): ActiveSession {
     sessionId: `session-${subject}`,
     authenticatedAt: new Date("2026-08-09T11:00:00.000Z"),
     expiresAt: new Date("2026-08-09T13:00:00.000Z"),
+  };
+}
+
+function betterAuthSession(subject: string, sessionId: string): ActiveSession {
+  return {
+    status: "active",
+    subject,
+    sessionId,
+    authenticatedAt: new Date(),
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000),
   };
 }
 
@@ -111,6 +155,27 @@ beforeAll(async () => {
     `insert into user_account (id, identity_provider_subject)
      values ($1, 'test-owner-a'), ($2, 'test-owner-b')`,
     [ownerA, ownerB],
+  );
+  await pool.query(
+    `insert into auth."user"
+       (id, name, email, email_verified, created_at, updated_at)
+     values
+       ('test-owner-a', 'Auth fixture A', 'owner-a@example.test', true,
+        '2026-08-09T11:59:00Z', '2026-08-09T11:59:00Z'),
+       ('test-owner-b', 'Auth fixture B', 'owner-b@example.test', true,
+        '2026-08-09T11:59:00Z', '2026-08-09T11:59:00Z')`,
+  );
+  await pool.query(
+    `insert into auth."session"
+       (id, token, user_id, created_at, updated_at, expires_at)
+     values
+       ($1, 'auth-token-owner-a', 'test-owner-a',
+        CURRENT_TIMESTAMP - interval '1 minute', CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP + interval '1 hour'),
+       ($2, 'auth-token-owner-b', 'test-owner-b',
+        CURRENT_TIMESTAMP - interval '1 minute', CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP + interval '1 hour')`,
+    [authSessionA, authSessionB],
   );
   const profiles = await pool.query<{ id: string; owner_user_id: string }>(
     `insert into profile (owner_user_id, display_name, current_timezone)
@@ -185,6 +250,80 @@ describe("initial PostgreSQL migration", () => {
     expect(Number(forcedPolicies.rows[0]!.count)).toBe(21);
   });
 
+  it("isolates the exact Better Auth schema and runtime privileges", async () => {
+    const authTables = await pool.query<{ table_name: string }>(
+      `select table_name
+       from information_schema.tables
+       where table_schema = 'auth' and table_type = 'BASE TABLE'
+       order by table_name`,
+    );
+    expect(authTables.rows.map((row) => row.table_name)).toEqual([
+      "account",
+      "session",
+      "user",
+      "verification",
+    ]);
+
+    const privileges = await pool.query<{
+      app_user_schema: boolean;
+      app_user_table: boolean;
+      auth_runtime_schema: boolean;
+      auth_runtime_table: boolean;
+      contact_direct_table: boolean;
+      contact_execute: boolean;
+      account_direct_table: boolean;
+      account_execute: boolean;
+      migrator_retains_owner: boolean;
+      migrator_retains_account_owner: boolean;
+    }>(
+      `select
+         has_schema_privilege('app_user', 'auth', 'USAGE') as app_user_schema,
+         has_table_privilege('app_user', 'auth."user"', 'SELECT') as app_user_table,
+         has_schema_privilege('app_auth_runtime', 'auth', 'USAGE') as auth_runtime_schema,
+         has_table_privilege('app_auth_runtime', 'auth."user"', 'SELECT,INSERT,UPDATE,DELETE') as auth_runtime_table,
+         has_table_privilege('app_auth_contact_resolver', 'auth."user"', 'SELECT') as contact_direct_table,
+         has_function_privilege(
+           'app_auth_contact_resolver',
+           'app.resolve_verified_auth_contact(text,text,uuid)',
+           'EXECUTE'
+         ) as contact_execute,
+         has_table_privilege(
+           'app_auth_account_resolver', 'user_account', 'SELECT'
+         ) as account_direct_table,
+         has_function_privilege(
+           'app_auth_account_resolver',
+           'app.resolve_active_auth_account(text)',
+           'EXECUTE'
+         ) as account_execute,
+         exists (
+           select 1 from pg_auth_members membership
+           join pg_roles member_role on member_role.oid = membership.member
+           join pg_roles granted_role on granted_role.oid = membership.roleid
+           where member_role.rolname = current_user
+             and granted_role.rolname = 'app_auth_contact_owner'
+         ) as migrator_retains_owner,
+         exists (
+           select 1 from pg_auth_members membership
+           join pg_roles member_role on member_role.oid = membership.member
+           join pg_roles granted_role on granted_role.oid = membership.roleid
+           where member_role.rolname = current_user
+             and granted_role.rolname = 'app_auth_account_owner'
+         ) as migrator_retains_account_owner`,
+    );
+    expect(privileges.rows[0]).toEqual({
+      app_user_schema: false,
+      app_user_table: false,
+      auth_runtime_schema: true,
+      auth_runtime_table: true,
+      contact_direct_table: false,
+      contact_execute: true,
+      account_direct_table: false,
+      account_execute: true,
+      migrator_retains_owner: false,
+      migrator_retains_account_owner: false,
+    });
+  });
+
   it("enforces deterministic constraints and versioned cache uniqueness", async () => {
     await expect(
       pool.query(
@@ -221,6 +360,249 @@ describe("initial PostgreSQL migration", () => {
     expect(names).toContain("billing_customer_binding_owner_provider_uidx");
   });
 });
+
+describe("Better Auth trusted contact isolation", () => {
+  it("runs the pinned Better Auth email/password and immediate-revocation path against PostgreSQL", async () => {
+    const email = `runtime-${randomUUID()}@example.test`;
+    const password = "integration-only-password-123";
+    const signUp = await auth.api.signUpEmail({
+      body: { name: "Runtime fixture", email, password },
+    });
+    expect(signUp.token).toBeNull();
+    expect(signUp.user.emailVerified).toBe(false);
+    expect(authEmailMessages.at(-1)).toMatchObject({ to: email });
+
+    await pool.query(
+      `update auth."user" set email_verified = true where id = $1`,
+      [signUp.user.id],
+    );
+    const signInResponse = await auth.api.signInEmail({
+      body: { email, password },
+      asResponse: true,
+    });
+    const setCookie = signInResponse.headers.get("set-cookie");
+    expect(setCookie).toBeTruthy();
+    const headers = new Headers({
+      cookie: setCookie!.split(";", 1)[0]!,
+      origin: "http://127.0.0.1:3000",
+    });
+    const active = await auth.api.getSession({ headers });
+    expect(active?.user.id).toBe(signUp.user.id);
+    expect(active?.session.expiresAt.getTime()).toBeGreaterThan(Date.now());
+
+    await auth.api.revokeSessions({ headers });
+    await expect(auth.api.getSession({ headers })).resolves.toBeNull();
+  });
+
+  it("returns only the current verified contact for the matching recent session and owner", async () => {
+    await expect(
+      authAccountResolver.resolveActiveAccount(
+        betterAuthSession("test-owner-a", authSessionA),
+      ),
+    ).resolves.toBe(ownerA);
+    await expect(
+      authAccountResolver.resolveActiveAccount(
+        betterAuthSession("unknown-owner", "unknown-session"),
+      ),
+    ).rejects.toBeInstanceOf(AccountUnavailableError);
+
+    await expect(
+      authContactResolver.resolveTrustedContact(
+        betterAuthSession("test-owner-a", authSessionA),
+        ownerA as AccountId,
+      ),
+    ).resolves.toEqual({ email: "owner-a@example.test" });
+
+    await expect(
+      authContactResolver.resolveTrustedContact(
+        betterAuthSession("test-owner-a", authSessionA),
+        ownerB as AccountId,
+      ),
+    ).resolves.toBeNull();
+    await expect(
+      authContactResolver.resolveTrustedContact(
+        betterAuthSession("test-owner-b", authSessionB),
+        ownerA as AccountId,
+      ),
+    ).resolves.toBeNull();
+  });
+
+  it("fails closed for unverified, malformed, changed, stale, expired, and revoked state", async () => {
+    const session = betterAuthSession("test-owner-a", authSessionA);
+    const owner = ownerA as AccountId;
+
+    await pool.query(
+      `update auth."user" set email_verified = false where id = 'test-owner-a'`,
+    );
+    await expect(
+      authContactResolver.resolveTrustedContact(session, owner),
+    ).resolves.toBeNull();
+
+    await pool.query(
+      `update auth."user"
+       set email_verified = true, email = 'invalid-address'
+       where id = 'test-owner-a'`,
+    );
+    await expect(
+      authContactResolver.resolveTrustedContact(session, owner),
+    ).resolves.toBeNull();
+
+    await pool.query(
+      `update auth."user" set email = 'changed@example.test' where id = 'test-owner-a'`,
+    );
+    await expect(
+      authContactResolver.resolveTrustedContact(session, owner),
+    ).resolves.toEqual({ email: "changed@example.test" });
+
+    await pool.query(
+      `update auth."session"
+       set created_at = CURRENT_TIMESTAMP - interval '11 minutes'
+       where id = $1`,
+      [authSessionA],
+    );
+    await expect(
+      authContactResolver.resolveTrustedContact(session, owner),
+    ).resolves.toBeNull();
+
+    await pool.query(
+      `update auth."session"
+       set created_at = CURRENT_TIMESTAMP - interval '1 minute',
+           expires_at = CURRENT_TIMESTAMP - interval '1 second'
+       where id = $1`,
+      [authSessionA],
+    );
+    await expect(
+      authContactResolver.resolveTrustedContact(session, owner),
+    ).resolves.toBeNull();
+
+    await pool.query(`delete from auth."session" where id = $1`, [
+      authSessionA,
+    ]);
+    await expect(
+      authContactResolver.resolveTrustedContact(session, owner),
+    ).resolves.toBeNull();
+
+    await pool.query(
+      `update auth."user"
+       set email = 'owner-a@example.test'
+       where id = 'test-owner-a'`,
+    );
+    await pool.query(
+      `insert into auth."session"
+         (id, token, user_id, created_at, updated_at, expires_at)
+       values ($1, 'auth-token-owner-a-restored', 'test-owner-a',
+         CURRENT_TIMESTAMP - interval '1 minute', CURRENT_TIMESTAMP,
+         CURRENT_TIMESTAMP + interval '1 hour')`,
+      [authSessionA],
+    );
+  });
+
+  it("fails closed for a deleted internal account and restores no pooled role", async () => {
+    const session = betterAuthSession("test-owner-a", authSessionA);
+    await pool.query(
+      `update user_account set deleted_at = now() where id = $1`,
+      [ownerA],
+    );
+    await expect(
+      authContactResolver.resolveTrustedContact(session, ownerA as AccountId),
+    ).resolves.toBeNull();
+    await expect(
+      authAccountResolver.resolveActiveAccount(session),
+    ).rejects.toBeInstanceOf(AccountUnavailableError);
+    await pool.query(
+      `update user_account set deleted_at = null where id = $1`,
+      [ownerA],
+    );
+
+    const role = await pool.query<{
+      current_role: string;
+      current_user: string;
+    }>(`select current_role, current_user`);
+    expect(role.rows[0]!.current_role).toBe(role.rows[0]!.current_user);
+  });
+
+  it("prevents application and contact-executor roles from directly reading auth rows", async () => {
+    for (const role of [
+      "app_user",
+      "app_auth_account_resolver",
+      "app_auth_contact_resolver",
+    ] as const) {
+      await expect(
+        asDatabaseRole(role, (client) =>
+          client.query(`select email from auth."user"`),
+        ),
+      ).rejects.toMatchObject({ code: "42501" });
+    }
+  });
+
+  it("allows the auth runtime only its generated tables", async () => {
+    await asDatabaseRole("app_auth_runtime", async (client) => {
+      await client.query(
+        `insert into auth."user" (id, name, email, email_verified)
+         values ('runtime-role-user', 'Runtime role', 'runtime-role@example.test', false)`,
+      );
+      const row = await client.query<{ email_verified: boolean }>(
+        `select email_verified from auth."user" where id = 'runtime-role-user'`,
+      );
+      expect(row.rows[0]?.email_verified).toBe(false);
+      await client.query(
+        `delete from auth."user" where id = 'runtime-role-user'`,
+      );
+    });
+
+    await expect(
+      asDatabaseRole("app_auth_runtime", (client) =>
+        client.query(`select id from public.user_account`),
+      ),
+    ).rejects.toMatchObject({ code: "42501" });
+  });
+
+  it("cascades sessions and password accounts when an auth user is deleted", async () => {
+    await pool.query(
+      `insert into auth."user" (id, name, email, email_verified)
+       values ('delete-auth-user', 'Delete fixture', 'delete@example.test', true);
+       insert into auth."session" (id, token, user_id, expires_at)
+       values ('delete-auth-session', 'delete-auth-token', 'delete-auth-user',
+         CURRENT_TIMESTAMP + interval '1 hour');
+       insert into auth."account"
+         (id, account_id, provider_id, user_id, password)
+       values ('delete-auth-account', 'delete@example.test', 'credential',
+         'delete-auth-user', 'fixture-hash-not-a-real-password');
+       delete from auth."user" where id = 'delete-auth-user'`,
+    );
+    const rows = await pool.query<{ sessions: string; accounts: string }>(
+      `select
+         (select count(*)::text from auth."session"
+          where user_id = 'delete-auth-user') as sessions,
+         (select count(*)::text from auth."account"
+          where user_id = 'delete-auth-user') as accounts`,
+    );
+    expect(rows.rows[0]).toEqual({ sessions: "0", accounts: "0" });
+  });
+});
+
+async function asDatabaseRole<T>(
+  role:
+    | "app_user"
+    | "app_auth_runtime"
+    | "app_auth_account_resolver"
+    | "app_auth_contact_resolver",
+  work: (client: PoolClient) => Promise<T>,
+) {
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(`set local role ${role}`);
+    const result = await work(client);
+    await client.query("commit");
+    return result;
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
 
 describe("compatibility report persistence and public share boundary", () => {
   it("round-trips a complete private report and fails closed across owners", async () => {

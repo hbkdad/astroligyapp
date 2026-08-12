@@ -78,6 +78,10 @@ tests/
   the only launch strategy; unsupported systems fail explicitly. See ADR 0006.
 - `SessionVerifier`: provider-neutral server verification returning explicit
   active, unauthenticated, expired, revoked, or invalid session state.
+- Better Auth adapter: exact 1.6.27 uses four Drizzle-owned tables in the isolated
+  `auth` schema, database sessions only, and a ten-minute recent-session requirement
+  for billing work. Separate execute-only account/contact roles keep application and
+  billing code away from auth rows, tokens, hashes, and verification records.
 - `withIdentityTransaction`: maps an internal account UUID into a constrained,
   transaction-local PostgreSQL role and RLS identity.
 - `NumerologyStrategy`: traceable calculations under an explicitly selected convention.
@@ -382,6 +386,11 @@ tests/
   short-circuits every failed trust step. Vendor-neutral verifier, account, and
   contact ports keep authentication selection outside billing. Fixed versioned
   outcomes contain no session, subject, account, contact, provider, or customer data.
+  The Better Auth implementation calls the official live session API, resolves the
+  internal account through `app.resolve_active_auth_account`, and reads only one
+  verified email through `app.resolve_verified_auth_contact`. Both SQL functions
+  recheck deletion/ownership; contact also rechecks session ID, subject, expiry,
+  freshness, and current `email_verified` state.
 
 ## Data and cache principles
 
@@ -419,10 +428,11 @@ tests/
 - Persistence: PostgreSQL 18 contract, Drizzle ORM/Kit, `pg`, checked-in SQL
   migrations, forced row-level security, and real disposable PostgreSQL tests.
   See ADR 0003.
-- Authentication: exact Better Auth 1.6.27 selected for a future self-hosted,
-  database-session implementation in an isolated PostgreSQL schema. Protected work
-  remains behind `SessionVerifier`; trusted billing email will be read live only from
-  the verified auth user row. No managed auth infrastructure is selected. See ADR 0008.
+- Authentication: exact Better Auth 1.6.27 installed for self-hosted database sessions
+  in an isolated PostgreSQL schema. Protected work remains behind `SessionVerifier`;
+  trusted billing email is read live only from the verified auth user row through
+  execute-only roles. Public routes/UI and transactional delivery remain unexposed.
+  No managed auth infrastructure is selected. See ADR 0008.
 - Ephemeris: exact Astronomy Engine 2.1.19 for tropical positions and local
   angles, composed with Whole Sign strategy 1.0.0. No silent house-system
   fallback; exact poles fail explicitly. See ADR 0006.

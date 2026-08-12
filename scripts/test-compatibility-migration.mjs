@@ -94,9 +94,14 @@ try {
   );
   const legacySubscriptionId = legacySubscription.rows[0].id;
   const bindingBefore = await pool.query(
-    `select to_regclass('public.billing_customer_binding') as relation`,
+    `select
+       to_regclass('public.billing_customer_binding') as binding_relation,
+       to_regclass('auth.user') as auth_relation`,
   );
-  if (bindingBefore.rows[0]?.relation !== null)
+  if (
+    bindingBefore.rows[0]?.binding_relation !== null ||
+    bindingBefore.rows[0]?.auth_relation !== null
+  )
     throw new Error("Billing customer binding existed before its migration");
 
   await migrate(drizzle(pool), { migrationsFolder: repositoryMigrations });
@@ -182,6 +187,14 @@ try {
   if (bindingUpgrade.rows[0]?.count !== "0")
     throw new Error("Billing customer binding migration fabricated ownership");
 
+  const authUpgrade = await pool.query(
+    `select count(*)::text as count
+     from information_schema.tables
+     where table_schema = 'auth' and table_type = 'BASE TABLE'`,
+  );
+  if (authUpgrade.rows[0]?.count !== "4")
+    throw new Error("Better Auth schema upgrade is incomplete");
+
   const boundary = await pool.query(
     `select
        has_function_privilege(
@@ -222,7 +235,43 @@ try {
          join pg_roles granted_role on granted_role.oid = membership.roleid
          where member_role.rolname = current_user
            and granted_role.rolname = 'app_billing_resolver_owner'
-       ) as migrator_retains_owner_role`,
+       ) as migrator_retains_owner_role,
+       has_schema_privilege('app_user', 'auth', 'USAGE') as app_user_auth_usage,
+       has_table_privilege('app_user', 'auth."user"', 'SELECT') as app_user_auth_select,
+       has_table_privilege(
+         'app_auth_account_resolver',
+         'user_account',
+         'SELECT'
+       ) as account_can_read_user,
+       has_function_privilege(
+         'app_auth_account_resolver',
+         'app.resolve_active_auth_account(text)',
+         'EXECUTE'
+       ) as account_can_execute,
+       has_table_privilege(
+         'app_auth_contact_resolver',
+         'auth."user"',
+         'SELECT'
+       ) as contact_can_read_auth,
+       has_function_privilege(
+         'app_auth_contact_resolver',
+         'app.resolve_verified_auth_contact(text,text,uuid)',
+         'EXECUTE'
+       ) as contact_can_execute,
+       exists (
+         select 1 from pg_auth_members membership
+         join pg_roles member_role on member_role.oid = membership.member
+         join pg_roles granted_role on granted_role.oid = membership.roleid
+         where member_role.rolname = current_user
+           and granted_role.rolname = 'app_auth_contact_owner'
+       ) as migrator_retains_auth_owner_role,
+       exists (
+         select 1 from pg_auth_members membership
+         join pg_roles member_role on member_role.oid = membership.member
+         join pg_roles granted_role on granted_role.oid = membership.roleid
+         where member_role.rolname = current_user
+           and granted_role.rolname = 'app_auth_account_owner'
+       ) as migrator_retains_auth_account_owner_role`,
   );
   if (
     boundary.rows[0]?.can_execute !== true ||
@@ -231,12 +280,20 @@ try {
     boundary.rows[0]?.can_select_private !== false ||
     boundary.rows[0]?.resolver_can_select_binding !== false ||
     boundary.rows[0]?.resolver_can_execute !== true ||
-    boundary.rows[0]?.migrator_retains_owner_role !== false
+    boundary.rows[0]?.migrator_retains_owner_role !== false ||
+    boundary.rows[0]?.app_user_auth_usage !== false ||
+    boundary.rows[0]?.app_user_auth_select !== false ||
+    boundary.rows[0]?.account_can_read_user !== false ||
+    boundary.rows[0]?.account_can_execute !== true ||
+    boundary.rows[0]?.contact_can_read_auth !== false ||
+    boundary.rows[0]?.contact_can_execute !== true ||
+    boundary.rows[0]?.migrator_retains_auth_owner_role !== false ||
+    boundary.rows[0]?.migrator_retains_auth_account_owner_role !== false
   )
     throw new Error("Narrow reader privileges are broader than intended");
 
   process.stdout.write(
-    "Compatibility/subscription/billing-binding upgrade: legacy rows, overlap writes, no fabricated ownership, and narrow readers passed\n",
+    "Compatibility/subscription/billing/auth upgrade: legacy rows, overlap writes, no fabricated ownership, and narrow readers passed\n",
   );
 } finally {
   await pool.end();
