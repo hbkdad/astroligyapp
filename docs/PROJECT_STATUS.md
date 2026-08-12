@@ -4,7 +4,7 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 36 complete; validated compatibility facts can now be scored transparently through a strict injected policy without a production weight model.
+Status: Goal 37 complete; a conservative, transparent initial five-category compatibility policy is selected and verified separately from calculation facts.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,12 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 37: select frozen Attraction, Communication, Emotional, Long-Term,
+      and Chemistry category configuration under its own policy version.
+- [x] Add symmetric mirrored body-pair aspect rules, selected relationship-house
+      overlay rules, and small phase-one equality contributions with safe rationales.
+- [x] Verify unique complete rule coverage, exact representative scores, policy
+      version isolation, conservative bounds, stable output, and fact immutability.
 - [x] Goal 36: define strict versioned compatibility category, rule, and
       discriminated fact-selector contracts with no default production policy.
 - [x] Revalidate the complete Goal 35 aggregate, match only canonical phase-one,
@@ -344,19 +350,18 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 37 — select the initial transparent compatibility scoring policy.
+Goal 38 — project compatibility facts and scores into safe content keys.
 
 Deliverables:
 
-1. Define one separately versioned initial policy for Attraction, Communication,
-   Emotional, Long-Term, and Chemistry using only explicit Goal 35 fact selectors.
-2. Keep weights conservative, symmetric, reconstructable, and independent from
-   calculation engines; document each rule's tradition-framed product rationale.
-3. Verify complete category/rule coverage, stable output, representative exact and
-   unmatched facts, bounds, confidence, version isolation, claim safety, and that
-   configuration changes cannot alter the Goal 35 aggregate.
-4. Add no deterministic relationship prediction, interpretation prose, persistence,
-   sharing URL, UI, AI, entitlement, notification, provider call, schema change,
+1. Define a separately versioned projection from validated Goal 35 facts and Goal
+   37 category contributions into stable factual and tradition-framed content keys.
+2. Preserve category, source fact, rule, aggregate, policy, and formula provenance;
+   project each selected contribution exactly once without composing prose.
+3. Validate exact coverage/order, duplicate or unknown references, unsupported
+   keys, version drift, symmetry, unsafe relationship claims, and immutability.
+4. Add no AI, prose renderer, deterministic relationship prediction, persistence,
+   sharing URL, UI, entitlement, notification, provider call, schema change,
    production service, or deployment.
 
 ## Phase queue
@@ -798,6 +803,36 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 37 initial compatibility policy record
+
+- Commands: focused compatibility scoring/policy suite; `npm run check`;
+  `npm run test:coverage`; `npm audit --omit=dev`; and `git diff --check` through
+  the `astro-validation` and `security-audit` procedures.
+- Configuration: `initial-compatibility-categories` 1.0.0 defines Attraction,
+  Communication, Emotional, Long-Term, and Chemistry in master-spec order. Each
+  uses baseline 50 and bounds 0-100. The deeply frozen configuration is separate
+  from the Goal 35 aggregate and the Goal 36 formula.
+- Rules: selected cross-chart body pairs are mirrored with identical rules in both
+  directions. Conjunction/sextile/trine contribute +3/+3/+4 and square/opposition
+  -2; selected relationship-house overlays contribute +2; exact phase-one equality
+  contributes only +1 or +2. Confidence is 0.50 or 0.55. Every rationale labels
+  itself tradition-framed; maximum absolute single-rule impact is four.
+- Verification: all five categories have phase-one, synastry, and overlay coverage;
+  rule IDs are unique and policy collections are frozen. One canonical fixture has
+  exact stable category scores 60/48/50/52/66 with full factor/confidence traces.
+  Repeated evaluation is equal. A cloned version/weight change alters only scoring
+  output and leaves the serialized Goal 35 aggregate byte-identical.
+- Claims/security: this is transparent product configuration, not scientific or
+  psychological measurement, causal evidence, deterministic prediction, or advice.
+  It contains no subject labels, raw birth/profile data, persistence, URL, log,
+  provider call, or public boundary. No critical or high finding remains.
+- Evidence: 35 test files and 516 tests passed; coverage was 94.28% statements,
+  91.44% branches, 99.68% functions, and 95.15% lines. The optimized build passed
+  and the production dependency audit found zero vulnerabilities.
+- Scope: no prose interpretation, report composition, persistence, share token/URL,
+  UI, AI, entitlement, notification, provider call, schema change, production
+  service, or deployment was added.
 
 ## Goal 36 injected compatibility scoring record
 

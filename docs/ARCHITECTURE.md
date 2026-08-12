@@ -240,6 +240,9 @@ tests/
   selectors, impacts, confidence, and rationales remain configuration; every
   matched contribution retains its source fact ID. There is no implicit default
   policy, and results are explicitly non-scientific product heuristics.
+  The initial policy is frozen configuration with five master-spec categories,
+  conservative symmetric aspect pairs, selected house overlays, and small
+  phase-one matches; changing its version or weights cannot alter Goal 35 facts.
   Relationship claims, persistence, and public sharing remain separate later layers.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.

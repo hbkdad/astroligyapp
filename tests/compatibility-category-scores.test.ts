@@ -19,6 +19,7 @@ import {
 import { SynastryAspectEngine } from "@/application/calculate-synastry-aspects";
 import { findHouseNumber } from "@/domain/astro/house-strategies";
 import { toZodiacPosition, type ZodiacSign } from "@/domain/astro/zodiac";
+import { INITIAL_COMPATIBILITY_CATEGORY_POLICY } from "@/config/compatibility-category-policy";
 import { PhaseOneCompatibilityStrategy } from "@/domain/compatibility/phase-one";
 import type {
   CompatibilityCategoryDefinition,
@@ -33,6 +34,125 @@ const FIRST_LONGITUDES = [0, 18, 37, 59, 83, 111, 147, 191, 239, 301];
 const SECOND_LONGITUDES = [180, 198, 217, 239, 263, 291, 327, 11, 59, 121];
 
 describe("injected compatibility category scoring", () => {
+  it("validates the frozen initial five-category policy with conservative complete rules", () => {
+    const policy = INITIAL_COMPATIBILITY_CATEGORY_POLICY;
+    expect(policy.categories.map((category) => category.id)).toEqual([
+      "attraction",
+      "communication",
+      "emotional",
+      "long-term",
+      "chemistry",
+    ]);
+    expect(new Set(policy.rules.map((rule) => rule.id)).size).toBe(
+      policy.rules.length,
+    );
+    for (const category of policy.categories) {
+      const rules = policy.rules.filter(
+        (rule) => rule.categoryId === category.id,
+      );
+      expect(rules.length).toBeGreaterThan(0);
+      expect(
+        rules.some((rule) => rule.selector.kind === "phase-one-pair"),
+      ).toBe(true);
+      expect(
+        rules.some((rule) => rule.selector.kind === "synastry-aspect"),
+      ).toBe(true);
+      expect(rules.some((rule) => rule.selector.kind === "house-overlay")).toBe(
+        true,
+      );
+    }
+    expect(policy.rules.every((rule) => Math.abs(rule.impact) <= 4)).toBe(true);
+    expect(
+      policy.rules.every((rule) =>
+        rule.rationale.startsWith("Tradition-framed configured contribution"),
+      ),
+    ).toBe(true);
+    expect(Object.isFrozen(policy)).toBe(true);
+    expect(Object.isFrozen(policy.rules)).toBe(true);
+  });
+
+  it("scores the initial policy stably without mutating its aggregate", () => {
+    const source = aggregate();
+    const before = JSON.stringify(source);
+    const first = calculateCompatibilityCategoryScores(
+      source,
+      INITIAL_COMPATIBILITY_CATEGORY_POLICY,
+    );
+    const second = calculateCompatibilityCategoryScores(
+      source,
+      INITIAL_COMPATIBILITY_CATEGORY_POLICY,
+    );
+    expect(second).toEqual(first);
+    expect(first.categories.map((category) => category.categoryId)).toEqual([
+      "attraction",
+      "communication",
+      "emotional",
+      "long-term",
+      "chemistry",
+    ]);
+    expect(first.categories.every((category) => category.score >= 0)).toBe(
+      true,
+    );
+    expect(first.categories.every((category) => category.score <= 100)).toBe(
+      true,
+    );
+    expect(
+      first.categories.map((category) => ({
+        id: category.categoryId,
+        score: category.score,
+        contributionTotal: category.contributionTotal,
+        confidence: category.confidence,
+        factors: category.contributions.length,
+      })),
+    ).toEqual([
+      {
+        id: "attraction",
+        score: 60,
+        contributionTotal: 10,
+        confidence: 0.54,
+        factors: 3,
+      },
+      {
+        id: "communication",
+        score: 48,
+        contributionTotal: -2,
+        confidence: 0.55,
+        factors: 1,
+      },
+      {
+        id: "emotional",
+        score: 50,
+        contributionTotal: 0,
+        confidence: 0.525,
+        factors: 2,
+      },
+      {
+        id: "long-term",
+        score: 52,
+        contributionTotal: 2,
+        confidence: 0.55,
+        factors: 1,
+      },
+      {
+        id: "chemistry",
+        score: 66,
+        contributionTotal: 16,
+        confidence: 0.54375,
+        factors: 5,
+      },
+    ]);
+    const alternative = structuredClone(INITIAL_COMPATIBILITY_CATEGORY_POLICY);
+    (alternative as unknown as { version: string }).version = "1.0.1-test";
+    (alternative.rules[0] as unknown as { impact: number }).impact = 2;
+    const alternativeResult = calculateCompatibilityCategoryScores(
+      source,
+      alternative,
+    );
+    expect(alternativeResult.policy.version).toBe("1.0.1-test");
+    expect(alternativeResult).not.toEqual(first);
+    expect(JSON.stringify(source)).toBe(before);
+  });
+
   it("returns bounded categories with complete reconstructable contributions", () => {
     const policy = fixturePolicy();
     const result = calculateCompatibilityCategoryScores(aggregate(), policy);
