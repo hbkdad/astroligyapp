@@ -243,6 +243,10 @@ tests/
   The initial policy is frozen configuration with five master-spec categories,
   conservative symmetric aspect pairs, selected house overlays, and small
   phase-one matches; changing its version or weights cannot alter Goal 35 facts.
+  `projectCompatibilityContent` revalidates the exact aggregate, accepted policy,
+  and recomputed scores, then maps each contribution once into a fact-family key,
+  category/tone reflection key, and minimal structured parameters. It composes no
+  prose and excludes policy rationale and raw relationship inputs.
   Relationship claims, persistence, and public sharing remain separate later layers.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.

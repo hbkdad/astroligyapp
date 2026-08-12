@@ -62,3 +62,16 @@ equality facts contribute only +1 or +2. All rule confidence values are 0.50 or
 These weights are conservative product configuration, not assertions of causal,
 psychological, or predictive validity. Any change requires a new policy version
 and regression evidence; calculation and aggregate versions remain unchanged.
+
+## Content projection 1.0.0
+
+Each matched Goal 37 contribution projects exactly once, in category then rule/fact
+order. The projection identifies its category, source fact, rule, impact, confidence,
+fact-family key, and category/tone reflection key. It includes only the minimal
+structured parameters required to render the underlying phase-one pair, synastry
+aspect, or house overlay later.
+
+Before projection, the accepted Goal 35 aggregate and Goal 37 policy/scores are
+recomputed and required to match exactly. Missing, duplicated, reordered, unknown,
+unsupported, or version-drifted data fails closed. The projection contains no prose,
+policy rationale, raw birth/profile inputs, account identity, or public route data.

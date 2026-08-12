@@ -13,6 +13,14 @@ import {
 } from "@/application/calculate-compatibility-category-scores";
 import { HouseOverlayEngine } from "@/application/calculate-house-overlays";
 import {
+  COMPATIBILITY_CONTENT_DISCLAIMER,
+  COMPATIBILITY_CONTENT_PROJECTION_VERSION,
+  InvalidCompatibilityContentInputError,
+  projectCompatibilityContent,
+  validateCompatibilityContentProjection,
+  type CompatibilityContentProjection,
+} from "@/application/project-compatibility-content";
+import {
   composeCompatibilityFacts,
   type CompatibilityFactAggregate,
 } from "@/application/compose-compatibility-facts";
@@ -34,6 +42,197 @@ const FIRST_LONGITUDES = [0, 18, 37, 59, 83, 111, 147, 191, 239, 301];
 const SECOND_LONGITUDES = [180, 198, 217, 239, 263, 291, 327, 11, 59, 121];
 
 describe("injected compatibility category scoring", () => {
+  it("projects every selected contribution once into factual and reflection keys", () => {
+    const source = aggregate();
+    const scores = calculateCompatibilityCategoryScores(
+      source,
+      INITIAL_COMPATIBILITY_CATEGORY_POLICY,
+    );
+    const projection = projectCompatibilityContent(source, scores);
+    const contributions = scores.categories.flatMap(
+      (category) => category.contributions,
+    );
+
+    expect(projection).toMatchObject({
+      version: COMPATIBILITY_CONTENT_PROJECTION_VERSION,
+      sourceVersions: {
+        aggregate: "1.0.0",
+        phaseOne: "1.0.0",
+        synastry: "1.0.0",
+        houseOverlays: "1.0.0",
+        scoringResult: "1.0.0",
+        scoringFormula: "1.0.0",
+        scoringPolicy: "1.0.0",
+      },
+      disclaimer: COMPATIBILITY_CONTENT_DISCLAIMER,
+    });
+    expect(projection.items).toHaveLength(contributions.length);
+    expect(projection.items).toHaveLength(12);
+    expect(
+      projection.items.map((item) => [item.ruleId, item.sourceFactId]),
+    ).toEqual(
+      contributions.map((contribution) => [
+        contribution.ruleId,
+        contribution.sourceFactId,
+      ]),
+    );
+    expect(projection.items[0]).toMatchObject({
+      categoryId: "attraction",
+      ruleId: "attraction-sun-venus-trine",
+      sourceFactId: "synastry:chart-a:sun:chart-b:venus:trine",
+      factKey: "compatibility.fact.synastry-aspect",
+      reflectionKey: "compatibility.reflection.attraction.supportive",
+      tone: "supportive",
+      impact: 4,
+      confidence: 0.55,
+      parameters: {
+        firstBody: "sun",
+        secondBody: "venus",
+        aspectType: "trine",
+        phase: "applying",
+        normalizedStrength: 0.8571428571428572,
+      },
+    });
+    expect(
+      projection.items.find(
+        (item) => item.ruleId === "communication-mercury-mercury-opposition",
+      ),
+    ).toMatchObject({
+      reflectionKey: "compatibility.reflection.communication.challenging",
+      tone: "challenging",
+      impact: -2,
+    });
+    expect(new Set(projection.items.map((item) => item.id)).size).toBe(
+      projection.items.length,
+    );
+    expect(Object.isFrozen(projection)).toBe(true);
+    expect(Object.isFrozen(projection.items[0]!.parameters)).toBe(true);
+    expect(JSON.stringify(projection)).not.toMatch(
+      /birth|observer|timezone|coordinateSource|private-source-marker|rationale|name|account|profile/,
+    );
+  });
+
+  it("projects byte-equivalent content when relationship inputs reverse", () => {
+    const first = chart("fixture-a", FIRST_LONGITUDES);
+    const second = chart("fixture-b", SECOND_LONGITUDES);
+    const forwardAggregate = aggregateFor(first, second);
+    const reversedAggregate = aggregateFor(second, first);
+    const forward = projectCompatibilityContent(
+      forwardAggregate,
+      calculateCompatibilityCategoryScores(
+        forwardAggregate,
+        INITIAL_COMPATIBILITY_CATEGORY_POLICY,
+      ),
+    );
+    const reversed = projectCompatibilityContent(
+      reversedAggregate,
+      calculateCompatibilityCategoryScores(
+        reversedAggregate,
+        INITIAL_COMPATIBILITY_CATEGORY_POLICY,
+      ),
+    );
+    expect(reversed).toEqual(forward);
+    expect(JSON.stringify(reversed)).toBe(JSON.stringify(forward));
+  });
+
+  it.each([
+    [
+      "version drift",
+      (value: MutableProjection) => {
+        value.version = "2.0.0";
+      },
+    ],
+    [
+      "missing item",
+      (value: MutableProjection) => {
+        value.items.pop();
+      },
+    ],
+    [
+      "duplicate item",
+      (value: MutableProjection) => {
+        value.items[1] = structuredClone(value.items[0]!);
+      },
+    ],
+    [
+      "reordered items",
+      (value: MutableProjection) => {
+        value.items.reverse();
+      },
+    ],
+    [
+      "unknown source",
+      (value: MutableProjection) => {
+        value.items[0]!.sourceFactId = "compatibility:unknown";
+      },
+    ],
+    [
+      "unsupported fact key",
+      (value: MutableProjection) => {
+        value.items[0]!.factKey = "compatibility.fact.unsupported";
+      },
+    ],
+    [
+      "unsupported reflection key",
+      (value: MutableProjection) => {
+        value.items[0]!.reflectionKey =
+          "compatibility.reflection.attraction.guaranteed";
+      },
+    ],
+    [
+      "unsafe claims drift",
+      (value: MutableProjection) => {
+        value.disclaimer = "This relationship is guaranteed to succeed.";
+      },
+    ],
+  ])("rejects projected content corruption: %s", (_, corrupt) => {
+    const source = aggregate();
+    const scores = calculateCompatibilityCategoryScores(
+      source,
+      INITIAL_COMPATIBILITY_CATEGORY_POLICY,
+    );
+    const projection = structuredClone(
+      projectCompatibilityContent(source, scores),
+    ) as unknown as MutableProjection;
+    corrupt(projection);
+    expect(() =>
+      validateCompatibilityContentProjection(
+        projection as unknown as CompatibilityContentProjection,
+        source,
+        scores,
+      ),
+    ).toThrow(InvalidCompatibilityContentInputError);
+  });
+
+  it("rejects score drift and policies outside the accepted Goal 37 version", () => {
+    const source = aggregate();
+    const scores = calculateCompatibilityCategoryScores(
+      source,
+      INITIAL_COMPATIBILITY_CATEGORY_POLICY,
+    );
+    const driftedScores = structuredClone(scores);
+    (
+      driftedScores.categories[0]!.contributions[0] as unknown as {
+        impact: number;
+      }
+    ).impact = 99;
+    expect(() => projectCompatibilityContent(source, driftedScores)).toThrow(
+      InvalidCompatibilityContentInputError,
+    );
+
+    const unsupportedPolicy = structuredClone(
+      INITIAL_COMPATIBILITY_CATEGORY_POLICY,
+    );
+    (unsupportedPolicy as unknown as { version: string }).version = "2.0.0";
+    const unsupportedScores = calculateCompatibilityCategoryScores(
+      source,
+      unsupportedPolicy,
+    );
+    expect(() =>
+      projectCompatibilityContent(source, unsupportedScores, unsupportedPolicy),
+    ).toThrow(InvalidCompatibilityContentInputError);
+  });
+
   it("validates the frozen initial five-category policy with conservative complete rules", () => {
     const policy = INITIAL_COMPATIBILITY_CATEGORY_POLICY;
     expect(policy.categories.map((category) => category.id)).toEqual([
@@ -584,3 +783,21 @@ interface MutablePolicy extends Omit<
 }
 
 type MutableAggregate = CompatibilityFactAggregate & { version: string };
+
+interface MutableProjectionItem extends Omit<
+  CompatibilityContentProjection["items"][number],
+  "sourceFactId" | "factKey" | "reflectionKey"
+> {
+  sourceFactId: string;
+  factKey: string;
+  reflectionKey: string;
+}
+
+interface MutableProjection extends Omit<
+  CompatibilityContentProjection,
+  "version" | "items" | "disclaimer"
+> {
+  version: string;
+  items: MutableProjectionItem[];
+  disclaimer: string;
+}

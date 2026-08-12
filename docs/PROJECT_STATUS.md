@@ -4,7 +4,7 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 37 complete; a conservative, transparent initial five-category compatibility policy is selected and verified separately from calculation facts.
+Status: Goal 38 complete; validated compatibility contributions now project exactly once into safe factual and tradition-framed content keys with full provenance.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,12 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 38: define versioned compatibility fact-family, category/tone
+      reflection-key, and minimal structured-parameter projection contracts.
+- [x] Reconstruct the Goal 35 aggregate and Goal 37 score result before projecting
+      every selected contribution exactly once in published category/rule order.
+- [x] Verify symmetry, coverage, identity, unsupported keys, drift, claims,
+      immutability, provenance, and exclusion of raw private data and prose.
 - [x] Goal 37: select frozen Attraction, Communication, Emotional, Long-Term,
       and Chemistry category configuration under its own policy version.
 - [x] Add symmetric mirrored body-pair aspect rules, selected relationship-house
@@ -350,19 +356,20 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 38 — project compatibility facts and scores into safe content keys.
+Goal 39 — render deterministic compatibility fact and reflection sections.
 
 Deliverables:
 
-1. Define a separately versioned projection from validated Goal 35 facts and Goal
-   37 category contributions into stable factual and tradition-framed content keys.
-2. Preserve category, source fact, rule, aggregate, policy, and formula provenance;
-   project each selected contribution exactly once without composing prose.
-3. Validate exact coverage/order, duplicate or unknown references, unsupported
-   keys, version drift, symmetry, unsafe relationship claims, and immutability.
-4. Add no AI, prose renderer, deterministic relationship prediction, persistence,
-   sharing URL, UI, entitlement, notification, provider call, schema change,
-   production service, or deployment.
+1. Define a separately versioned deterministic en-CA compatibility template library
+   for all Goal 38 factual families and category/tone reflection keys.
+2. Render visibly separate calculated-fact and tradition-framed reflection text
+   from validated parameters without recomputing facts or scores.
+3. Preserve projection/source/library/renderer provenance; verify exact parameter
+   coverage, stable output, unsupported fallbacks, escaping, claims safety,
+   symmetry, version drift, and immutability.
+4. Add no AI, deterministic relationship prediction/advice, persistence, sharing
+   URL, UI, entitlement, notification, provider call, schema change, production
+   service, or deployment.
 
 ## Phase queue
 
@@ -803,6 +810,40 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 38 compatibility content-projection record
+
+- Commands: focused compatibility aggregate/scoring/policy/projection suite;
+  `npm run check`; `npm run test:coverage`; `npm audit --omit=dev`; and
+  `git diff --check` through `astro-validation` and `security-audit` procedures.
+- Boundary: `projectCompatibilityContent` accepts the Goal 35 aggregate, Goal 37
+  score result, and accepted policy. It reconstructs the aggregate, requires exact
+  equality with the frozen policy, recomputes scores, and rejects any divergence
+  before mapping content keys. The exported validator rebuilds the projection and
+  requires exact output equality.
+- Coverage/identity: every flattened category contribution maps once, preserving
+  category then rule/fact order. Stable IDs combine category, rule, and source fact.
+  Fact families are phase-one pair, synastry aspect, or house overlay; reflection
+  keys combine one of five categories with supportive/challenging/neutral tone.
+  Duplicate identities fail closed.
+- Parameters/provenance: phase pairs retain canonical values/equality/master count;
+  aspects retain bodies/type/orb/phase/strength; overlays retain source body/target
+  house. Result trace carries aggregate, phase-one, synastry, overlay, score-result,
+  formula, policy, and projection versions. No calculation or score is repeated in
+  the parameter mapper.
+- Validation/security: the representative policy produces twelve exact projections.
+  Tests reject missing, duplicated, reordered, unknown-source, unsupported fact or
+  reflection key, source/policy/score drift, and claims-disclaimer corruption.
+  Reversing relationship inputs is byte-equivalent. Output is deeply frozen and
+  excludes birth/profile/account data, numerology tokens, policy rationales, prose,
+  and logs. No critical or high finding remains.
+- Evidence: 35 test files and 527 tests passed; coverage was 94.24% statements,
+  91.28% branches, 99.69% functions, and 95.21% lines. The projection had 92.59%
+  statement, 77.77% branch, 100% function, and 97.82% line coverage. The optimized
+  build passed and the production dependency audit found zero vulnerabilities.
+- Scope: no template library, prose renderer, report composition, persistence,
+  share token/URL, UI, AI, entitlement, notification, provider call, schema change,
+  production service, or deployment was added.
 
 ## Goal 37 initial compatibility policy record
 
