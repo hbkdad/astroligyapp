@@ -1,4 +1,4 @@
-import type { Pool } from "pg";
+import type { Pool, PoolClient } from "pg";
 
 import type { ActiveSession } from "./session";
 
@@ -34,23 +34,42 @@ export async function resolveActiveAccountId(
 }
 
 export async function bootstrapAccount(
-  pool: Pick<Pool, "query">,
+  pool: Pick<Pool, "connect">,
   session: ActiveSession,
 ): Promise<AccountId> {
-  const result = await pool.query<{ id: string }>(
-    `insert into user_account (identity_provider_subject)
-     values ($1)
-     on conflict (identity_provider_subject) do update
-       set updated_at = now()
-       where user_account.deleted_at is null
-     returning id`,
-    [session.subject],
-  );
-
-  const accountId = result.rows[0]?.id;
-  if (!accountId) {
-    throw new AccountUnavailableError();
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query("set local role app_auth_account_bootstrap");
+    const result = await client.query<{ id: unknown }>(
+      "select app.bootstrap_auth_account($1) as id",
+      [session.subject],
+    );
+    await client.query("commit");
+    const accountId = result.rows[0]?.id;
+    if (!isUuid(accountId)) throw new AccountUnavailableError();
+    return accountId as AccountId;
+  } catch (error) {
+    await rollback(client);
+    throw error;
+  } finally {
+    client.release();
   }
+}
 
-  return accountId as AccountId;
+async function rollback(client: PoolClient) {
+  try {
+    await client.query("rollback");
+  } catch {
+    // Preserve the first failure and discard the pooled connection below.
+  }
+}
+
+function isUuid(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      value,
+    )
+  );
 }

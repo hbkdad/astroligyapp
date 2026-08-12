@@ -4,8 +4,8 @@ Last updated: 2026-08-12
 
 ## Current position
 
-Status: Goal 61 complete; authenticated SES configuration-set feedback now produces only
-content-free delivery state, deduplication receipts, and keyed permanent suppression.
+Status: Goal 62 complete; live email-verified Better Auth sessions can bootstrap exactly one
+internal account through an execute-only function and prove identity-scoped readiness.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -107,6 +107,14 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
       migrations `0008_amused_bloodscream` and `0009_deep_leper_queen`, forced RLS, a
       dedicated NOLOGIN consumer role, at-least-once concurrency control, safe terminal
       state precedence, and an exact Goal 60 `isSuppressed` resolver.
+- [x] Goal 62: require a live recent matching Better Auth session with current
+      `emailVerified: true`, ignore browser-owned identity/redirect fields, and compose
+      bootstrap, independent active-account resolution, identity match, and `app_user`
+      transaction readiness into one fixed identity-free workflow result.
+- [x] Replace direct bootstrap SQL with migration `0010_smiling_nekra`, an execute-only
+      NOLOGIN role, a separate non-inherited function owner, column-limited grants, forced
+      RLS policy, atomic concurrent insert/existing-row resolution, and deleted-account
+      nonreactivation without retained owner membership.
 - [x] Goal 60: pin `@aws-sdk/client-sesv2` 3.1108.0 and implement a strict server-only
       adapter fixed to `ca-central-1`, one normalized authentication sender, one required
       configuration set, local Simple text/HTML, and an SDK client with retries disabled.
@@ -542,26 +550,26 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 62 — compose first verified-session internal-account bootstrap behind a dedicated
-least-privilege database boundary without exposing a public authentication route.
+Goal 63 — implement verified-session account-deletion and retention orchestration without
+exposing a public authentication route or touching production data.
 
 Deliverables:
 
-1. Define one exact server-only bootstrap request/result contract that accepts identity
-   only from a currently verified Better Auth database session. Browser subject, account
-   UUID, email/profile fields, cookies outside the verifier, and arbitrary redirects must
-   never select or create the internal account.
-2. Replace direct migrator-owned bootstrap SQL with a dedicated NOLOGIN role and narrow
-   execute-only database function or equivalent transaction boundary. Preserve atomic
-   subject uniqueness, concurrent idempotency, deleted-account nonreactivation, and no
-   raw auth-table or unrelated `user_account` privileges.
-3. Compose verification, bootstrap, active-account resolution, and identity-scoped
-   transaction readiness with fixed anti-enumerating outcomes. Prove invalid/expired/
-   revoked/unverified sessions, concurrency, deletion, rollback, pooled-state cleanup,
-   two-account isolation, constraints, and cumulative migration behavior.
-4. Apply `database-migration` and `security-audit`, set the next single auth workflow
-   goal, and run every gate. Do not expose Better Auth/public routes, pages, forms, session
-   cookies, email delivery, external resources, production data, purchase, or deployment.
+1. Define a strict server-only deletion request/result contract requiring a recent
+   email-verified session, the independently resolved active internal account, explicit
+   same-origin user intent, and a current password reauthentication seam. Never accept
+   browser account/subject IDs or reveal whether partial identity/provider state exists.
+2. Design one transactionally safe lifecycle across internal soft deletion, private-row
+   cascade/retention requirements, Better Auth sessions/accounts/user deletion, public
+   share revocation, billing bindings/subscriptions, feedback receipts, and keyed email
+   suppression. Document what is erased, retained, anonymized, or externally reconciled.
+3. Implement only local injected orchestration and least-privilege persistence required
+   for deterministic deletion. Prove two-account isolation, replay, concurrency, partial
+   failure/reconciliation, session revocation, rollback, pooling cleanup, retention/index
+   plans, and no account resurrection.
+4. Apply `database-migration` and `security-audit`, set the next single auth workflow goal,
+   and run every gate. Do not expose public routes/UI, call Paddle/AWS, delete production
+   data, create credentials/resources, purchase, or deploy.
 
 ## Phase queue
 
@@ -611,10 +619,10 @@ Deliverables:
   while eventual production-host runtime and cache behavior remain release gates.
 - Managed database, payment-account, AI, monitoring, and deployment providers remain
   intentionally undecided. Amazon SES is selected only for authentication email.
-- Better Auth still requires verified-session account-bootstrap orchestration, public
-  route/UI review, deletion/retention orchestration, browser E2E, and production recovery
-  testing. The SES SNS signature authenticator and regional queue infrastructure remain
-  external gates. MFA and passkeys remain release-hardening decisions.
+- Better Auth still requires deletion/retention orchestration, public route/UI review,
+  browser E2E, and production recovery testing. The SES SNS signature authenticator and
+  regional queue infrastructure remain external gates. MFA and passkeys remain
+  release-hardening decisions.
 - Production database role provisioning, TLS, pooling, migration timeouts,
   backup/restore, and managed-provider parity remain release gates.
 - Drizzle Kit has four moderate findings through a legacy esbuild development loader.
@@ -644,6 +652,9 @@ Deliverables:
 | 2026-08-12 | Goal 61 migration and PostgreSQL gate              | Oldest schema upgraded cumulatively; 49/49 concurrency, privacy, RLS, rollback tests passed   |
 | 2026-08-12 | Goal 61 focused and coverage gates                 | 29 focused cases; 56 files/982 tests at 93.44% statements and 91.53% branches passed          |
 | 2026-08-12 | Goal 61 full application gate                      | Formatting, lint, strict TypeScript, 56 files/982 tests, and optimized build passed           |
+| 2026-08-12 | Goal 62 migration and PostgreSQL gate              | Oldest schema upgraded cumulatively; 50/50 auth/bootstrap/isolation tests passed              |
+| 2026-08-12 | Goal 62 focused and coverage gates                 | 25 focused cases; 58 files/997 tests at 93.47% statements and 91.56% branches passed          |
+| 2026-08-12 | Goal 62 full application gate                      | Formatting, lint, strict TypeScript, 58 files/997 tests, and optimized build passed           |
 | 2026-08-11 | `npm run db:check`                                 | Drizzle schema, migration journal, and generated snapshot are consistent                      |
 | 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 562 tests, and optimized production build         |
 | 2026-08-11 | `npm run test:coverage`                            | 94.04% statements, 91.04% branches, 99.73% functions, and 95.13% lines                        |
@@ -1201,6 +1212,49 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 62 verified-session internal-account bootstrap record
+
+- Trust order: `bootstrapAccountForRequest` first requires an active session from the
+  injected verifier. The Better Auth implementation accepts only a recent, unexpired,
+  matching session/user and exact database `emailVerified: true`; missing, unverified,
+  expired, revoked, and malformed state become one authenticate result. Request query,
+  body, account/subject headers, profile/email values, and redirect targets never select
+  the identity or cross the bootstrap port.
+- Orchestration: the verified session is passed to the bootstrapper, then the independent
+  active-account resolver. Both must return the same canonical UUID. The matched UUID must
+  then survive a real identity-scoped `app_user` transaction and resolve through
+  `app.current_user_id()`. Only then does the workflow return fixed `account-ready`; all
+  results remain frozen and contain no subject, session, UUID, email, profile, exception,
+  or caller-controlled data.
+- Migration: `0010_smiling_nekra` creates `app_auth_account_bootstrap` and a separate
+  `app_auth_account_bootstrap_owner`, both NOLOGIN and the owner NOINHERIT. The owner has
+  only selected `user_account` columns and owns `app.bootstrap_auth_account(text)` under
+  a fixed `pg_catalog` search path. The executor has schema usage and function execution
+  only; it cannot directly select/insert/update account rows or read auth rows. The
+  migrator does not retain owner membership.
+- Semantics: the function accepts only bounded subjects, atomically inserts or returns the
+  existing active mapping, updates only `updated_at`, and returns no row for a soft-deleted
+  subject. Concurrent calls converge on one UUID, and deletion cannot be reversed through
+  bootstrap. The old direct migrator-authority INSERT/ON CONFLICT path is removed from the
+  runtime repository.
+- Security audit: assets are auth subject-to-internal-account binding, session validity,
+  deletion state, and row-scoped request identity. Trust boundaries remain Better Auth API,
+  two independently owned execute-only functions, and transaction-local `app_user`. Tests
+  cover hostile request identity/redirect fields, unverified and revoked state, malformed
+  UUIDs, mismatched mappings, dependency exceptions, direct-table/function privilege
+  denial, rollback failure, concurrency, deletion, and pooled-role cleanup. No
+  critical/high finding remains.
+- Verification: 25 focused verifier/orchestration/repository cases pass. The cumulative
+  PostgreSQL 18 upgrade and all 50 integration tests pass, including real Better Auth
+  unverified signup, database verification, sign-in, internal bootstrap/readiness, session
+  revocation, three-way concurrent idempotency, deleted mapping nonreactivation, privilege
+  isolation, rollback, and two-account RLS. Coverage passes 58 files/997 tests at 93.47%
+  statements, 91.56% branches, 99.34% functions, and 95.06% lines. The full gate passes
+  formatting, ESLint, strict TypeScript, all 58 files/997 tests, and the optimized build.
+- Scope: no public Better Auth route, page/form, cookie integration point, automatic
+  redirect, live email, external account/resource, production data, purchase, or deployment
+  was created or changed.
 
 ## Goal 61 authentication-email feedback and suppression record
 

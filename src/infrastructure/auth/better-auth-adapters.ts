@@ -8,7 +8,12 @@ import type {
 } from "@/server/authenticated-billing-customer-provisioning";
 import type { TrustedBillingContact } from "@/server/billing-customer-provisioning";
 
-import { AccountUnavailableError, type AccountId } from "./account";
+import {
+  AccountUnavailableError,
+  bootstrapAccount,
+  type AccountId,
+} from "./account";
+import { withIdentityTransaction } from "../persistence/identity-transaction";
 import type {
   ActiveSession,
   SessionVerification,
@@ -26,6 +31,7 @@ interface BetterAuthSessionValue {
 
 interface BetterAuthUserValue {
   readonly id?: unknown;
+  readonly emailVerified?: unknown;
 }
 
 export interface BetterAuthSessionApi {
@@ -36,6 +42,7 @@ export class BetterAuthBillingSessionVerifier implements SessionVerifier {
   constructor(
     private readonly api: BetterAuthSessionApi,
     private readonly now: () => Date = () => new Date(),
+    private readonly requireVerifiedEmail = false,
   ) {}
 
   async verify(request: Request): Promise<SessionVerification> {
@@ -63,6 +70,7 @@ export class BetterAuthBillingSessionVerifier implements SessionVerifier {
       !sessionId ||
       !subject ||
       subject !== userId ||
+      (this.requireVerifiedEmail && user.emailVerified !== true) ||
       !authenticatedAt ||
       !expiresAt
     )
@@ -83,6 +91,33 @@ export class BetterAuthBillingSessionVerifier implements SessionVerifier {
       sessionId,
       authenticatedAt,
       expiresAt,
+    });
+  }
+}
+
+export class BetterAuthVerifiedSessionVerifier extends BetterAuthBillingSessionVerifier {
+  constructor(api: BetterAuthSessionApi, now: () => Date = () => new Date()) {
+    super(api, now, true);
+  }
+}
+
+export class BetterAuthAccountBootstrapper {
+  constructor(private readonly pool: Pick<Pool, "connect">) {}
+
+  async bootstrap(session: ActiveSession): Promise<AccountId> {
+    return bootstrapAccount(this.pool, session);
+  }
+}
+
+export class IdentityScopedAccountReadinessVerifier {
+  constructor(private readonly pool: Pick<Pool, "connect">) {}
+
+  async verify(ownerId: AccountId): Promise<boolean> {
+    return withIdentityTransaction(this.pool, ownerId, async ({ client }) => {
+      const result = await client.query<{ id: unknown }>(
+        "select app.current_user_id() as id",
+      );
+      return result.rows[0]?.id === ownerId;
     });
   }
 }

@@ -436,6 +436,12 @@ tests/
   trusted billing email is read live only from the verified auth user row through
   execute-only roles. Public routes/UI and transactional delivery remain unexposed.
   No managed auth infrastructure is selected. See ADR 0008.
+- Internal account bootstrap: a recent live Better Auth database session with current
+  `emailVerified: true` is the only identity source. The orchestration invokes a dedicated
+  execute-only security-definer function, independently resolves the active mapping, and
+  proves identity-scoped transaction readiness before returning a fixed identity-free
+  result. Deleted mappings do not reactivate, browser identity fields are ignored, and no
+  public auth route invokes the workflow yet.
 - Authentication email: Amazon SES API v2 is selected behind a provider-neutral
   dispatch/result contract, using only the `ca-central-1` regional endpoint. The strict
   v1 request/result validators, two fixed local `en-CA` templates, and Better Auth

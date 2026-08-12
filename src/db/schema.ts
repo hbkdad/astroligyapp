@@ -66,6 +66,13 @@ export const userAccount = pgTable(
       using: sql`(id = app.current_user_id())`,
       withCheck: sql`(id = app.current_user_id())`,
     }),
+    pgPolicy("user_account_auth_account_bootstrap_owner", {
+      as: "permissive",
+      for: "all",
+      to: ["app_auth_account_bootstrap_owner"],
+      using: sql`true`,
+      withCheck: sql`true`,
+    }),
   ],
 );
 

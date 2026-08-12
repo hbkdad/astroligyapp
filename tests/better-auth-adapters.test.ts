@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { BetterAuthBillingSessionVerifier } from "@/infrastructure/auth/better-auth-adapters";
+import {
+  BetterAuthBillingSessionVerifier,
+  BetterAuthVerifiedSessionVerifier,
+} from "@/infrastructure/auth/better-auth-adapters";
 
 const NOW = new Date("2026-08-12T12:00:00.000Z");
 const request = new Request("https://app.example.test/private", {
@@ -24,6 +27,7 @@ function value(
     user: {
       id: "user-1",
       email: "browser-decoy@example.test",
+      emailVerified: true,
       ...userOverrides,
     },
   };
@@ -82,5 +86,26 @@ describe("Better Auth billing adapters", () => {
     await expect(verifier.verify(request)).rejects.toThrow(
       "database unavailable",
     );
+  });
+
+  it("requires the live Better Auth user to be email verified for account bootstrap", async () => {
+    const verified = new BetterAuthVerifiedSessionVerifier(
+      { getSession: async () => value() },
+      () => NOW,
+    );
+    await expect(verified.verify(request)).resolves.toMatchObject({
+      status: "active",
+      subject: "user-1",
+    });
+
+    for (const emailVerified of [false, undefined, "true"]) {
+      const rejected = new BetterAuthVerifiedSessionVerifier(
+        { getSession: async () => value({}, { emailVerified }) },
+        () => NOW,
+      );
+      await expect(rejected.verify(request)).resolves.toEqual({
+        status: "invalid",
+      });
+    }
   });
 });

@@ -13,11 +13,15 @@ import {
   type AccountId,
 } from "@/infrastructure/auth/account";
 import {
+  BetterAuthAccountBootstrapper,
   BetterAuthActiveBillingAccountResolver,
   BetterAuthTrustedBillingContactResolver,
+  BetterAuthVerifiedSessionVerifier,
+  IdentityScopedAccountReadinessVerifier,
 } from "@/infrastructure/auth/better-auth-adapters";
 import { betterAuthSchema } from "@/db/auth-schema";
 import { createBetterAuth } from "@/server/better-auth-configuration";
+import { bootstrapAccountForRequest } from "@/server/authenticated-account-bootstrap";
 import type { AuthenticationEmailRequest } from "@/server/authentication-email";
 import { AuthenticationEmailFeedbackRepository } from "@/server/authentication-email-feedback";
 import { AuthenticationEmailIdempotencyRepository } from "@/server/authentication-email-idempotency";
@@ -147,6 +151,8 @@ const billingBindingRepository = new BillingCustomerBindingRepository(pool);
 const billingOwnerResolver = new BillingCustomerOwnerResolver(pool);
 const authContactResolver = new BetterAuthTrustedBillingContactResolver(pool);
 const authAccountResolver = new BetterAuthActiveBillingAccountResolver(pool);
+const authAccountBootstrapper = new BetterAuthAccountBootstrapper(pool);
+const authAccountReadiness = new IdentityScopedAccountReadinessVerifier(pool);
 
 function subscriptionEvent(
   overrides: Partial<NormalizedSubscriptionEvent> = {},
@@ -343,6 +349,9 @@ describe("initial PostgreSQL migration", () => {
       feedback_consumer_suppression_insert: boolean;
       feedback_consumer_suppression_mutate: boolean;
       feedback_consumer_delivery_update: boolean;
+      bootstrap_direct_table: boolean;
+      bootstrap_execute: boolean;
+      migrator_retains_bootstrap_owner: boolean;
     }>(
       `select
          has_schema_privilege('app_user', 'auth', 'USAGE') as app_user_schema,
@@ -416,7 +425,21 @@ describe("initial PostgreSQL migration", () => {
          has_table_privilege(
            'app_auth_email_feedback_consumer',
            'authentication_email_delivery', 'UPDATE'
-         ) as feedback_consumer_delivery_update`,
+         ) as feedback_consumer_delivery_update,
+         has_table_privilege(
+           'app_auth_account_bootstrap', 'user_account', 'SELECT,INSERT,UPDATE'
+         ) as bootstrap_direct_table,
+         has_function_privilege(
+           'app_auth_account_bootstrap',
+           'app.bootstrap_auth_account(text)', 'EXECUTE'
+         ) as bootstrap_execute,
+         exists (
+           select 1 from pg_auth_members membership
+           join pg_roles member_role on member_role.oid = membership.member
+           join pg_roles granted_role on granted_role.oid = membership.roleid
+           where member_role.rolname = current_user
+             and granted_role.rolname = 'app_auth_account_bootstrap_owner'
+         ) as migrator_retains_bootstrap_owner`,
     );
     expect(privileges.rows[0]).toEqual({
       app_user_schema: false,
@@ -440,6 +463,9 @@ describe("initial PostgreSQL migration", () => {
       feedback_consumer_suppression_insert: true,
       feedback_consumer_suppression_mutate: false,
       feedback_consumer_delivery_update: true,
+      bootstrap_direct_table: false,
+      bootstrap_execute: true,
+      migrator_retains_bootstrap_owner: false,
     });
   });
 
@@ -519,8 +545,42 @@ describe("Better Auth trusted contact isolation", () => {
     expect(active?.user.id).toBe(signUp.user.id);
     expect(active?.session.expiresAt.getTime()).toBeGreaterThan(Date.now());
 
+    const bootstrapRequest = new Request(
+      "https://app.example.test/internal/account-bootstrap?owner=attacker",
+      { method: "POST", headers },
+    );
+    const bootstrapDependencies = {
+      sessionVerifier: new BetterAuthVerifiedSessionVerifier(auth.api),
+      bootstrapper: authAccountBootstrapper,
+      accountResolver: authAccountResolver,
+      readinessVerifier: authAccountReadiness,
+    };
+    await expect(
+      bootstrapAccountForRequest(bootstrapRequest, bootstrapDependencies),
+    ).resolves.toEqual({
+      version: "1.0.0",
+      disposition: "ready",
+      code: "account-ready",
+    });
+    const internal = await pool.query<{ id: string }>(
+      `select id from user_account where identity_provider_subject = $1`,
+      [signUp.user.id],
+    );
+    expect(internal.rowCount).toBe(1);
+
     await auth.api.revokeSessions({ headers });
     await expect(auth.api.getSession({ headers })).resolves.toBeNull();
+    await expect(
+      bootstrapAccountForRequest(bootstrapRequest, bootstrapDependencies),
+    ).resolves.toEqual({
+      version: "1.0.0",
+      disposition: "authenticate",
+      code: "authentication-required",
+    });
+    await pool.query("delete from user_account where id = $1", [
+      internal.rows[0]!.id,
+    ]);
+    await pool.query(`delete from auth."user" where id = $1`, [signUp.user.id]);
   });
 
   it("returns only the current verified contact for the matching recent session and owner", async () => {
@@ -654,6 +714,7 @@ describe("Better Auth trusted contact isolation", () => {
     for (const role of [
       "app_user",
       "app_auth_account_resolver",
+      "app_auth_account_bootstrap",
       "app_auth_contact_resolver",
     ] as const) {
       await expect(
@@ -682,6 +743,27 @@ describe("Better Auth trusted contact isolation", () => {
     await expect(
       asDatabaseRole("app_auth_runtime", (client) =>
         client.query(`select id from public.user_account`),
+      ),
+    ).rejects.toMatchObject({ code: "42501" });
+  });
+
+  it("allows the bootstrap executor only its function and no direct account rows", async () => {
+    await expect(
+      asDatabaseRole("app_auth_account_bootstrap", (client) =>
+        client.query("select id from user_account"),
+      ),
+    ).rejects.toMatchObject({ code: "42501" });
+    await expect(
+      asDatabaseRole("app_auth_account_bootstrap", (client) =>
+        client.query(
+          `insert into user_account (identity_provider_subject)
+           values ('forbidden-direct-bootstrap')`,
+        ),
+      ),
+    ).rejects.toMatchObject({ code: "42501" });
+    await expect(
+      asDatabaseRole("app_auth_account_resolver", (client) =>
+        client.query("select app.bootstrap_auth_account('wrong-executor')"),
       ),
     ).rejects.toMatchObject({ code: "42501" });
   });
@@ -715,6 +797,7 @@ async function asDatabaseRole<T>(
     | "app_user"
     | "app_auth_runtime"
     | "app_auth_account_resolver"
+    | "app_auth_account_bootstrap"
     | "app_auth_contact_resolver",
   work: (client: PoolClient) => Promise<T>,
 ) {
@@ -2343,9 +2426,12 @@ describe("two-owner row isolation", () => {
 
   it("bootstraps idempotently and never reactivates a deleted subject", async () => {
     const session = activeSession("test-bootstrap-subject");
-    const first = await bootstrapAccount(pool, session);
-    const second = await bootstrapAccount(pool, session);
-    expect(second).toBe(first);
+    const [first, second, third] = await Promise.all([
+      bootstrapAccount(pool, session),
+      bootstrapAccount(pool, session),
+      bootstrapAccount(pool, session),
+    ]);
+    expect(new Set([first, second, third])).toEqual(new Set([first]));
 
     await pool.query(
       "update user_account set deleted_at = now() where id = $1",

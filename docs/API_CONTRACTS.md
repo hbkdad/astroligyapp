@@ -360,3 +360,28 @@ append-only receipts, mutate/delete suppression, access user/auth tables, or exp
 table to `app_user`. `isSuppressed(recipient)` searches every retained keyed digest and is
 the concrete Goal 60 suppression resolver. Receipt retention and suppression erasure are
 explicit owner/maintenance operations; key retirement must not strand retained digests.
+
+## Verified-session account bootstrap boundary
+
+`bootstrapAccountForRequest` is an internal server-only workflow. It accepts a standard
+`Request` only so the configured `SessionVerifier` can validate the Better Auth database
+session; request body/query/header account IDs, subjects, emails, profile data, and redirect
+targets are ignored. `BetterAuthVerifiedSessionVerifier` requires a live, recent, matching
+session/user pair and the current database user row's exact `emailVerified: true`. Invalid,
+expired, revoked, malformed, missing, and unverified state all return the same fixed
+authentication result. Verifier outage is a distinct identity-free retry result.
+
+After verification, `BetterAuthAccountBootstrapper` invokes only
+`app.bootstrap_auth_account(subject)` while holding the NOLOGIN
+`app_auth_account_bootstrap` role. The security-definer function has a separate non-inherited
+owner with column-limited account privileges. It atomically inserts a new opaque account or
+returns the existing active row, but cannot reactivate a soft-deleted subject. The executor
+cannot read/write `user_account` or auth tables directly, and the migrator does not retain
+membership in the function-owner role.
+
+The workflow then resolves the active account through the independent execute-only resolver,
+requires its UUID to match the bootstrapped UUID, and proves `app_user` plus
+`app.current_user_id` transaction readiness. Results are frozen `ready`, `authenticate`,
+`retry`, or `reconcile` values with fixed codes and never expose subject, session, internal
+account UUID, email, profile, database error, or caller-supplied data. No public route,
+cookie name, page, form, redirect, or automatic invocation is selected by this contract.
