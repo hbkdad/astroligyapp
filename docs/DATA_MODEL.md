@@ -175,6 +175,22 @@ the bearer-token digest and is verified before parsing stored public content.
 - external provider references and period timestamps
 - last applied provider event
 
+### `billing_customer_binding`
+
+- immutable `id`, opaque `user_account_id`, bounded provider key, and bounded
+  provider customer reference; no email, checkout/custom data, profile, or browser
+  ownership claim
+- globally unique provider/customer pair and one customer per owner/provider,
+  preventing reuse across owners and ambiguous resolver results under concurrency
+- owner-scoped `app_user` SELECT/INSERT only under forced RLS; no application update
+  or delete privilege, and account deletion cascades the binding
+- the public application role has no access. A NOLOGIN resolver role can execute
+  only a bounded security-definer lookup. The function's separate NOLOGIN owner has
+  column-only reads plus explicit resolver RLS policies and is not inherited by the
+  application/migration login after installation
+- resolution returns only the internal account UUID for an exact bound pair and
+  only while that account is not soft-deleted
+
 ### `subscription_provider_event_receipt`
 
 - subscription reference plus opaque provider/event identity

@@ -171,3 +171,18 @@ billing period. Paddle's documented null-period paused/canceled states instead u
 the subscription start and exact pause/cancel time, ending access safely. Provider
 RFC 3339 values are converted into the internal canonical millisecond UTC form; no
 provider payload or credential is returned or logged.
+
+`BillingCustomerBindingRepository.bind(ownerId, identity)` creates one immutable
+provider/customer ownership binding under the owner's `app_user` transaction. Exact
+replay returns `existing`; a different customer for the owner's provider or reuse of
+the pair by another owner throws the same generic conflict. `findForProvider` returns
+only the frozen provider/customer identity visible to that owner. Both methods reject
+extra fields and unsafe references before SQL.
+
+`BillingCustomerOwnerResolver.resolveOwner(provider, customerReference)` implements
+the narrow Goal 48 resolver. It opens a transaction, assumes only
+`app_billing_resolver`, and calls `app.resolve_billing_customer_owner(text,text)`.
+That role has no table privileges. The bounded security-definer function returns one
+opaque account UUID or null and filters soft-deleted accounts; malformed privileged
+results, database/rollback failure, and pool state are never translated into a user
+identity or reflected response.

@@ -5,7 +5,9 @@ import { SDK_VERSION } from "@paddle/paddle-node-sdk";
 
 vi.mock("server-only", () => ({}));
 
+import type { AccountId } from "@/infrastructure/auth/account";
 import type { BillingWebhookAdapterRequest } from "@/server/billing-webhook-contracts";
+import { processBillingWebhook } from "@/server/billing-webhook-orchestrator";
 import {
   PADDLE_BILLING_ADAPTER_VERSION,
   PADDLE_PROVIDER_KEY,
@@ -165,6 +167,45 @@ describe("Paddle billing provider adapter", () => {
       status: "verified",
       event: { planKey: "advanced" },
     });
+  });
+
+  it("flows one signed Paddle event through Goal 48 with fake owner and persistence boundaries", async () => {
+    const signed = signedRequest(payload());
+    const resolveOwner = vi.fn(
+      async () => "10000000-0000-4000-8000-000000000001" as AccountId,
+    );
+    const applyNormalizedEvent = vi.fn(async () => ({
+      outcome: "applied" as const,
+      changed: true,
+      entitlementState: null,
+    }));
+
+    await expect(
+      processBillingWebhook(
+        { rawBody: signed.rawBody, headers: signed.headers },
+        {
+          adapter: adapter(),
+          accountResolver: { resolveOwner },
+          subscriptionWriter: { applyNormalizedEvent },
+          clock: { now: () => new Date(NOW) },
+        },
+      ),
+    ).resolves.toEqual({
+      version: "1.0.0",
+      disposition: "acknowledge",
+      statusCode: 200,
+      code: "processed",
+    });
+    expect(resolveOwner).toHaveBeenCalledWith(PADDLE_PROVIDER_KEY, CUSTOMER_ID);
+    expect(applyNormalizedEvent).toHaveBeenCalledWith(
+      "10000000-0000-4000-8000-000000000001",
+      {
+        provider: PADDLE_PROVIDER_KEY,
+        customerReference: CUSTOMER_ID,
+        subscriptionReference: SUBSCRIPTION_ID,
+      },
+      expect.objectContaining({ eventId: EVENT_ID, planKey: "personal" }),
+    );
   });
 
   it("normalizes Paddle RFC 3339 fractional precision into internal instants", async () => {

@@ -337,6 +337,58 @@ export const subscription = pgTable(
   ],
 );
 
+export const billingCustomerBinding = pgTable(
+  "billing_customer_binding",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    userAccountId: uuid("user_account_id").notNull(),
+    externalProvider: text("external_provider").notNull(),
+    externalCustomerReference: text("external_customer_reference").notNull(),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+      mode: "string",
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("billing_customer_binding_provider_customer_uidx").using(
+      "btree",
+      table.externalProvider.asc().nullsLast().op("text_ops"),
+      table.externalCustomerReference.asc().nullsLast().op("text_ops"),
+    ),
+    uniqueIndex("billing_customer_binding_owner_provider_uidx").using(
+      "btree",
+      table.userAccountId.asc().nullsLast().op("uuid_ops"),
+      table.externalProvider.asc().nullsLast().op("text_ops"),
+    ),
+    index("billing_customer_binding_owner_idx").using(
+      "btree",
+      table.userAccountId.asc().nullsLast().op("uuid_ops"),
+    ),
+    foreignKey({
+      columns: [table.userAccountId],
+      foreignColumns: [userAccount.id],
+      name: "billing_customer_binding_user_account_id_user_account_id_fk",
+    }).onDelete("cascade"),
+    pgPolicy("billing_customer_binding_owner", {
+      as: "permissive",
+      for: "all",
+      to: ["app_user"],
+      using: sql`(user_account_id = app.current_user_id())`,
+      withCheck: sql`(user_account_id = app.current_user_id())`,
+    }),
+    check(
+      "billing_customer_binding_provider_check",
+      sql`char_length(external_provider) <= 64 AND external_provider ~ '^[a-z][a-z0-9_-]*$'`,
+    ),
+    check(
+      "billing_customer_binding_customer_check",
+      sql`char_length(external_customer_reference) <= 200 AND external_customer_reference ~ '^[A-Za-z0-9][A-Za-z0-9._:-]*$'`,
+    ),
+  ],
+);
+
 export const subscriptionProviderEventReceipt = pgTable(
   "subscription_provider_event_receipt",
   {

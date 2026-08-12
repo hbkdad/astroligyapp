@@ -93,6 +93,11 @@ try {
     [legacyId],
   );
   const legacySubscriptionId = legacySubscription.rows[0].id;
+  const bindingBefore = await pool.query(
+    `select to_regclass('public.billing_customer_binding') as relation`,
+  );
+  if (bindingBefore.rows[0]?.relation !== null)
+    throw new Error("Billing customer binding existed before its migration");
 
   await migrate(drizzle(pool), { migrationsFolder: repositoryMigrations });
 
@@ -171,6 +176,12 @@ try {
   )
     throw new Error("Previous subscription writes are not overlap-safe");
 
+  const bindingUpgrade = await pool.query(
+    `select count(*)::text as count from billing_customer_binding`,
+  );
+  if (bindingUpgrade.rows[0]?.count !== "0")
+    throw new Error("Billing customer binding migration fabricated ownership");
+
   const boundary = await pool.query(
     `select
        has_function_privilege(
@@ -194,18 +205,38 @@ try {
          'compatibility_report',
          'report_payload',
          'SELECT'
-       ) as can_select_private`,
+       ) as can_select_private,
+       has_table_privilege(
+         'app_billing_resolver',
+         'billing_customer_binding',
+         'SELECT'
+       ) as resolver_can_select_binding,
+       has_function_privilege(
+         'app_billing_resolver',
+         'app.resolve_billing_customer_owner(text,text)',
+         'EXECUTE'
+       ) as resolver_can_execute,
+       exists (
+         select 1 from pg_auth_members membership
+         join pg_roles member_role on member_role.oid = membership.member
+         join pg_roles granted_role on granted_role.oid = membership.roleid
+         where member_role.rolname = current_user
+           and granted_role.rolname = 'app_billing_resolver_owner'
+       ) as migrator_retains_owner_role`,
   );
   if (
     boundary.rows[0]?.can_execute !== true ||
     boundary.rows[0]?.can_select !== false ||
     boundary.rows[0]?.can_select_public !== true ||
-    boundary.rows[0]?.can_select_private !== false
+    boundary.rows[0]?.can_select_private !== false ||
+    boundary.rows[0]?.resolver_can_select_binding !== false ||
+    boundary.rows[0]?.resolver_can_execute !== true ||
+    boundary.rows[0]?.migrator_retains_owner_role !== false
   )
-    throw new Error("Public share reader privileges are broader than intended");
+    throw new Error("Narrow reader privileges are broader than intended");
 
   process.stdout.write(
-    "Compatibility/subscription migration upgrade: legacy rows, overlap writes, and RLS-scoped column reader passed\n",
+    "Compatibility/subscription/billing-binding upgrade: legacy rows, overlap writes, no fabricated ownership, and narrow readers passed\n",
   );
 } finally {
   await pool.end();

@@ -4,12 +4,12 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 49 complete; Paddle is selected for the first exact-SDK billing
-verification adapter behind the provider-neutral webhook boundary.
+Status: Goal 50 complete; verified provider customers now resolve through an
+immutable, least-privilege binding to active internal account owners.
 
 The project now has the portable application baseline plus a PostgreSQL 18
-contract, Drizzle ORM/Kit, a typed 21-table normalized schema, checked-in SQL
-migrations, forced row-level security on 20 private tables, a server-only
+contract, Drizzle ORM/Kit, a typed 22-table normalized schema, checked-in SQL
+migrations, forced row-level security on 21 private tables, a server-only
 verified-session boundary, identity-scoped transactions, account bootstrap,
 deterministic zodiac/aspect primitives, lunar phase geometry, a traceable
 Pythagorean numerology strategy, and a strict ephemeris adapter validation
@@ -95,6 +95,18 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 50: add one immutable provider/customer-to-owner binding table with
+      strict reference constraints, dual uniqueness, owner index, account
+      cascade, forced RLS, and owner-only SELECT/INSERT privileges.
+- [x] Implement idempotent owner-scoped binding/read operations plus a NOLOGIN,
+      function-only webhook resolver that returns only an active account UUID.
+- [x] Isolate the security-definer function under a separate non-inherited
+      NOLOGIN owner with column-only reads and explicit RLS policies, avoiding
+      any production dependency on migrator superuser/BYPASSRLS privileges.
+- [x] Verify legacy upgrade/overlap, no fabricated ownership, default/two-owner
+      isolation, concurrent first binding, conflicts, rollback/release, role and
+      function privilege boundaries, soft/hard deletion, index use, and signed
+      Paddle-to-Goal-48 composition with fake downstream dependencies.
 - [x] Goal 49: compare current Stripe, Paddle, and Lemon Squeezy pricing,
       Canada availability, merchant-of-record implications, webhook behavior,
       Node support, and operating fit; accept Paddle in ADR 0007.
@@ -449,24 +461,25 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 50 — bind billing-provider customers to internal account owners before
-webhook state mutation.
+Goal 51 — expose the verified Paddle webhook pipeline through a bounded HTTP
+Route Handler without live credentials or deployment.
 
 Deliverables:
 
-1. Design a provider-neutral durable customer-binding record with one opaque owner,
-   provider key, and customer reference; add a forward-only migration, constraints,
-   indexes, deletion behavior, and forced RLS without weakening existing tables.
-2. Implement an owner-scoped idempotent create/read boundary plus the narrow
-   privileged Goal 48 owner resolver needed before a first subscription row exists.
-   Never resolve ownership from email, browser metadata, or webhook custom data.
-3. Fail provider/customer reuse across owners closed under concurrency, preserve
-   rollback and pooled-role cleanup, and return no account/profile/private details
-   beyond the internal resolver contract.
-4. Verify previous-schema upgrade, overlap writes, two-owner/default-deny isolation,
-   concurrent first binding, resolver least privilege, cascade deletion, and the
-   Paddle adapter-to-orchestrator path with fakes only. Add no live API call,
-   credential, checkout, public route, production mutation, or deployment.
+1. Define a strict server-only configuration loader for PostgreSQL, one Paddle
+   destination secret, and explicit Personal/Advanced price-reference lists. Reject
+   missing, public-prefixed, malformed, duplicate, or overlapping configuration
+   without echoing values.
+2. Compose the Goal 49 adapter, Goal 50 resolver, Goal 47 writer, and trusted clock
+   behind one process-safe dependency factory with explicit pool lifecycle and no
+   browser import.
+3. Add `/api/webhooks/paddle` POST with bounded streaming body/header collection,
+   safe content-type/method/cache/security behavior, and exact Goal 48 disposition
+   mapping. Do not buffer an oversized body or reflect provider/error detail.
+4. Verify locally signed HTTP requests, missing/invalid configuration, method and
+   content-type rejection, body/header limits, all dispositions, dependency failure,
+   response privacy, concurrency, and production build. Add no live credential,
+   provider API call, checkout, external account mutation, notification, or deploy.
 
 ## Phase queue
 
@@ -1083,6 +1096,55 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 50 billing customer ownership-binding record
+
+- Commands: schema generation and SQL/snapshot review; `npm run db:check`;
+  focused binding/resolver/Paddle/orchestrator/transition suites; previous-schema
+  migration and full PostgreSQL integration; `npm run check`;
+  `npm run test:coverage`; `npm audit --omit=dev`; secret-pattern scan; and
+  `git diff --check` through `database-migration` and `security-audit`.
+- Migration: forward-only `0005_silent_vampiro` adds one empty five-column binding
+  table to produce 22 application tables and 21 forced-RLS private tables. There
+  is no backfill or table rewrite. Bounded provider/customer checks, global
+  provider/customer uniqueness, owner/provider uniqueness, owner index, and an
+  account cascade prevent ambiguous or orphaned bindings.
+- Owner boundary: `app_user` receives SELECT/INSERT only; update/delete are revoked.
+  The repository validates an exact provider/customer shape, creates within the
+  owner identity transaction, returns immutable created/existing results, and maps
+  every ownership collision to one generic error. It never accepts email, profile,
+  checkout/custom data, or browser ownership fields.
+- Resolver boundary: `app_billing_resolver` is NOLOGIN and has no table privilege;
+  it can call only the bounded lookup function. That security-definer function is
+  owned by a separate NOLOGIN/NOINHERIT role with column-only reads and explicit
+  forced-RLS policies. Temporary migrator membership is revoked, so production
+  behavior does not rely on superuser/BYPASSRLS and the runtime resolver cannot
+  inherit or assume its owner. Only an active opaque account UUID or null returns.
+- Migration/overlap: a real schema from migrations 0000-0001 upgraded through all
+  later changes with legacy compatibility/subscription rows intact. The new table
+  was absent before 0005, empty afterward, fabricated no ownership, and previous
+  compatibility/subscription writes still succeeded. Reader/function privileges
+  were checked after upgrade.
+- Adversarial result: exact replay, concurrent first binding, different-customer and
+  cross-owner reuse, unsafe/extra fields, constraints, direct cross-owner inserts,
+  default deny, owner-only reads, update/delete denial, index use, resolver table
+  denial, malformed privileged results, database plus rollback failure, commit/
+  rollback/release order, soft deletion, hard cascade, and signed Paddle-to-Goal-48
+  flow with fake resolver/writer passed. No critical/high finding remains.
+- Verification result: 44 unit files and 720 tests plus 25 PostgreSQL integration
+  tests passed. Coverage was 94.27% statements, 91.79% branches, 99.40% functions,
+  and 95.37% lines. Formatting, ESLint, strict TypeScript, optimized build, Drizzle
+  checks, production audit, secret scan, and diff integrity passed.
+- Rollout/recovery: apply 0005 before any binding writer or webhook resolver. It is
+  additive and overlap-safe. If migration or privilege verification fails, keep new
+  code disabled and deploy a reviewed forward fix; after real bindings exist,
+  dropping/rolling back the table would lose security-critical ownership evidence,
+  so backup restore or forward correction is required.
+- Observability/scope: aggregate binding created/existing/conflict, resolver miss/
+  failure, unique violation, function latency, and webhook owner-unavailable counts
+  may be monitored. Never log provider/customer/account values. No live credential,
+  provider call, checkout, public route, external account mutation, notification,
+  production database change, or deployment was added.
 
 ## Goal 49 Paddle billing verification adapter record
 

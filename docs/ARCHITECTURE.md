@@ -343,6 +343,15 @@ tests/
   the subscription start plus exact access-ending transition time. Every unknown
   event/product/shape fails closed. No API key, checkout, route, or account inference
   enters this layer.
+- Billing customer ownership: a provider-neutral immutable binding is created only
+  inside an authenticated `app_user` owner transaction. Global provider/customer and
+  owner/provider uniqueness make first binding idempotent and all reuse ambiguous to
+  another owner. Webhooks resolve the exact verified provider/customer pair through
+  one NOLOGIN role and one security-definer function that returns only an active
+  account UUID. The execution role cannot read the binding/account tables, while the
+  function's isolated NOLOGIN owner has only the required columns and RLS policies.
+  Email, checkout metadata, webhook custom data, profile IDs, and browser claims are
+  never ownership evidence.
 
 ## Data and cache principles
 

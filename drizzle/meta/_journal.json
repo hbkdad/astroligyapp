@@ -36,6 +36,13 @@
       "when": 1786503763615,
       "tag": "0004_steady_viper",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786506164475,
+      "tag": "0005_silent_vampiro",
+      "breakpoints": true
     }
   ]
 }

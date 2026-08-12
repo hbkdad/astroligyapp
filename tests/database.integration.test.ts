@@ -17,6 +17,11 @@ import {
   InvalidStoredCompatibilityReportError,
 } from "@/infrastructure/persistence/compatibility-report-repository";
 import {
+  BillingCustomerBindingConflictError,
+  BillingCustomerBindingRepository,
+  BillingCustomerOwnerResolver,
+} from "@/infrastructure/persistence/billing-customer-binding-repository";
+import {
   SubscriptionIdentityConflictError,
   SubscriptionRepository,
 } from "@/infrastructure/persistence/subscription-repository";
@@ -49,6 +54,8 @@ let compatibilityReportA2: string;
 
 const compatibilityRepository = new CompatibilityReportRepository(pool);
 const subscriptionRepository = new SubscriptionRepository(pool);
+const billingBindingRepository = new BillingCustomerBindingRepository(pool);
+const billingOwnerResolver = new BillingCustomerOwnerResolver(pool);
 
 function subscriptionEvent(
   overrides: Partial<NormalizedSubscriptionEvent> = {},
@@ -174,8 +181,8 @@ describe("initial PostgreSQL migration", () => {
        from pg_class c join pg_namespace n on n.oid = c.relnamespace
        where n.nspname = 'public' and c.relrowsecurity and c.relforcerowsecurity`,
     );
-    expect(Number(tables.rows[0]!.count)).toBe(21);
-    expect(Number(forcedPolicies.rows[0]!.count)).toBe(20);
+    expect(Number(tables.rows[0]!.count)).toBe(22);
+    expect(Number(forcedPolicies.rows[0]!.count)).toBe(21);
   });
 
   it("enforces deterministic constraints and versioned cache uniqueness", async () => {
@@ -210,6 +217,8 @@ describe("initial PostgreSQL migration", () => {
     expect(names).toContain("audit_event_owner_occurred_idx");
     expect(names).toContain("subscription_event_receipt_provider_event_uidx");
     expect(names).toContain("subscription_event_receipt_subscription_idx");
+    expect(names).toContain("billing_customer_binding_provider_customer_uidx");
+    expect(names).toContain("billing_customer_binding_owner_provider_uidx");
   });
 });
 
@@ -576,6 +585,268 @@ describe("compatibility report persistence and public share boundary", () => {
     expect(
       await compatibilityRepository.deleteOwned(ownerA as AccountId, reportId),
     ).toBe(false);
+  });
+});
+
+describe("billing customer ownership binding", () => {
+  const identity = {
+    provider: "binding_test",
+    customerReference: "customer_owner_a",
+  } as const;
+
+  it("creates an immutable owner binding idempotently and resolves only active owners", async () => {
+    const created = await billingBindingRepository.bind(
+      ownerA as AccountId,
+      identity,
+    );
+    expect(created).toEqual({ outcome: "created", identity });
+    expect(Object.isFrozen(created)).toBe(true);
+    expect(Object.isFrozen(created.identity)).toBe(true);
+
+    await expect(
+      billingBindingRepository.bind(ownerA as AccountId, identity),
+    ).resolves.toEqual({ outcome: "existing", identity });
+    await expect(
+      billingBindingRepository.findForProvider(
+        ownerA as AccountId,
+        identity.provider,
+      ),
+    ).resolves.toEqual(identity);
+    await expect(
+      billingBindingRepository.findForProvider(
+        ownerB as AccountId,
+        identity.provider,
+      ),
+    ).resolves.toBeNull();
+    await expect(
+      billingOwnerResolver.resolveOwner(
+        identity.provider,
+        identity.customerReference,
+      ),
+    ).resolves.toBe(ownerA);
+    await expect(
+      billingOwnerResolver.resolveOwner(identity.provider, "customer_unknown"),
+    ).resolves.toBeNull();
+  });
+
+  it("serializes concurrent first binding and rejects every ownership collision", async () => {
+    const concurrentIdentity = {
+      provider: "binding_concurrent",
+      customerReference: "customer_concurrent",
+    } as const;
+    const outcomes = await Promise.all([
+      billingBindingRepository.bind(ownerA as AccountId, concurrentIdentity),
+      billingBindingRepository.bind(ownerA as AccountId, concurrentIdentity),
+    ]);
+    expect(outcomes.map((value) => value.outcome).sort()).toEqual([
+      "created",
+      "existing",
+    ]);
+
+    await expect(
+      billingBindingRepository.bind(ownerA as AccountId, {
+        ...concurrentIdentity,
+        customerReference: "customer_replacement",
+      }),
+    ).rejects.toEqual(new BillingCustomerBindingConflictError());
+    await expect(
+      billingBindingRepository.bind(ownerB as AccountId, concurrentIdentity),
+    ).rejects.toEqual(new BillingCustomerBindingConflictError());
+
+    const stored = await pool.query<{ bindings: string }>(
+      `select count(*)::text as bindings
+       from billing_customer_binding
+       where external_provider = $1`,
+      [concurrentIdentity.provider],
+    );
+    expect(stored.rows[0]).toEqual({ bindings: "1" });
+  });
+
+  it("rejects browser fields, unsafe references, and cross-owner writes", async () => {
+    await expect(
+      billingBindingRepository.bind(ownerA as AccountId, {
+        ...identity,
+        email: "browser@example.test",
+      }),
+    ).rejects.toThrow("Billing customer identity is invalid");
+    await expect(
+      billingBindingRepository.bind(ownerA as AccountId, {
+        provider: "Paddle",
+        customerReference: "ctm_valid",
+      }),
+    ).rejects.toThrow("Billing customer identity is invalid");
+    await expect(
+      billingBindingRepository.findForProvider(
+        ownerA as AccountId,
+        "contains space",
+      ),
+    ).rejects.toThrow("Billing provider identity is invalid");
+
+    await expect(
+      asUser(ownerA, (client) =>
+        client.query(
+          `insert into billing_customer_binding
+             (user_account_id, external_provider, external_customer_reference)
+           values ($1, 'binding_forbidden', 'customer_forbidden')`,
+          [ownerB],
+        ),
+      ),
+    ).rejects.toMatchObject({ code: "42501" });
+    await expect(
+      asUser(ownerA, (client) =>
+        client.query(
+          `insert into billing_customer_binding
+             (user_account_id, external_provider, external_customer_reference)
+           values ($1, 'Invalid Provider', 'customer')`,
+          [ownerA],
+        ),
+      ),
+    ).rejects.toMatchObject({ code: "23514" });
+  });
+
+  it("enforces forced RLS, immutable app access, and function-only resolver privilege", async () => {
+    const boundary = await pool.query<{
+      forced: boolean;
+      app_select: boolean;
+      app_insert: boolean;
+      app_update: boolean;
+      app_delete: boolean;
+      resolver_select: boolean;
+      resolver_execute: boolean;
+      app_execute: boolean;
+      resolver_login: boolean;
+      resolver_owner_login: boolean;
+      resolver_inherits_owner: boolean;
+      function_owner: string;
+    }>(
+      `select c.relforcerowsecurity as forced,
+              has_table_privilege('app_user', c.oid, 'SELECT') as app_select,
+              has_table_privilege('app_user', c.oid, 'INSERT') as app_insert,
+              has_table_privilege('app_user', c.oid, 'UPDATE') as app_update,
+              has_table_privilege('app_user', c.oid, 'DELETE') as app_delete,
+              has_table_privilege('app_billing_resolver', c.oid, 'SELECT')
+                as resolver_select,
+              has_function_privilege(
+                'app_billing_resolver',
+                'app.resolve_billing_customer_owner(text,text)',
+                'EXECUTE'
+              ) as resolver_execute,
+              has_function_privilege(
+                'app_user',
+                'app.resolve_billing_customer_owner(text,text)',
+                'EXECUTE'
+              ) as app_execute,
+              (select rolcanlogin from pg_roles
+               where rolname = 'app_billing_resolver') as resolver_login,
+              (select rolcanlogin from pg_roles
+               where rolname = 'app_billing_resolver_owner')
+                as resolver_owner_login,
+              pg_has_role(
+                'app_billing_resolver',
+                'app_billing_resolver_owner',
+                'MEMBER'
+              ) as resolver_inherits_owner,
+              (select pg_get_userbyid(p.proowner)
+               from pg_proc p join pg_namespace pn on pn.oid = p.pronamespace
+               where pn.nspname = 'app'
+                 and p.proname = 'resolve_billing_customer_owner')
+                as function_owner
+       from pg_class c join pg_namespace n on n.oid = c.relnamespace
+       where n.nspname = 'public' and c.relname = 'billing_customer_binding'`,
+    );
+    expect(boundary.rows[0]).toEqual({
+      forced: true,
+      app_select: true,
+      app_insert: true,
+      app_update: false,
+      app_delete: false,
+      resolver_select: false,
+      resolver_execute: true,
+      app_execute: false,
+      resolver_login: false,
+      resolver_owner_login: false,
+      resolver_inherits_owner: false,
+      function_owner: "app_billing_resolver_owner",
+    });
+
+    await expect(
+      asUser(ownerA, (client) =>
+        client.query(
+          "update billing_customer_binding set external_customer_reference = 'changed'",
+        ),
+      ),
+    ).rejects.toMatchObject({ code: "42501" });
+    await expect(
+      asUser(ownerA, (client) =>
+        client.query("delete from billing_customer_binding"),
+      ),
+    ).rejects.toMatchObject({ code: "42501" });
+
+    const resolverClient = await pool.connect();
+    try {
+      await resolverClient.query("begin");
+      await resolverClient.query("set local role app_billing_resolver");
+      await expect(
+        resolverClient.query("select * from billing_customer_binding"),
+      ).rejects.toMatchObject({ code: "42501" });
+      await resolverClient.query("rollback");
+    } finally {
+      resolverClient.release();
+    }
+
+    const noIdentity = await asUser(null, (client) =>
+      client.query("select id from billing_customer_binding"),
+    );
+    expect(noIdentity.rowCount).toBe(0);
+
+    const plan = await asUser(ownerA, async (client) => {
+      await client.query("set local enable_seqscan = off");
+      return client.query(
+        `explain (format json)
+         select external_customer_reference
+         from billing_customer_binding
+         where external_provider = 'binding_test'`,
+      );
+    });
+    expect(JSON.stringify(plan.rows)).toContain(
+      "billing_customer_binding_owner_provider_uidx",
+    );
+  });
+
+  it("returns no owner after soft deletion and cascades on hard deletion", async () => {
+    const temporaryOwner = randomUUID();
+    await pool.query(
+      `insert into user_account (id, identity_provider_subject)
+       values ($1, 'billing-binding-temporary-owner')`,
+      [temporaryOwner],
+    );
+    const temporaryIdentity = {
+      provider: "binding_temporary",
+      customerReference: "customer_temporary",
+    } as const;
+    await billingBindingRepository.bind(
+      temporaryOwner as AccountId,
+      temporaryIdentity,
+    );
+    await pool.query(
+      "update user_account set deleted_at = now() where id = $1",
+      [temporaryOwner],
+    );
+    await expect(
+      billingOwnerResolver.resolveOwner(
+        temporaryIdentity.provider,
+        temporaryIdentity.customerReference,
+      ),
+    ).resolves.toBeNull();
+    await pool.query("delete from user_account where id = $1", [
+      temporaryOwner,
+    ]);
+    const remaining = await pool.query<{ count: string }>(
+      `select count(*)::text as count from billing_customer_binding
+       where user_account_id = $1`,
+      [temporaryOwner],
+    );
+    expect(remaining.rows[0]).toEqual({ count: "0" });
   });
 });
 
@@ -961,6 +1232,9 @@ describe("two-owner row isolation", () => {
       receipts: await client.query<{ id: string }>(
         "select id from subscription_provider_event_receipt",
       ),
+      billingBindings: await client.query<{ id: string }>(
+        "select id from billing_customer_binding",
+      ),
     }));
     const b = await asUser(ownerB, async (client) => ({
       profiles: await client.query<{ id: string }>("select id from profile"),
@@ -976,6 +1250,9 @@ describe("two-owner row isolation", () => {
       receipts: await client.query<{ id: string }>(
         "select id from subscription_provider_event_receipt",
       ),
+      billingBindings: await client.query<{ id: string }>(
+        "select id from billing_customer_binding",
+      ),
     }));
 
     expect(a.profiles.rows.map((row) => row.id)).toEqual([profileA]);
@@ -985,11 +1262,13 @@ describe("two-owner row isolation", () => {
     expect(a.positions.rows.map((row) => row.body)).toEqual(["sun"]);
     expect(a.subscriptions.rowCount).toBe(3);
     expect(a.receipts.rowCount).toBe(8);
+    expect(a.billingBindings.rowCount).toBe(2);
     expect(b.profiles.rows.map((row) => row.id)).toEqual([profileB]);
     expect(b.births.rows.map((row) => row.id)).toEqual([birthProfileB]);
     expect(b.positions.rowCount).toBe(0);
     expect(b.subscriptions.rowCount).toBe(0);
     expect(b.receipts.rowCount).toBe(0);
+    expect(b.billingBindings.rowCount).toBe(0);
   });
 
   it("blocks cross-owner insert, update, and delete operations", async () => {
@@ -1111,6 +1390,7 @@ describe("two-owner row isolation", () => {
       compatibility_reports: string;
       subscriptions: string;
       subscription_receipts: string;
+      billing_customer_bindings: string;
     }>(
       `select
          (select count(*) from profile where owner_user_id = $1)::text as profiles,
@@ -1122,7 +1402,9 @@ describe("two-owner row isolation", () => {
            as subscriptions,
          (select count(*) from subscription_provider_event_receipt r
             join subscription s on s.id = r.subscription_id
-           where s.user_account_id = $1)::text as subscription_receipts`,
+           where s.user_account_id = $1)::text as subscription_receipts,
+         (select count(*) from billing_customer_binding
+           where user_account_id = $1)::text as billing_customer_bindings`,
       [ownerA, calculationRunA],
     );
     expect(counts.rows[0]).toEqual({
@@ -1132,6 +1414,7 @@ describe("two-owner row isolation", () => {
       compatibility_reports: "0",
       subscriptions: "0",
       subscription_receipts: "0",
+      billing_customer_bindings: "0",
     });
   });
 });
