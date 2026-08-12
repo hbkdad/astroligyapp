@@ -1,5 +1,7 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
+
 import {
   SUBSCRIPTION_ENTITLEMENT_STATE_VERSION,
   SUBSCRIPTION_ENTITLEMENT_STATUSES,
@@ -16,6 +18,8 @@ import {
 } from "@/domain/entitlements/subscription-transitions";
 
 const paidPlanKeys = new Set(["personal", "advanced"]);
+const NORMALIZED_EVENT_DIGEST_DOMAIN =
+  "personal-cosmic-calendar:normalized-subscription-event:v1:";
 const statuses = new Set<string>(SUBSCRIPTION_ENTITLEMENT_STATUSES);
 const allowedTransitions: Readonly<
   Record<
@@ -57,7 +61,7 @@ export function applySubscriptionEvent(
   const current = validateState(currentValue);
   if (currentValue !== null && current === null)
     return result("invalid-current-state", false, null);
-  const event = validateEvent(eventValue);
+  const event = validateNormalizedSubscriptionEvent(eventValue);
   if (event === null) return result("invalid-event", false, current);
   if (current === null) return result("applied", true, stateFrom(event));
 
@@ -74,6 +78,42 @@ export function applySubscriptionEvent(
   if (!transitionAllowed(current, event))
     return result("invalid-transition", false, current);
   return result("applied", true, stateFrom(event));
+}
+
+export function validateNormalizedSubscriptionEvent(
+  value: unknown,
+): NormalizedSubscriptionEvent | null {
+  const validated = validateEvent(value);
+  if (!validated) return null;
+  return Object.freeze({
+    version: SUBSCRIPTION_TRANSITION_EVENT_VERSION,
+    eventId: validated.eventId,
+    occurredAt: validated.occurredAt,
+    planKey: validated.planKey,
+    status: validated.status,
+    periodStartsAt: validated.periodStartsAt,
+    periodEndsAt: validated.periodEndsAt,
+  });
+}
+
+export function digestNormalizedSubscriptionEvent(
+  value: unknown,
+): string | null {
+  const event = validateNormalizedSubscriptionEvent(value);
+  if (!event) return null;
+  const canonical = JSON.stringify([
+    event.version,
+    event.eventId,
+    event.occurredAt,
+    event.planKey,
+    event.status,
+    event.periodStartsAt,
+    event.periodEndsAt,
+  ]);
+  return `sha256:${createHash("sha256")
+    .update(NORMALIZED_EVENT_DIGEST_DOMAIN)
+    .update(canonical)
+    .digest("hex")}`;
 }
 
 export function projectSubscriptionEntitlementState(

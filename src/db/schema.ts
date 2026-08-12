@@ -288,7 +288,12 @@ export const subscription = pgTable(
       withTimezone: true,
       mode: "string",
     }),
+    transitionStateVersion: text("transition_state_version"),
     lastProviderEventId: text("last_provider_event_id"),
+    lastProviderEventOccurredAt: timestamp("last_provider_event_occurred_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -325,6 +330,63 @@ export const subscription = pgTable(
       using: sql`(user_account_id = app.current_user_id())`,
       withCheck: sql`(user_account_id = app.current_user_id())`,
     }),
+    check(
+      "subscription_transition_state_check",
+      sql`((transition_state_version IS NULL AND last_provider_event_occurred_at IS NULL) OR (transition_state_version = '1.0.0' AND plan_key IN ('personal', 'advanced') AND period_starts_at IS NOT NULL AND period_ends_at IS NOT NULL AND period_starts_at < period_ends_at AND last_provider_event_id ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$' AND last_provider_event_occurred_at IS NOT NULL))`,
+    ),
+  ],
+);
+
+export const subscriptionProviderEventReceipt = pgTable(
+  "subscription_provider_event_receipt",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    subscriptionId: uuid("subscription_id").notNull(),
+    externalProvider: text("external_provider").notNull(),
+    providerEventId: text("provider_event_id").notNull(),
+    normalizedEventDigest: text("normalized_event_digest").notNull(),
+    occurredAt: timestamp("occurred_at", {
+      withTimezone: true,
+      mode: "string",
+    }).notNull(),
+    outcome: text().notNull(),
+    receivedAt: timestamp("received_at", {
+      withTimezone: true,
+      mode: "string",
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("subscription_event_receipt_provider_event_uidx").using(
+      "btree",
+      table.externalProvider.asc().nullsLast().op("text_ops"),
+      table.providerEventId.asc().nullsLast().op("text_ops"),
+    ),
+    index("subscription_event_receipt_subscription_idx").using(
+      "btree",
+      table.subscriptionId.asc().nullsLast().op("uuid_ops"),
+    ),
+    foreignKey({
+      columns: [table.subscriptionId],
+      foreignColumns: [subscription.id],
+      name: "subscription_event_receipt_subscription_id_subscription_id_fk",
+    }).onDelete("cascade"),
+    pgPolicy("subscription_event_receipt_owner", {
+      as: "permissive",
+      for: "all",
+      to: ["app_user"],
+      using: sql`EXISTS (SELECT 1 FROM subscription WHERE subscription.id = subscription_provider_event_receipt.subscription_id AND subscription.user_account_id = app.current_user_id())`,
+      withCheck: sql`EXISTS (SELECT 1 FROM subscription WHERE subscription.id = subscription_provider_event_receipt.subscription_id AND subscription.user_account_id = app.current_user_id())`,
+    }),
+    check(
+      "subscription_event_receipt_digest_check",
+      sql`normalized_event_digest ~ '^sha256:[0-9a-f]{64}$'`,
+    ),
+    check(
+      "subscription_event_receipt_outcome_check",
+      sql`outcome IN ('applied', 'stale', 'conflict', 'invalid-transition')`,
+    ),
   ],
 );
 

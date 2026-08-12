@@ -1,0 +1,3 @@
+ALTER TABLE "subscription" ADD COLUMN "transition_state_version" text;--> statement-breakpoint
+ALTER TABLE "subscription" ADD COLUMN "last_provider_event_occurred_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "subscription" ADD CONSTRAINT "subscription_transition_state_check" CHECK (((transition_state_version IS NULL AND last_provider_event_occurred_at IS NULL) OR (transition_state_version = '1.0.0' AND plan_key IN ('personal', 'advanced') AND period_starts_at IS NOT NULL AND period_ends_at IS NOT NULL AND period_starts_at < period_ends_at AND last_provider_event_id ~ '^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$' AND last_provider_event_occurred_at IS NOT NULL)));

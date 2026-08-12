@@ -4,12 +4,12 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 46 complete; normalized subscription events now pass through one
-versioned, deterministic server-only transition engine before entitlements.
+Status: Goal 47 complete; normalized subscription transitions now persist
+atomically with durable idempotency receipts behind forced row security.
 
 The project now has the portable application baseline plus a PostgreSQL 18
-contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
-migrations, forced row-level security on 19 private tables, a server-only
+contract, Drizzle ORM/Kit, a typed 21-table normalized schema, checked-in SQL
+migrations, forced row-level security on 20 private tables, a server-only
 verified-session boundary, identity-scoped transactions, account bootstrap,
 deterministic zodiac/aspect primitives, lunar phase geometry, a traceable
 Pythagorean numerology strategy, and a strict ephemeris adapter validation
@@ -94,6 +94,14 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 47: add nullable transition version/event occurrence fields plus a
+      forced-RLS append-only provider-event receipt ledger with no event payload.
+- [x] Implement owner-scoped atomic application, identity serialization, durable
+      event digest/idempotency, strict legacy fail-closed behavior, and Goal 45
+      entitlement projection in `SubscriptionRepository`.
+- [x] Verify previous-schema/overlap migration, concurrent first delivery,
+      complete ordering outcomes, identity collision, two-owner isolation,
+      receipt privileges/index use, rollback/pool cleanup, and account cascade.
 - [x] Goal 46: define strict provider-neutral normalized event and transition-
       state contracts with canonical IDs, instants, plans, statuses, and periods.
 - [x] Implement explicit trialing/active/past-due/paused/canceled transitions,
@@ -419,20 +427,21 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 47 — persist normalized subscription transitions idempotently.
+Goal 48 — define the billing-provider adapter and webhook orchestration boundary.
 
 Deliverables:
 
-1. Add only the transition-state version and last-event occurrence fields required
-   to reconstruct Goal 46 state from the existing subscription table.
-2. Implement a server-only repository that locks one provider subscription,
-   applies the pure transition engine atomically, records provider/event identity,
-   and returns only the Goal 45 entitlement projection to authenticated callers.
-3. Enforce event idempotency, stale/conflict behavior, owner isolation, provider-
-   subscription uniqueness, rollback, pooling cleanup, and safe deletion cascades.
-4. Verify forward migration/legacy behavior and two-owner PostgreSQL integration;
-   add no provider SDK, webhook/signature adapter, checkout UI, prices,
-   notification, external call, production credential, or deployment.
+1. Define a provider-neutral server adapter that verifies raw webhook bytes,
+   required headers, signature, and freshness before returning a strict internal
+   account mapping request, provider identity, and Goal 46 normalized event.
+2. Add pure orchestration that resolves the internal owner server-side, invokes
+   Goal 47 once, and classifies duplicate/stale/conflict/retry/failure responses
+   without logging raw bodies, signatures, customer IDs, or subscription IDs.
+3. Keep provider-specific plan mapping, secrets, algorithms, and SDK types inside
+   adapters; reject unverified/browser-supplied events before database work.
+4. Verify fake-adapter signature/freshness failures, replay/out-of-order outcomes,
+   owner resolution, retry semantics, redacted errors, and add no vendor SDK,
+   public route, checkout UI, prices, notification, external call, or deployment.
 
 ## Phase queue
 
@@ -994,6 +1003,61 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook response/retry behavior, and production observability remain later goals.
   No database mutation, provider selection, network call, UI, notification, or
   deployment was added.
+
+## Goal 47 subscription persistence and durable idempotency record
+
+- Commands: Drizzle generation/check and SQL/snapshot review; real previous-schema
+  upgrade; disposable PostgreSQL integration suite; focused transition tests;
+  Prettier, ESLint, strict TypeScript, all tests/coverage, optimized build,
+  production audit, secret-pattern scan, and `git diff --check` through
+  `database-migration` and `security-audit`.
+- Migration: `0003_stiff_valkyrie` adds nullable transition-state version and
+  last-event occurrence columns plus a v1 reconstructability constraint. Existing
+  rows remain explicitly unverified and prior application inserts remain valid.
+  `0004_steady_viper` adds the narrow event-receipt table, unique provider/event and
+  subscription indexes, cascade FK, digest/outcome constraints, forced RLS, and
+  SELECT/INSERT-only `app_user` privileges.
+- Durable receipt: the ledger contains subscription linkage, normalized provider/
+  event IDs, domain-separated SHA-256 of the canonical normalized event, occurrence
+  time, outcome, and receipt time. It stores no webhook body, signature, customer
+  payload, price, checkout value, or browser data and is immutable to application
+  users.
+- Repository: bounded provider/customer/subscription identity is validated before
+  work. A transaction advisory lock serializes even first delivery for one provider/
+  subscription pair. The owner-scoped transaction locks existing state, checks the
+  durable receipt, applies Goal 46, and commits state plus receipt atomically. Only
+  the Goal 45 plan/status/period projection leaves the repository.
+- Upgrade/overlap: representative legacy compatibility and subscription rows
+  upgraded intact; legacy subscription state/version remained null/unverified and
+  previous application subscription inserts still succeeded. Legacy state cannot
+  grant entitlement or be overwritten by an unordered event. Recovery requires a
+  future explicit provider resynchronization path or reviewed forward fix.
+- Adversarial result: exact replay after later state, event-ID content collision,
+  stale and same-instant events, renew/pause/cancel/terminal reactivation, concurrent
+  first delivery, cross-owner/provider/customer/subscription collision, unknown and
+  browser-added input, unverified legacy rows, append-only privileges, forced RLS,
+  unique-index plan use, two-owner direct/receipt visibility, transaction cleanup,
+  and account cascade passed. No critical/high finding remains.
+- Verification result: the previous-schema upgrade and all 20 PostgreSQL 18
+  integration tests passed; 41 unit files and 617 tests passed. Coverage was
+  94.04% statements, 91.43% branches, 99.38% functions, and 95.13% lines; the
+  transition engine had 98.61% statement, 98.90% branch, 100% function, and 100%
+  line coverage. Drizzle check, optimized build, and the zero-vulnerability
+  production audit passed.
+- Migration risk/recovery: both column additions are metadata-only nullable
+  expansion; the reconstructability check validates/scans subscription rows. The new
+  empty table/indexes do not rewrite existing data. Apply during a controlled window
+  with lock/statement monitoring and backup. Forward recovery can drop no data:
+  disable new writers and deploy a reviewed fix; rollback across new receipts would
+  lose replay history, so backup restore or forward fix is preferred.
+- Observability: monitor constraint/unique violations, invalid-current outcomes,
+  receipt conflicts, stale/same-time rates, advisory-lock waits, transaction errors,
+  and entitlement-null rates using aggregate counts only; never log raw webhook,
+  provider/customer/subscription/event identity, or normalized payload.
+- Scope/residual risk: no signature/freshness adapter, provider plan mapping,
+  webhook route, provider SDK, checkout, price, production database credential,
+  notification, external call, or deployment was added. Provider reconciliation for
+  legacy state and operational backup/restore remain later gates.
 
 ## Goal 43 compatibility persistence and share-security record
 

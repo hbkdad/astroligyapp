@@ -310,6 +310,16 @@ tests/
   Access-reducing past-due, paused, or canceled updates may shorten a period so a
   defensive ordering rule never preserves stale paid access. Only the strict
   plan/status/period projection reaches `EntitlementPolicy`.
+- Subscription persistence: two additive nullable fields keep legacy/overlap writes
+  safe while marking only reconstructable v1 transition rows. A forced-RLS receipt
+  ledger stores opaque provider/event identity, a domain-separated normalized-event
+  digest, occurrence time, and outcome; `app_user` can only select/insert it, never
+  mutate history. `SubscriptionRepository` serializes one provider/subscription
+  identity with a transaction advisory lock, applies Goal 46 under the owner-scoped
+  transaction, and atomically updates state plus receipt. Unique provider/event
+  receipts make idempotency durable beyond the current last-event column. Legacy
+  rows remain readable only as unverified and produce no entitlement state until a
+  separately designed resynchronization path exists.
 
 ## Data and cache principles
 

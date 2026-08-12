@@ -16,7 +16,9 @@ import {
 import { createEntitlementPolicy } from "@/server/entitlement-policy";
 import {
   applySubscriptionEvent,
+  digestNormalizedSubscriptionEvent,
   projectSubscriptionEntitlementState,
+  validateNormalizedSubscriptionEvent,
 } from "@/server/subscription-transition-engine";
 
 const START = "2026-08-01T00:00:00.000Z";
@@ -273,6 +275,26 @@ describe("provider-neutral subscription transition engine", () => {
     ).toMatchObject({ allowed: true, reason: "paid-period-canceled" });
     expect(
       projectSubscriptionEntitlementState({ ...state, extra: true }),
+    ).toBeNull();
+  });
+
+  it("normalizes and domain-digests valid events for durable receipts", () => {
+    const value = event();
+    const normalized = validateNormalizedSubscriptionEvent(value);
+    const digest = digestNormalizedSubscriptionEvent(value);
+    expect(normalized).toEqual(value);
+    expect(Object.isFrozen(normalized)).toBe(true);
+    expect(digest).toMatch(/^sha256:[0-9a-f]{64}$/);
+    expect(digest).toBe(digestNormalizedSubscriptionEvent({ ...value }));
+    expect(digest).not.toBe(
+      digestNormalizedSubscriptionEvent({ ...value, status: "paused" }),
+    );
+    expect(digest).not.toContain(value.eventId);
+    expect(
+      validateNormalizedSubscriptionEvent({ ...value, extra: true }),
+    ).toBeNull();
+    expect(
+      digestNormalizedSubscriptionEvent({ ...value, extra: true }),
     ).toBeNull();
   });
 });

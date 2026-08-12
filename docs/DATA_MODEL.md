@@ -175,6 +175,15 @@ the bearer-token digest and is verified before parsing stored public content.
 - external provider references and period timestamps
 - last applied provider event
 
+### `subscription_provider_event_receipt`
+
+- subscription reference plus opaque provider/event identity
+- domain-separated digest of the strict normalized event, occurrence time, and
+  applied/no-change outcome
+- append-only to `app_user`, forced-RLS through the owning subscription, unique by
+  provider/event ID, and deleted only through subscription/account cascade
+- no raw webhook body, signature, price, checkout value, or provider payload
+
 ### `notification_preference`
 
 - `id`, `profile_id`, channel, event type

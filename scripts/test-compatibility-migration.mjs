@@ -80,6 +80,19 @@ try {
     [legacyId],
   );
   const malformedLegacyId = malformedLegacy.rows[0].id;
+  const legacySubscription = await pool.query(
+    `insert into subscription
+       (user_account_id, plan_key, status, external_provider,
+        external_customer_reference, external_subscription_reference,
+        period_starts_at, period_ends_at, last_provider_event_id)
+     select owner_user_id, 'legacy-plan', 'active', 'legacy-provider',
+            'legacy-customer', 'legacy-subscription',
+            '2026-01-01T00:00:00Z', '2026-02-01T00:00:00Z', 'legacy-event'
+     from compatibility_report where id = $1
+     returning id`,
+    [legacyId],
+  );
+  const legacySubscriptionId = legacySubscription.rows[0].id;
 
   await migrate(drizzle(pool), { migrationsFolder: repositoryMigrations });
 
@@ -111,6 +124,21 @@ try {
     cleared.rows[0]?.share_revoked_at !== null
   )
     throw new Error("Malformed legacy share state was not cleared safely");
+  const upgradedSubscription = await pool.query(
+    `select plan_key, last_provider_event_id, transition_state_version,
+            last_provider_event_occurred_at
+     from subscription where id = $1`,
+    [legacySubscriptionId],
+  );
+  if (
+    upgradedSubscription.rows[0]?.plan_key !== "legacy-plan" ||
+    upgradedSubscription.rows[0]?.last_provider_event_id !== "legacy-event" ||
+    upgradedSubscription.rows[0]?.transition_state_version !== null ||
+    upgradedSubscription.rows[0]?.last_provider_event_occurred_at !== null
+  )
+    throw new Error(
+      "Legacy subscription was not preserved as unverified state",
+    );
 
   const overlap = await pool.query(
     `insert into compatibility_report
@@ -127,6 +155,21 @@ try {
     overlap.rows[0]?.report_payload !== null
   )
     throw new Error("Previous application writes are not overlap-safe");
+  const overlapSubscription = await pool.query(
+    `insert into subscription
+       (user_account_id, plan_key, status, external_provider,
+        external_customer_reference, external_subscription_reference)
+     select owner_user_id, 'legacy-plan', 'paused', 'legacy-provider',
+            'overlap-customer', 'overlap-subscription'
+     from compatibility_report where id = $1
+     returning transition_state_version, last_provider_event_occurred_at`,
+    [legacyId],
+  );
+  if (
+    overlapSubscription.rows[0]?.transition_state_version !== null ||
+    overlapSubscription.rows[0]?.last_provider_event_occurred_at !== null
+  )
+    throw new Error("Previous subscription writes are not overlap-safe");
 
   const boundary = await pool.query(
     `select
@@ -162,7 +205,7 @@ try {
     throw new Error("Public share reader privileges are broader than intended");
 
   process.stdout.write(
-    "Compatibility migration upgrade: legacy row, overlap write, and RLS-scoped column reader passed\n",
+    "Compatibility/subscription migration upgrade: legacy rows, overlap writes, and RLS-scoped column reader passed\n",
   );
 } finally {
   await pool.end();

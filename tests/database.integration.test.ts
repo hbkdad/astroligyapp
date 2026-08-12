@@ -16,8 +16,16 @@ import {
   CompatibilityReportRepository,
   InvalidStoredCompatibilityReportError,
 } from "@/infrastructure/persistence/compatibility-report-repository";
+import {
+  SubscriptionIdentityConflictError,
+  SubscriptionRepository,
+} from "@/infrastructure/persistence/subscription-repository";
 import { withIdentityTransaction } from "@/infrastructure/persistence/identity-transaction";
 import { DEMO_COMPATIBILITY_REPORT } from "@/presentation/compatibility-demo";
+import {
+  SUBSCRIPTION_TRANSITION_EVENT_VERSION,
+  type NormalizedSubscriptionEvent,
+} from "@/domain/entitlements/subscription-transitions";
 
 const connectionString = process.env.TEST_DATABASE_URL;
 
@@ -40,6 +48,22 @@ let compatibilityReportA: string;
 let compatibilityReportA2: string;
 
 const compatibilityRepository = new CompatibilityReportRepository(pool);
+const subscriptionRepository = new SubscriptionRepository(pool);
+
+function subscriptionEvent(
+  overrides: Partial<NormalizedSubscriptionEvent> = {},
+): NormalizedSubscriptionEvent {
+  return {
+    version: SUBSCRIPTION_TRANSITION_EVENT_VERSION,
+    eventId: "evt_subscription_001",
+    occurredAt: "2026-08-01T00:01:00.000Z",
+    planKey: "personal",
+    status: "active",
+    periodStartsAt: "2026-08-01T00:00:00.000Z",
+    periodEndsAt: "2026-09-01T00:00:00.000Z",
+    ...overrides,
+  };
+}
 
 function activeSession(subject: string): ActiveSession {
   return {
@@ -150,8 +174,8 @@ describe("initial PostgreSQL migration", () => {
        from pg_class c join pg_namespace n on n.oid = c.relnamespace
        where n.nspname = 'public' and c.relrowsecurity and c.relforcerowsecurity`,
     );
-    expect(Number(tables.rows[0]!.count)).toBe(20);
-    expect(Number(forcedPolicies.rows[0]!.count)).toBe(19);
+    expect(Number(tables.rows[0]!.count)).toBe(21);
+    expect(Number(forcedPolicies.rows[0]!.count)).toBe(20);
   });
 
   it("enforces deterministic constraints and versioned cache uniqueness", async () => {
@@ -184,6 +208,8 @@ describe("initial PostgreSQL migration", () => {
     expect(names).toContain("calculation_run_owner_idx");
     expect(names).toContain("transit_event_profile_exact_idx");
     expect(names).toContain("audit_event_owner_occurred_idx");
+    expect(names).toContain("subscription_event_receipt_provider_event_uidx");
+    expect(names).toContain("subscription_event_receipt_subscription_idx");
   });
 });
 
@@ -553,6 +579,365 @@ describe("compatibility report persistence and public share boundary", () => {
   });
 });
 
+describe("subscription transition persistence and durable idempotency", () => {
+  const identity = {
+    provider: "test_payments",
+    customerReference: "customer_owner_a",
+    subscriptionReference: "subscription_owner_a",
+  } as const;
+
+  it("persists ordered transitions and globally durable event receipts", async () => {
+    const firstEvent = subscriptionEvent();
+    const first = await subscriptionRepository.applyNormalizedEvent(
+      ownerA as AccountId,
+      identity,
+      firstEvent,
+    );
+    expect(first).toMatchObject({
+      outcome: "applied",
+      changed: true,
+      entitlementState: { planKey: "personal", status: "active" },
+    });
+    expect(Object.isFrozen(first)).toBe(true);
+    expect(Object.isFrozen(first.entitlementState)).toBe(true);
+    expect(
+      await subscriptionRepository.findEntitlementState(
+        ownerB as AccountId,
+        identity,
+      ),
+    ).toBeNull();
+
+    expect(
+      await subscriptionRepository.applyNormalizedEvent(
+        ownerA as AccountId,
+        identity,
+        firstEvent,
+      ),
+    ).toMatchObject({ outcome: "duplicate", changed: false });
+    expect(
+      await subscriptionRepository.applyNormalizedEvent(
+        ownerA as AccountId,
+        identity,
+        { ...firstEvent, planKey: "advanced" },
+      ),
+    ).toMatchObject({ outcome: "conflict", changed: false });
+
+    const staleEvent = subscriptionEvent({
+      eventId: "evt_subscription_stale",
+      occurredAt: "2026-07-31T23:59:59.999Z",
+    });
+    expect(
+      await subscriptionRepository.applyNormalizedEvent(
+        ownerA as AccountId,
+        identity,
+        staleEvent,
+      ),
+    ).toMatchObject({ outcome: "stale", changed: false });
+    expect(
+      await subscriptionRepository.applyNormalizedEvent(
+        ownerA as AccountId,
+        identity,
+        staleEvent,
+      ),
+    ).toMatchObject({ outcome: "duplicate", changed: false });
+
+    expect(
+      await subscriptionRepository.applyNormalizedEvent(
+        ownerA as AccountId,
+        identity,
+        subscriptionEvent({
+          eventId: "evt_subscription_same_time",
+        }),
+      ),
+    ).toMatchObject({ outcome: "conflict", changed: false });
+
+    expect(
+      await subscriptionRepository.applyNormalizedEvent(
+        ownerA as AccountId,
+        identity,
+        subscriptionEvent({
+          eventId: "evt_subscription_renewal",
+          occurredAt: "2026-08-02T00:01:00.000Z",
+          planKey: "advanced",
+          periodStartsAt: "2026-09-01T00:00:00.000Z",
+          periodEndsAt: "2026-10-01T00:00:00.000Z",
+        }),
+      ),
+    ).toMatchObject({
+      outcome: "applied",
+      entitlementState: { planKey: "advanced", status: "active" },
+    });
+
+    expect(
+      await subscriptionRepository.applyNormalizedEvent(
+        ownerA as AccountId,
+        identity,
+        subscriptionEvent({
+          eventId: "evt_subscription_paused",
+          occurredAt: "2026-08-03T00:01:00.000Z",
+          planKey: "advanced",
+          status: "paused",
+          periodStartsAt: "2026-09-01T00:00:00.000Z",
+          periodEndsAt: "2026-09-20T00:00:00.000Z",
+        }),
+      ),
+    ).toMatchObject({
+      outcome: "applied",
+      entitlementState: { status: "paused" },
+    });
+
+    expect(
+      await subscriptionRepository.applyNormalizedEvent(
+        ownerA as AccountId,
+        identity,
+        subscriptionEvent({
+          eventId: "evt_subscription_canceled",
+          occurredAt: "2026-08-04T00:01:00.000Z",
+          planKey: "advanced",
+          status: "canceled",
+          periodStartsAt: "2026-09-01T00:00:00.000Z",
+          periodEndsAt: "2026-09-15T00:00:00.000Z",
+        }),
+      ),
+    ).toMatchObject({
+      outcome: "applied",
+      entitlementState: { status: "canceled" },
+    });
+
+    expect(
+      await subscriptionRepository.applyNormalizedEvent(
+        ownerA as AccountId,
+        identity,
+        subscriptionEvent({
+          eventId: "evt_subscription_reactivate",
+          occurredAt: "2026-08-05T00:01:00.000Z",
+          planKey: "advanced",
+          status: "active",
+          periodStartsAt: "2026-09-01T00:00:00.000Z",
+          periodEndsAt: "2026-10-15T00:00:00.000Z",
+        }),
+      ),
+    ).toMatchObject({
+      outcome: "invalid-transition",
+      changed: false,
+      entitlementState: { status: "canceled" },
+    });
+
+    const stored = await pool.query<{
+      state_version: string;
+      last_event_id: string;
+      receipt_count: string;
+      digest_count: string;
+    }>(
+      `select s.transition_state_version as state_version,
+              s.last_provider_event_id as last_event_id,
+              count(r.id)::text as receipt_count,
+              count(*) filter (
+                where r.normalized_event_digest ~ '^sha256:[0-9a-f]{64}$'
+              )::text as digest_count
+       from subscription s
+       join subscription_provider_event_receipt r on r.subscription_id = s.id
+       where s.external_provider = $1 and s.external_subscription_reference = $2
+       group by s.id`,
+      [identity.provider, identity.subscriptionReference],
+    );
+    expect(stored.rows[0]).toEqual({
+      state_version: "1.0.0",
+      last_event_id: "evt_subscription_canceled",
+      receipt_count: "7",
+      digest_count: "7",
+    });
+  });
+
+  it("fails identity collisions, cross-owner access, and invalid input closed", async () => {
+    await expect(
+      subscriptionRepository.applyNormalizedEvent(
+        ownerB as AccountId,
+        identity,
+        subscriptionEvent({
+          eventId: "evt_cross_owner",
+          occurredAt: "2026-08-06T00:01:00.000Z",
+        }),
+      ),
+    ).rejects.toEqual(new SubscriptionIdentityConflictError());
+    await expect(
+      subscriptionRepository.applyNormalizedEvent(
+        ownerA as AccountId,
+        { ...identity, customerReference: "wrong_customer" },
+        subscriptionEvent({
+          eventId: "evt_wrong_customer",
+          occurredAt: "2026-08-06T00:01:00.000Z",
+        }),
+      ),
+    ).rejects.toEqual(new SubscriptionIdentityConflictError());
+
+    const collision = await subscriptionRepository.applyNormalizedEvent(
+      ownerA as AccountId,
+      {
+        provider: identity.provider,
+        customerReference: "customer_second",
+        subscriptionReference: "subscription_second",
+      },
+      subscriptionEvent(),
+    );
+    expect(collision).toEqual({
+      outcome: "conflict",
+      changed: false,
+      entitlementState: null,
+    });
+
+    await expect(
+      subscriptionRepository.applyNormalizedEvent(
+        ownerA as AccountId,
+        { ...identity, browserPlan: "advanced" } as typeof identity,
+        subscriptionEvent(),
+      ),
+    ).rejects.toThrow("Subscription provider identity is invalid");
+    expect(
+      await subscriptionRepository.applyNormalizedEvent(
+        ownerA as AccountId,
+        identity,
+        { ...subscriptionEvent(), priceId: "browser-price" },
+      ),
+    ).toEqual({
+      outcome: "invalid-event",
+      changed: false,
+      entitlementState: null,
+    });
+  });
+
+  it("serializes concurrent first delivery into one apply and one duplicate", async () => {
+    const concurrentIdentity = {
+      provider: "test_payments",
+      customerReference: "customer_concurrent",
+      subscriptionReference: "subscription_concurrent",
+    } as const;
+    const concurrentEvent = subscriptionEvent({
+      eventId: "evt_concurrent_initial",
+      occurredAt: "2026-08-10T00:01:00.000Z",
+    });
+    const results = await Promise.all([
+      subscriptionRepository.applyNormalizedEvent(
+        ownerA as AccountId,
+        concurrentIdentity,
+        concurrentEvent,
+      ),
+      subscriptionRepository.applyNormalizedEvent(
+        ownerA as AccountId,
+        concurrentIdentity,
+        concurrentEvent,
+      ),
+    ]);
+    expect(results.map((result) => result.outcome).sort()).toEqual([
+      "applied",
+      "duplicate",
+    ]);
+    const persisted = await pool.query<{
+      subscriptions: string;
+      receipts: string;
+    }>(
+      `select
+         (select count(*) from subscription
+           where external_provider = $1 and external_subscription_reference = $2)::text
+           as subscriptions,
+         (select count(*) from subscription_provider_event_receipt
+           where external_provider = $1 and provider_event_id = $3)::text as receipts`,
+      [
+        concurrentIdentity.provider,
+        concurrentIdentity.subscriptionReference,
+        concurrentEvent.eventId,
+      ],
+    );
+    expect(persisted.rows[0]).toEqual({ subscriptions: "1", receipts: "1" });
+  });
+
+  it("leaves legacy rows unverified and enforces receipt immutability", async () => {
+    const legacy = await pool.query<{ id: string }>(
+      `insert into subscription
+         (user_account_id, plan_key, status, external_provider,
+          external_customer_reference, external_subscription_reference,
+          period_starts_at, period_ends_at, last_provider_event_id)
+       values ($1, 'legacy-plan', 'active', 'legacy-test',
+               'legacy-customer-a', 'legacy-subscription-a',
+               '2026-01-01T00:00:00Z', '2026-02-01T00:00:00Z', 'legacy-event-a')
+       returning id`,
+      [ownerA],
+    );
+    const legacyIdentity = {
+      provider: "legacy-test",
+      customerReference: "legacy-customer-a",
+      subscriptionReference: "legacy-subscription-a",
+    } as const;
+    expect(
+      await subscriptionRepository.findEntitlementState(
+        ownerA as AccountId,
+        legacyIdentity,
+      ),
+    ).toBeNull();
+    expect(
+      await subscriptionRepository.applyNormalizedEvent(
+        ownerA as AccountId,
+        legacyIdentity,
+        subscriptionEvent({ eventId: "evt_legacy_resync" }),
+      ),
+    ).toEqual({
+      outcome: "invalid-current-state",
+      changed: false,
+      entitlementState: null,
+    });
+
+    await expect(
+      asUser(ownerA, (client) =>
+        client.query(
+          "update subscription_provider_event_receipt set outcome = 'applied'",
+        ),
+      ),
+    ).rejects.toMatchObject({ code: "42501" });
+    const boundary = await pool.query<{
+      forced: boolean;
+      can_select: boolean;
+      can_insert: boolean;
+      can_update: boolean;
+      can_delete: boolean;
+    }>(
+      `select c.relforcerowsecurity as forced,
+              has_table_privilege('app_user', c.oid, 'SELECT') as can_select,
+              has_table_privilege('app_user', c.oid, 'INSERT') as can_insert,
+              has_table_privilege('app_user', c.oid, 'UPDATE') as can_update,
+              has_table_privilege('app_user', c.oid, 'DELETE') as can_delete
+       from pg_class c join pg_namespace n on n.oid = c.relnamespace
+       where n.nspname = 'public'
+         and c.relname = 'subscription_provider_event_receipt'`,
+    );
+    expect(boundary.rows[0]).toEqual({
+      forced: true,
+      can_select: true,
+      can_insert: true,
+      can_update: false,
+      can_delete: false,
+    });
+    const plan = await asUser(ownerA, async (client) => {
+      await client.query("set local enable_seqscan = off");
+      return client.query(
+        `explain (format json)
+         select subscription_id, normalized_event_digest
+         from subscription_provider_event_receipt
+         where external_provider = 'test_payments'
+           and provider_event_id = 'evt_subscription_001'`,
+      );
+    });
+    expect(JSON.stringify(plan.rows)).toContain(
+      "subscription_event_receipt_provider_event_uidx",
+    );
+    const stillLegacy = await pool.query<{
+      transition_state_version: string | null;
+    }>("select transition_state_version from subscription where id = $1", [
+      legacy.rows[0]!.id,
+    ]);
+    expect(stillLegacy.rows[0]!.transition_state_version).toBeNull();
+  });
+});
+
 describe("two-owner row isolation", () => {
   it("fails closed without a request identity", async () => {
     const result = await asUser(null, (client) =>
@@ -570,6 +955,12 @@ describe("two-owner row isolation", () => {
       positions: await client.query<{ body: string }>(
         "select body from planet_position",
       ),
+      subscriptions: await client.query<{ id: string }>(
+        "select id from subscription",
+      ),
+      receipts: await client.query<{ id: string }>(
+        "select id from subscription_provider_event_receipt",
+      ),
     }));
     const b = await asUser(ownerB, async (client) => ({
       profiles: await client.query<{ id: string }>("select id from profile"),
@@ -579,6 +970,12 @@ describe("two-owner row isolation", () => {
       positions: await client.query<{ body: string }>(
         "select body from planet_position",
       ),
+      subscriptions: await client.query<{ id: string }>(
+        "select id from subscription",
+      ),
+      receipts: await client.query<{ id: string }>(
+        "select id from subscription_provider_event_receipt",
+      ),
     }));
 
     expect(a.profiles.rows.map((row) => row.id)).toEqual([profileA]);
@@ -586,9 +983,13 @@ describe("two-owner row isolation", () => {
       new Set([birthProfileA, birthProfileA2]),
     );
     expect(a.positions.rows.map((row) => row.body)).toEqual(["sun"]);
+    expect(a.subscriptions.rowCount).toBe(3);
+    expect(a.receipts.rowCount).toBe(8);
     expect(b.profiles.rows.map((row) => row.id)).toEqual([profileB]);
     expect(b.births.rows.map((row) => row.id)).toEqual([birthProfileB]);
     expect(b.positions.rowCount).toBe(0);
+    expect(b.subscriptions.rowCount).toBe(0);
+    expect(b.receipts.rowCount).toBe(0);
   });
 
   it("blocks cross-owner insert, update, and delete operations", async () => {
@@ -708,13 +1109,20 @@ describe("two-owner row isolation", () => {
       runs: string;
       positions: string;
       compatibility_reports: string;
+      subscriptions: string;
+      subscription_receipts: string;
     }>(
       `select
          (select count(*) from profile where owner_user_id = $1)::text as profiles,
          (select count(*) from calculation_run where owner_user_id = $1)::text as runs,
          (select count(*) from planet_position where calculation_run_id = $2)::text as positions,
          (select count(*) from compatibility_report where owner_user_id = $1)::text
-           as compatibility_reports`,
+           as compatibility_reports,
+         (select count(*) from subscription where user_account_id = $1)::text
+           as subscriptions,
+         (select count(*) from subscription_provider_event_receipt r
+            join subscription s on s.id = r.subscription_id
+           where s.user_account_id = $1)::text as subscription_receipts`,
       [ownerA, calculationRunA],
     );
     expect(counts.rows[0]).toEqual({
@@ -722,6 +1130,8 @@ describe("two-owner row isolation", () => {
       runs: "0",
       positions: "0",
       compatibility_reports: "0",
+      subscriptions: "0",
+      subscription_receipts: "0",
     });
   });
 });

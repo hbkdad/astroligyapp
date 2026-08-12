@@ -131,4 +131,13 @@ The result is immutable and explicitly reports `applied`, `duplicate`, `stale`,
 Different event IDs at the same instant conflict rather than using arbitrary lexical
 ordering. Cancellation is terminal for one provider subscription. Reactivation must
 arrive as a separately authorized subscription lifecycle, not an event that revives
-a canceled record. Persistence and webhook adapters remain subsequent boundaries.
+a canceled record.
+
+`SubscriptionRepository.applyNormalizedEvent(owner, providerIdentity, event)` is
+the implemented persistence boundary. It validates bounded normalized identity,
+serializes concurrent first delivery, applies the pure transition under `app_user`,
+and writes state plus an append-only domain-digested event receipt atomically. Exact
+replay returns duplicate even after later transitions; same event identity with
+different normalized content conflicts. Cross-owner provider/subscription collisions
+return one generic internal conflict, and only the strict Goal 45 entitlement state
+is returned. Webhook signature/provider adapters remain subsequent boundaries.
