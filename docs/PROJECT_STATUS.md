@@ -4,7 +4,7 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 39 complete; compatibility content keys now render through a strict en-CA deterministic library into separate fact and tradition-framed reflection sections.
+Status: Goal 40 complete; facts, scores, content projections, and rendered sections now compose into one reconstructable compatibility report payload.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,12 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 40: compose all four validated compatibility layers into one versioned,
+      deeply immutable report without recalculation or new interpretation.
+- [x] Reconstruct every child with the declared policy/library and require byte-exact
+      equality before publishing complete source versions and section accounting.
+- [x] Verify symmetry, rendered/unsupported counts, child drift/order, provenance,
+      claims, privacy, immutability, and deterministic reconstruction.
 - [x] Goal 39: define a versioned en-CA compatibility library covering four
       factual schemas and all fifteen category/tone reflection keys.
 - [x] Render fact and reflection sections independently with exact parameters,
@@ -362,18 +368,18 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 40 — compose one validated compatibility report payload.
+Goal 41 — map and present the compatibility report.
 
 Deliverables:
 
-1. Compose the validated Goal 35 aggregate, Goal 37 scores, Goal 38 projection, and
-   Goal 39 rendered sections into one versioned, deeply immutable report payload.
-2. Recheck exact identities, versions, category and contribution coverage/order,
-   section provenance, claims disclaimer, and unsupported-content accounting.
-3. Verify symmetry, missing/duplicate/reordered children, source drift, malformed
-   text/provenance, raw-private-data exclusion, and stable reconstruction.
-4. Add no persistence, sharing URL, UI, AI, entitlement, notification, provider
-   call, schema change, production service, or deployment.
+1. Map only a validated Goal 40 report into a versioned immutable read model with
+   five category summaries, paired fact/reflection items, trace, and disclaimer.
+2. Add a responsive local-demo compatibility route with deliberate loading,
+   locked, unavailable, error, empty, unsupported, and ready states.
+3. Verify no calculation in React, semantic score text, keyboard flow, 44px controls,
+   mobile/desktop/200% text, reduced motion, claims separation, and clean console.
+4. Add no persistence, public sharing, account/profile loading, AI, entitlement
+   enforcement, notification, provider call, schema change, or deployment.
 
 ## Phase queue
 
@@ -814,6 +820,36 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 40 compatibility report-composition record
+
+- Commands: focused compatibility aggregate/scoring/projection/render/report suite;
+  `npm run check`; `npm run test:coverage`; `npm audit --omit=dev`; and
+  `git diff --check` through `astro-validation` and `security-audit` procedures.
+- Boundary: `composeCompatibilityReport` accepts the Goal 35 aggregate, Goal 37
+  scores, Goal 38 projection, and Goal 39 rendered content. It reconstructs each
+  layer in dependency order with the declared policy/library and requires exact
+  equality before returning the children under report version 1.0.0.
+- Trace/accounting: report metadata retains aggregate, phase-one, synastry,
+  overlay, scoring result/formula/policy, projection, renderer, content-library,
+  and locale versions. Accounting reports categories, contributions, projections,
+  and rendered/unsupported fact/reflection section counts; all coverage equations
+  must balance before composition succeeds.
+- Validation: the default fixture publishes five categories, twelve contributions/
+  projections, and twelve fact plus twelve reflection sections. An empty valid
+  library publishes twelve unsupported sections of each kind. Tests reject aggregate
+  version drift, category reorder, projection loss, rendered reorder/text changes,
+  provenance drift, and claims-disclaimer corruption through one generic error.
+- Symmetry/security: reversing both relationship subjects produces byte-equivalent
+  reports. The payload is deeply frozen and contains no raw birth instant, observer,
+  timezone/source, private numerology token, account/profile ID, deterministic
+  relationship directive, log, URL, or persistence behavior. No critical/high finding.
+- Evidence: 35 test files and 545 tests passed; coverage was 93.98% statements,
+  91.00% branches, 99.71% functions, and 95.11% lines. The report composer had
+  93.33% statement, 89.65% branch, 100% function, and 97.36% line coverage. The
+  optimized build passed and the production audit found zero vulnerabilities.
+- Scope: no read model, route/UI, persistence, share token/URL, AI, entitlement,
+  notification, provider call, schema change, production service, or deployment.
 
 ## Goal 39 compatibility content-rendering record
 

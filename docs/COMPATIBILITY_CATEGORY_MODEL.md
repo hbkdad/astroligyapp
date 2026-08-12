@@ -89,3 +89,11 @@ validated Goal 38 projection. Numbers use at most six fractional digits. Fact an
 reflection sections are separate and carry the complete projection/source/policy/
 library/locale/renderer trace. Missing templates produce a fixed fallback rather
 than invented content.
+
+## Report payload 1.0.0
+
+The report payload retains the complete validated aggregate, scores, projection,
+and rendered output. Composition reconstructs each layer with the declared policy
+and content library and requires byte-exact equality. It also records five category
+and contribution/projection counts plus rendered and unsupported fact/reflection
+section counts, with complete source versions and a report-level claims disclaimer.

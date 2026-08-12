@@ -251,6 +251,9 @@ tests/
   single-line templates. `renderCompatibilityContent` resolves factual and
   reflection sections independently, applies invariant six-decimal formatting,
   emits provenance-bearing fixed fallbacks, and never recalculates a source fact.
+  `composeCompatibilityReport` reconstructs every prior layer with its declared
+  policy/library, requires exact equality, and publishes the complete immutable
+  children plus category/contribution and rendered/unsupported section accounting.
   Relationship claims, persistence, and public sharing remain separate later layers.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.

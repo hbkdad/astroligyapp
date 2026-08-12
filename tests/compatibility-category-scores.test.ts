@@ -5,6 +5,13 @@ import {
   type NatalChart,
 } from "@/application/calculate-natal-chart";
 import {
+  COMPATIBILITY_REPORT_DISCLAIMER,
+  COMPATIBILITY_REPORT_VERSION,
+  InvalidCompatibilityReportInputError,
+  composeCompatibilityReport,
+  type CompatibilityReportInput,
+} from "@/application/compose-compatibility-report";
+import {
   COMPATIBILITY_CATEGORY_SCORE_DISCLAIMER,
   COMPATIBILITY_CATEGORY_SCORE_FORMULA_VERSION,
   COMPATIBILITY_CATEGORY_SCORE_RESULT_VERSION,
@@ -39,6 +46,7 @@ import {
   COMPATIBILITY_CONTENT_LIBRARY_VERSION,
   DEFAULT_COMPATIBILITY_CONTENT_LIBRARY,
   DeterministicCompatibilityContentLibrary,
+  type CompatibilityContentLibrary,
   type CompatibilityContentTemplate,
 } from "@/domain/compatibility/content-library";
 import { PhaseOneCompatibilityStrategy } from "@/domain/compatibility/phase-one";
@@ -55,6 +63,140 @@ const FIRST_LONGITUDES = [0, 18, 37, 59, 83, 111, 147, 191, 239, 301];
 const SECOND_LONGITUDES = [180, 198, 217, 239, 263, 291, 327, 11, 59, 121];
 
 describe("injected compatibility category scoring", () => {
+  it("composes one immutable, fully accounted compatibility report", () => {
+    const input = reportInput();
+    const report = composeCompatibilityReport(input);
+    expect(report).toMatchObject({
+      version: COMPATIBILITY_REPORT_VERSION,
+      sourceVersions: {
+        aggregate: "1.0.0",
+        phaseOne: "1.0.0",
+        synastry: "1.0.0",
+        houseOverlays: "1.0.0",
+        scoringResult: "1.0.0",
+        scoringFormula: "1.0.0",
+        scoringPolicy: "1.0.0",
+        projection: "1.0.0",
+        renderer: "1.0.0",
+        contentLibrary: "1.0.0",
+        locale: "en-CA",
+      },
+      accounting: {
+        categories: 5,
+        contributions: 12,
+        projectionItems: 12,
+        renderedFactSections: 12,
+        renderedReflectionSections: 12,
+        unsupportedFactSections: 0,
+        unsupportedReflectionSections: 0,
+      },
+      disclaimer: COMPATIBILITY_REPORT_DISCLAIMER,
+    });
+    expect(report.aggregate).toEqual(input.aggregate);
+    expect(report.scores).toEqual(input.scores);
+    expect(report.projection).toEqual(input.projection);
+    expect(report.rendered).toEqual(input.rendered);
+    expect(Object.isFrozen(report)).toBe(true);
+    expect(Object.isFrozen(report.accounting)).toBe(true);
+    expect(JSON.stringify(report)).not.toMatch(
+      /birth|observer|timezone|coordinateSource|private-source-marker|accountId|profileId|should marry|guaranteed/,
+    );
+  });
+
+  it("accounts for independently unsupported fact and reflection sections", () => {
+    const library = new DeterministicCompatibilityContentLibrary({
+      id: "empty-report-library",
+      version: "1.0.0",
+      locale: "en-CA",
+      templates: [],
+    });
+    const input = reportInput(library);
+    const report = composeCompatibilityReport(input, { library });
+    expect(report.accounting).toMatchObject({
+      projectionItems: 12,
+      renderedFactSections: 0,
+      renderedReflectionSections: 0,
+      unsupportedFactSections: 12,
+      unsupportedReflectionSections: 12,
+    });
+    expect(report.sourceVersions.contentLibrary).toBe("1.0.0");
+  });
+
+  it("composes byte-equivalent reports when relationship inputs reverse", () => {
+    const first = chart("fixture-a", FIRST_LONGITUDES);
+    const second = chart("fixture-b", SECOND_LONGITUDES);
+    const forward = composeCompatibilityReport(
+      reportInput(undefined, aggregateFor(first, second)),
+    );
+    const reversed = composeCompatibilityReport(
+      reportInput(undefined, aggregateFor(second, first)),
+    );
+    expect(reversed).toEqual(forward);
+    expect(JSON.stringify(reversed)).toBe(JSON.stringify(forward));
+  });
+
+  it.each([
+    [
+      "aggregate version drift",
+      (input: CompatibilityReportInput) => {
+        (input.aggregate as unknown as { version: string }).version = "2.0.0";
+      },
+    ],
+    [
+      "score reorder",
+      (input: CompatibilityReportInput) => {
+        (input.scores.categories as unknown as unknown[]).reverse();
+      },
+    ],
+    [
+      "projection loss",
+      (input: CompatibilityReportInput) => {
+        (input.projection.items as unknown as unknown[]).pop();
+      },
+    ],
+    [
+      "rendered reorder",
+      (input: CompatibilityReportInput) => {
+        (input.rendered.items as unknown as unknown[]).reverse();
+      },
+    ],
+    [
+      "rendered text drift",
+      (input: CompatibilityReportInput) => {
+        const fact = input.rendered.items[0]!.fact as unknown as {
+          text: string;
+        };
+        fact.text = "Calculated replacement text.";
+      },
+    ],
+    [
+      "rendered provenance drift",
+      (input: CompatibilityReportInput) => {
+        const provenance = input.rendered.items[0]!.fact
+          .provenance as unknown as {
+          sourceFactId: string;
+        };
+        provenance.sourceFactId = "unknown";
+      },
+    ],
+    [
+      "claims disclaimer drift",
+      (input: CompatibilityReportInput) => {
+        (input.rendered as unknown as { disclaimer: string }).disclaimer =
+          "This relationship is guaranteed.";
+      },
+    ],
+  ])("rejects incompatible report child: %s", (_, corrupt) => {
+    const input = structuredClone(reportInput());
+    corrupt(input);
+    expect(() => composeCompatibilityReport(input)).toThrow(
+      InvalidCompatibilityReportInputError,
+    );
+    expect(() => composeCompatibilityReport(input)).toThrow(
+      "Compatibility report input is invalid or inconsistent",
+    );
+  });
+
   it("covers every factual and category-tone key in the default en-CA library", () => {
     const keys = [
       "compatibility.fact.phase-one-pair",
@@ -910,6 +1052,24 @@ function aggregate(): CompatibilityFactAggregate {
     chart("fixture-a", FIRST_LONGITUDES),
     chart("fixture-b", SECOND_LONGITUDES),
   );
+}
+
+function reportInput(
+  library: CompatibilityContentLibrary = DEFAULT_COMPATIBILITY_CONTENT_LIBRARY,
+  source: CompatibilityFactAggregate = aggregate(),
+): CompatibilityReportInput {
+  const scores = calculateCompatibilityCategoryScores(
+    source,
+    INITIAL_COMPATIBILITY_CATEGORY_POLICY,
+  );
+  const projection = projectCompatibilityContent(source, scores);
+  const rendered = renderCompatibilityContent(
+    projection,
+    source,
+    scores,
+    library,
+  );
+  return { aggregate: source, scores, projection, rendered };
 }
 
 function aggregateFor(
