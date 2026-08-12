@@ -195,6 +195,12 @@ try {
   if (authUpgrade.rows[0]?.count !== "4")
     throw new Error("Better Auth schema upgrade is incomplete");
 
+  const emailUpgrade = await pool.query(
+    `select count(*)::text as count from authentication_email_delivery`,
+  );
+  if (emailUpgrade.rows[0]?.count !== "0")
+    throw new Error("Authentication email migration fabricated delivery state");
+
   const boundary = await pool.query(
     `select
        has_function_privilege(
@@ -271,7 +277,20 @@ try {
          join pg_roles granted_role on granted_role.oid = membership.roleid
          where member_role.rolname = current_user
            and granted_role.rolname = 'app_auth_account_owner'
-       ) as migrator_retains_auth_account_owner_role`,
+       ) as migrator_retains_auth_account_owner_role,
+       has_table_privilege(
+         'app_auth_email_runtime',
+         'authentication_email_delivery',
+         'SELECT,INSERT,UPDATE'
+       ) as email_runtime_write,
+       has_table_privilege(
+         'app_auth_email_runtime',
+         'authentication_email_delivery',
+         'DELETE'
+       ) as email_runtime_delete,
+       has_table_privilege(
+         'app_user', 'authentication_email_delivery', 'SELECT'
+       ) as app_user_email_read`,
   );
   if (
     boundary.rows[0]?.can_execute !== true ||
@@ -288,12 +307,15 @@ try {
     boundary.rows[0]?.contact_can_read_auth !== false ||
     boundary.rows[0]?.contact_can_execute !== true ||
     boundary.rows[0]?.migrator_retains_auth_owner_role !== false ||
-    boundary.rows[0]?.migrator_retains_auth_account_owner_role !== false
+    boundary.rows[0]?.migrator_retains_auth_account_owner_role !== false ||
+    boundary.rows[0]?.email_runtime_write !== true ||
+    boundary.rows[0]?.email_runtime_delete !== false ||
+    boundary.rows[0]?.app_user_email_read !== false
   )
     throw new Error("Narrow reader privileges are broader than intended");
 
   process.stdout.write(
-    "Compatibility/subscription/billing/auth upgrade: legacy rows, overlap writes, no fabricated ownership, and narrow readers passed\n",
+    "Compatibility/subscription/billing/auth/email upgrade: legacy rows, overlap writes, no fabricated state, and narrow roles passed\n",
   );
 } finally {
   await pool.end();

@@ -19,6 +19,7 @@ import {
 import { betterAuthSchema } from "@/db/auth-schema";
 import { createBetterAuth } from "@/server/better-auth-configuration";
 import type { AuthenticationEmailRequest } from "@/server/authentication-email";
+import { AuthenticationEmailIdempotencyRepository } from "@/server/authentication-email-idempotency";
 import type { ActiveSession } from "@/infrastructure/auth/session";
 import {
   CompatibilityReportRepository,
@@ -86,6 +87,34 @@ const ownerA = randomUUID();
 const ownerB = randomUUID();
 const authSessionA = "auth-session-owner-a";
 const authSessionB = "auth-session-owner-b";
+const authEmailKey = createHash("sha256")
+  .update("database-auth-email-key")
+  .digest("base64url");
+let authEmailNow = new Date("2026-08-12T12:00:00.000Z");
+const authEmailIdempotency = new AuthenticationEmailIdempotencyRepository(
+  pool,
+  {
+    keys: [{ version: 1, value: authEmailKey }],
+    leaseMilliseconds: 60_000,
+  },
+  "https://app.example.test",
+  () => authEmailNow,
+);
+
+function authEmailRequest(
+  reference: string,
+  recipient = "delivery@example.test",
+): AuthenticationEmailRequest {
+  return {
+    version: "1.0.0",
+    purpose: "verify-email",
+    recipient,
+    actionUrl:
+      "https://app.example.test/api/auth/verify-email?token=header.payload.signature&callbackURL=%2F",
+    templateVersion: "auth.verify-email.en-CA.1",
+    idempotencyReference: reference,
+  };
+}
 let profileA: string;
 let profileB: string;
 let birthProfileA: string;
@@ -257,8 +286,8 @@ describe("initial PostgreSQL migration", () => {
        from pg_class c join pg_namespace n on n.oid = c.relnamespace
        where n.nspname = 'public' and c.relrowsecurity and c.relforcerowsecurity`,
     );
-    expect(Number(tables.rows[0]!.count)).toBe(22);
-    expect(Number(forcedPolicies.rows[0]!.count)).toBe(21);
+    expect(Number(tables.rows[0]!.count)).toBe(23);
+    expect(Number(forcedPolicies.rows[0]!.count)).toBe(22);
   });
 
   it("isolates the exact Better Auth schema and runtime privileges", async () => {
@@ -286,6 +315,10 @@ describe("initial PostgreSQL migration", () => {
       account_execute: boolean;
       migrator_retains_owner: boolean;
       migrator_retains_account_owner: boolean;
+      email_runtime_select: boolean;
+      email_runtime_write: boolean;
+      email_runtime_delete: boolean;
+      app_user_email_table: boolean;
     }>(
       `select
          has_schema_privilege('app_user', 'auth', 'USAGE') as app_user_schema,
@@ -319,7 +352,19 @@ describe("initial PostgreSQL migration", () => {
            join pg_roles granted_role on granted_role.oid = membership.roleid
            where member_role.rolname = current_user
              and granted_role.rolname = 'app_auth_account_owner'
-         ) as migrator_retains_account_owner`,
+         ) as migrator_retains_account_owner,
+         has_table_privilege(
+           'app_auth_email_runtime', 'authentication_email_delivery', 'SELECT'
+         ) as email_runtime_select,
+         has_table_privilege(
+           'app_auth_email_runtime', 'authentication_email_delivery', 'INSERT,UPDATE'
+         ) as email_runtime_write,
+         has_table_privilege(
+           'app_auth_email_runtime', 'authentication_email_delivery', 'DELETE'
+         ) as email_runtime_delete,
+         has_table_privilege(
+           'app_user', 'authentication_email_delivery', 'SELECT'
+         ) as app_user_email_table`,
     );
     expect(privileges.rows[0]).toEqual({
       app_user_schema: false,
@@ -332,6 +377,10 @@ describe("initial PostgreSQL migration", () => {
       account_execute: true,
       migrator_retains_owner: false,
       migrator_retains_account_owner: false,
+      email_runtime_select: true,
+      email_runtime_write: true,
+      email_runtime_delete: false,
+      app_user_email_table: false,
     });
   });
 
@@ -369,6 +418,8 @@ describe("initial PostgreSQL migration", () => {
     expect(names).toContain("subscription_event_receipt_subscription_idx");
     expect(names).toContain("billing_customer_binding_provider_customer_uidx");
     expect(names).toContain("billing_customer_binding_owner_provider_uidx");
+    expect(names).toContain("authentication_email_delivery_reference_uidx");
+    expect(names).toContain("authentication_email_delivery_recovery_idx");
   });
 });
 
@@ -1599,6 +1650,189 @@ describe("subscription transition persistence and durable idempotency", () => {
       legacy.rows[0]!.id,
     ]);
     expect(stillLegacy.rows[0]!.transition_state_version).toBeNull();
+  });
+});
+
+describe("authentication email privacy-minimized idempotency ledger", () => {
+  const reference = (seed: string) =>
+    createHash("sha256").update(seed).digest("base64url");
+
+  it("atomically reserves once and returns in-progress for concurrent exact replay", async () => {
+    authEmailNow = new Date("2026-08-12T12:00:00.000Z");
+    const request = authEmailRequest(reference("concurrent-reservation"));
+    const results = await Promise.all([
+      authEmailIdempotency.reserve(request),
+      authEmailIdempotency.reserve(request),
+    ]);
+    expect(results.map((result) => result.outcome).sort()).toEqual([
+      "in-progress",
+      "reserved",
+    ]);
+  });
+
+  it("binds one accepted provider reference and makes later completion idempotent", async () => {
+    const request = authEmailRequest(reference("accepted-delivery"));
+    await expect(authEmailIdempotency.reserve(request)).resolves.toMatchObject({
+      outcome: "reserved",
+    });
+    await expect(
+      authEmailIdempotency.complete(
+        request,
+        {
+          version: "1.0.0",
+          disposition: "accepted",
+          code: "EMAIL_ACCEPTED",
+        },
+        "ses-message-001",
+      ),
+    ).resolves.toEqual({ version: "1.0.0", outcome: "accepted" });
+    await expect(
+      authEmailIdempotency.complete(request, {
+        version: "1.0.0",
+        disposition: "retry",
+        code: "EMAIL_RETRY",
+      }),
+    ).resolves.toEqual({ version: "1.0.0", outcome: "accepted" });
+  });
+
+  it("detects content collision without revealing either request", async () => {
+    const idempotencyReference = reference("collision");
+    await authEmailIdempotency.reserve(
+      authEmailRequest(idempotencyReference, "first@example.test"),
+    );
+    await expect(
+      authEmailIdempotency.reserve(
+        authEmailRequest(idempotencyReference, "second@example.test"),
+      ),
+    ).resolves.toEqual({ version: "1.0.0", outcome: "collision" });
+  });
+
+  it("finds an existing reservation through a retained rollover key", async () => {
+    const request = authEmailRequest(reference("rollover-replay"));
+    await authEmailIdempotency.reserve(request);
+    const nextKey = createHash("sha256")
+      .update("database-auth-email-key-next")
+      .digest("base64url");
+    const rotated = new AuthenticationEmailIdempotencyRepository(
+      pool,
+      {
+        keys: [
+          { version: 2, value: nextKey },
+          { version: 1, value: authEmailKey },
+        ],
+        leaseMilliseconds: 60_000,
+      },
+      "https://app.example.test",
+      () => authEmailNow,
+    );
+    await expect(rotated.reserve(request)).resolves.toEqual({
+      version: "1.0.0",
+      outcome: "in-progress",
+    });
+  });
+
+  it("rejects invalid terminal/provider-reference combinations before SQL", async () => {
+    const request = authEmailRequest(reference("invalid-completion"));
+    await authEmailIdempotency.reserve(request);
+    await expect(
+      authEmailIdempotency.complete(request, {
+        version: "1.0.0",
+        disposition: "accepted",
+        code: "EMAIL_ACCEPTED",
+      }),
+    ).rejects.toThrow("Authentication email configuration is unavailable");
+    await expect(
+      authEmailIdempotency.complete(
+        request,
+        {
+          version: "1.0.0",
+          disposition: "suppressed",
+          code: "EMAIL_SUPPRESSED",
+        },
+        "provider-reference-not-allowed",
+      ),
+    ).rejects.toThrow("Authentication email configuration is unavailable");
+  });
+
+  it("moves an abandoned reservation to reconciliation-required and never reopens it", async () => {
+    authEmailNow = new Date("2026-08-12T13:00:00.000Z");
+    const request = authEmailRequest(reference("abandoned"));
+    await authEmailIdempotency.reserve(request);
+    authEmailNow = new Date("2026-08-12T13:01:00.001Z");
+    await expect(authEmailIdempotency.reserve(request)).resolves.toEqual({
+      version: "1.0.0",
+      outcome: "reconciliation-required",
+    });
+    await expect(
+      authEmailIdempotency.complete(
+        request,
+        {
+          version: "1.0.0",
+          disposition: "accepted",
+          code: "EMAIL_ACCEPTED",
+        },
+        "late-provider-message",
+      ),
+    ).resolves.toEqual({
+      version: "1.0.0",
+      outcome: "reconciliation-required",
+    });
+  });
+
+  it("persists no recipient, capability URL/token, rendered body, or raw reference", async () => {
+    const rawReference = reference("privacy-scan");
+    const request = authEmailRequest(rawReference, "private@example.test");
+    await authEmailIdempotency.reserve(request);
+    const rows = await pool.query<Record<string, unknown>>(
+      `select * from authentication_email_delivery
+       where purpose = 'verify-email'`,
+    );
+    const serialized = JSON.stringify(rows.rows);
+    expect(serialized).not.toContain("private@example.test");
+    expect(serialized).not.toContain("header.payload.signature");
+    expect(serialized).not.toContain("callbackURL");
+    expect(serialized).not.toContain(rawReference);
+    expect(serialized).not.toContain("<html");
+    expect(serialized).toMatch(/hmac-sha256:1:[0-9a-f]{64}/);
+  });
+
+  it("denies app-user reads and runtime deletion while using the recovery index", async () => {
+    await expect(
+      asUser(ownerA, (client) =>
+        client.query("select id from authentication_email_delivery"),
+      ),
+    ).rejects.toMatchObject({ code: "42501" });
+
+    const client = await pool.connect();
+    try {
+      await client.query("begin");
+      await client.query("set local role app_auth_email_runtime");
+      await expect(
+        client.query("delete from authentication_email_delivery"),
+      ).rejects.toMatchObject({ code: "42501" });
+      await client.query("rollback");
+    } finally {
+      client.release();
+    }
+
+    const planClient = await pool.connect();
+    let planRows: unknown = null;
+    try {
+      await planClient.query("begin");
+      await planClient.query("set local enable_seqscan = off");
+      const plan = await planClient.query(
+        `explain (format json)
+         select id from authentication_email_delivery
+         where state = 'reserved' and lease_expires_at <= CURRENT_TIMESTAMP`,
+      );
+      planRows = plan.rows;
+      await planClient.query("rollback");
+    } finally {
+      planClient.release();
+    }
+    expect(JSON.stringify(planRows)).toContain(
+      "authentication_email_delivery_recovery_idx",
+    );
   });
 });
 

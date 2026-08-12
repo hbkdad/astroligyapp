@@ -50,6 +50,13 @@
       "when": 1786509712351,
       "tag": "0006_jazzy_carmella_unuscione",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786512532324,
+      "tag": "0007_nasty_mister_sinister",
+      "breakpoints": true
     }
   ]
 }

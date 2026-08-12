@@ -442,6 +442,98 @@ export const subscriptionProviderEventReceipt = pgTable(
   ],
 );
 
+export const authenticationEmailDelivery = pgTable(
+  "authentication_email_delivery",
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    purpose: text().notNull(),
+    templateVersion: text("template_version").notNull(),
+    referenceKeyVersion: integer("reference_key_version").notNull(),
+    referenceDigest: text("reference_digest").notNull(),
+    requestDigest: text("request_digest").notNull(),
+    state: text().notNull(),
+    providerMessageReference: text("provider_message_reference"),
+    reservedAt: timestamp("reserved_at", {
+      withTimezone: true,
+      mode: "string",
+    })
+      .defaultNow()
+      .notNull(),
+    leaseExpiresAt: timestamp("lease_expires_at", {
+      withTimezone: true,
+      mode: "string",
+    }).notNull(),
+    completedAt: timestamp("completed_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
+    updatedAt: timestamp("updated_at", {
+      withTimezone: true,
+      mode: "string",
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("authentication_email_delivery_reference_uidx").using(
+      "btree",
+      table.referenceDigest.asc().nullsLast().op("text_ops"),
+    ),
+    index("authentication_email_delivery_recovery_idx").using(
+      "btree",
+      table.state.asc().nullsLast().op("text_ops"),
+      table.leaseExpiresAt.asc().nullsLast().op("timestamptz_ops"),
+    ),
+    pgPolicy("authentication_email_delivery_runtime", {
+      as: "permissive",
+      for: "all",
+      to: ["app_auth_email_runtime"],
+      using: sql`true`,
+      withCheck: sql`true`,
+    }),
+    check(
+      "authentication_email_delivery_purpose_check",
+      sql`purpose IN ('verify-email', 'reset-password')`,
+    ),
+    check(
+      "authentication_email_delivery_template_check",
+      sql`(purpose = 'verify-email' AND template_version = 'auth.verify-email.en-CA.1') OR (purpose = 'reset-password' AND template_version = 'auth.reset-password.en-CA.1')`,
+    ),
+    check(
+      "authentication_email_delivery_key_version_check",
+      sql`reference_key_version >= 0`,
+    ),
+    check(
+      "authentication_email_delivery_reference_digest_check",
+      sql`reference_digest ~ '^hmac-sha256:[0-9]+:[0-9a-f]{64}$'`,
+    ),
+    check(
+      "authentication_email_delivery_request_digest_check",
+      sql`request_digest ~ '^hmac-sha256:[0-9]+:[0-9a-f]{64}$'`,
+    ),
+    check(
+      "authentication_email_delivery_digest_version_check",
+      sql`split_part(reference_digest, ':', 2)::integer = reference_key_version AND split_part(request_digest, ':', 2)::integer = reference_key_version`,
+    ),
+    check(
+      "authentication_email_delivery_state_check",
+      sql`state IN ('reserved', 'accepted', 'rejected', 'retry', 'reconciliation-required', 'suppressed')`,
+    ),
+    check(
+      "authentication_email_delivery_provider_reference_check",
+      sql`provider_message_reference IS NULL OR (char_length(provider_message_reference) <= 200 AND provider_message_reference ~ '^[A-Za-z0-9][A-Za-z0-9._:-]*$')`,
+    ),
+    check(
+      "authentication_email_delivery_timeline_check",
+      sql`reserved_at < lease_expires_at AND reserved_at <= updated_at AND (completed_at IS NULL OR (reserved_at <= completed_at AND completed_at <= updated_at))`,
+    ),
+    check(
+      "authentication_email_delivery_lifecycle_check",
+      sql`(state = 'reserved' AND completed_at IS NULL AND provider_message_reference IS NULL) OR (state = 'accepted' AND completed_at IS NOT NULL AND provider_message_reference IS NOT NULL) OR (state IN ('rejected', 'retry', 'suppressed') AND completed_at IS NOT NULL AND provider_message_reference IS NULL) OR (state = 'reconciliation-required' AND completed_at IS NOT NULL)`,
+    ),
+  ],
+);
+
 export const auditEvent = pgTable(
   "audit_event",
   {

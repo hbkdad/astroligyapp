@@ -443,9 +443,12 @@ tests/
   framework token; the dispatcher receives a frozen validated request and every unsafe
   outcome fails generically. A future adapter pins `@aws-sdk/client-sesv2` 3.1108.0,
   dedicated SPF/DKIM/DMARC/custom-MAIL-FROM identity, required configuration-set
-  events, and same-region SNS-to-SQS feedback. A durable content-free idempotency
-  ledger must prevent blind retries. No concrete factory/dispatcher, account, SDK,
-  DNS, credential, queue, route, or send exists yet. See ADR 0009.
+  events, and same-region SNS-to-SQS feedback. The durable service-only ledger now
+  reserves separate versioned HMAC reference/request digests, supports retained-key
+  rollover, serializes concurrency, and turns abandoned/late work into reconciliation
+  without storing recipient, capability, content, or account identity. No concrete
+  dispatcher, account, SDK, DNS, credential, queue, route, or send exists yet. See
+  ADR 0009.
 - Ephemeris: exact Astronomy Engine 2.1.19 for tropical positions and local
   angles, composed with Whole Sign strategy 1.0.0. No silent house-system
   fallback; exact poles fail explicitly. See ADR 0006.

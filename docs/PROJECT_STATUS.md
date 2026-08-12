@@ -4,12 +4,12 @@ Last updated: 2026-08-12
 
 ## Current position
 
-Status: Goal 58 complete; the strict authentication-email contract, local `en-CA`
-templates, and privacy-safe Better Auth callback seam are implemented without sending.
+Status: Goal 59 complete; authentication email now has a forced-RLS content-free
+idempotency ledger and rollover-aware keyed reference boundary without sending.
 
 The project now has the portable application baseline plus a PostgreSQL 18
-contract, Drizzle ORM/Kit, a typed 22-table normalized schema, checked-in SQL
-migrations, forced row-level security on 21 private tables, a server-only
+contract, Drizzle ORM/Kit, a typed 23-table public schema plus four isolated auth
+tables, checked-in SQL migrations, forced row-level security on 22 public tables, a server-only
 verified-session boundary, identity-scoped transactions, account bootstrap,
 deterministic zodiac/aspect primitives, lunar phase geometry, a traceable
 Pythagorean numerology strategy, and a strict ephemeris adapter validation
@@ -23,7 +23,7 @@ tables, strict server configuration, database sessions, and execute-only account
 contact lookups. No live billing account, production data, managed database/auth
 infrastructure, public auth surface, AI, general notification, location-resolution,
 or deployment provider is selected. Authentication email has a provider decision but
-no SDK, account, DNS, credentials, infrastructure, adapter, persistence, or delivery.
+no SDK, account, DNS, credentials, infrastructure, provider adapter, or delivery.
 
 ## Completed
 
@@ -98,6 +98,14 @@ no SDK, account, DNS, credentials, infrastructure, adapter, persistence, or deli
 
 ## Recently completed
 
+- [x] Goal 59: add forward-only migration `0007_nasty_mister_sinister` with a
+      content-free authentication-email delivery ledger, forced RLS, one NOLOGIN
+      runtime role limited to SELECT/INSERT/UPDATE, unique reference digest, lifecycle
+      constraints, and an abandoned-reservation recovery index.
+- [x] Implement strict descending 256-bit base64url HMAC rollover-key configuration,
+      purpose-separated opaque reference derivation, versioned reference/request
+      digests, atomic reservation, exact replay/collision handling, constrained terminal
+      completion, and fail-safe expired/late reconciliation with no plaintext storage.
 - [x] Goal 58: implement strict frozen authentication-email v1 request/result,
       dispatcher, idempotency-reference-factory, and rendered-message contracts with
       exact fields, normalized bounded ASCII email, opaque 256-bit references, and
@@ -518,25 +526,25 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 59 — implement the durable privacy-minimized authentication-email idempotency
-ledger and keyed reference derivation without a provider SDK or sending email.
+Goal 60 — implement the isolated Amazon SES API v2 authentication-email adapter against
+an injected client without creating AWS resources or sending live email.
 
 Deliverables:
 
-1. Add a forward-only content-free delivery table and least-privilege database role.
-   Persist only purpose/template, domain-separated keyed request/reference digests,
-   safe state/timestamps, and a bounded private provider-message reference; never
-   recipient, action URL/token, rendered body, raw idempotency reference, or payload.
-2. Implement an HMAC-SHA-256 reference factory with strict rollover-key configuration
-   and a repository that atomically reserves one reference/fingerprint, distinguishes
-   exact replay from collision, binds only valid terminal outcomes, and treats an
-   abandoned reservation or ambiguous transition as reconciliation-required.
-3. Prove cumulative upgrade, concurrent first reservation, replay/collision, illegal
-   transition, two-role/unauthenticated isolation, no plaintext persistence, key/version
-   behavior, deletion/retention posture, rollback, index use, and pool cleanup.
-4. Apply `database-migration` and `security-audit`, update the next adapter goal, and run
-   all database/application gates. Do not install the SES SDK, create AWS/DNS/queue/IAM
-   resources, add live credentials, call a provider, send email, or expose auth routes/UI.
+1. Pin exact `@aws-sdk/client-sesv2` 3.1108.0 and define strict server-only SES
+   configuration fixed to `ca-central-1`, a verified authentication sender, required
+   configuration set, and no global endpoint/SMTP/tracking/provider template.
+2. Compose Goal 58 validation/rendering and Goal 59 reservation with one injected
+   `SendEmail` client. Map definite pre-acceptance rejection/throttle/quota outcomes
+   safely; treat timeout/network/malformed success or other ambiguous acceptance as
+   reconciliation-required and never issue a second send.
+3. Prove exact MIME/content shape, text+HTML parity, sender/recipient/configuration-set
+   fields, accepted message-reference binding, terminal replay, collision, suppression
+   seam, every error class, no raw data in results/errors/logs, and no call before a new
+   reservation using a fake client only.
+4. Apply `security-audit`, document feedback-ingestion as the single next goal, and run
+   all gates. Do not create an AWS account/identity/DNS/IAM/configuration set/topic/queue,
+   use credentials, call live SES, send email, expose auth routes/UI, purchase, or deploy.
 
 ## Phase queue
 
@@ -586,8 +594,7 @@ Deliverables:
   while eventual production-host runtime and cache behavior remain release gates.
 - Managed database, payment-account, AI, monitoring, and deployment providers remain
   intentionally undecided. Amazon SES is selected only for authentication email.
-- Better Auth still requires a durable delivery ledger/reference implementation, SES
-  adapter/infrastructure, account-bootstrap
+- Better Auth still requires an SES adapter/infrastructure, account-bootstrap
   orchestration, public route/UI review, deletion/retention orchestration, browser E2E,
   and production recovery testing. MFA and passkeys remain release-hardening decisions.
 - Production database role provisioning, TLS, pooling, migration timeouts,
@@ -611,6 +618,9 @@ Deliverables:
 | 2026-08-12 | Goal 57 decision plus full application gate        | SES Canada Central selected; 52 files/869 tests, strict checks, and optimized build passed    |
 | 2026-08-12 | Goal 58 focused and PostgreSQL integration gates   | 53 focused checks plus cumulative upgrade and 33/33 database integration tests passed         |
 | 2026-08-12 | Goal 58 full application and coverage gates        | 53 files/905 tests/build passed; coverage 94.38% statements and 92.43% branches               |
+| 2026-08-12 | Goal 59 migration and PostgreSQL gate              | Oldest schema upgraded empty; 41/41 integration tests and least-privilege checks passed       |
+| 2026-08-12 | Goal 59 coverage gate                              | 54 files/921 tests passed; 94.25% statements, 92.16% branches, and 99.29% functions           |
+| 2026-08-12 | Goal 59 full application gate                      | Formatting, lint, strict TypeScript, 54 files/921 tests, and optimized build passed           |
 | 2026-08-11 | `npm run db:check`                                 | Drizzle schema, migration journal, and generated snapshot are consistent                      |
 | 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 562 tests, and optimized production build         |
 | 2026-08-11 | `npm run test:coverage`                            | 94.04% statements, 91.04% branches, 99.73% functions, and 95.13% lines                        |
@@ -1168,6 +1178,50 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 59 authentication-email idempotency persistence record
+
+- Migration/invariants: additive migration `0007_nasty_mister_sinister` creates one
+  empty 12-column table and two indexes without touching existing rows. Exact checks
+  bind purpose to template, both digests to the recorded key version, state to legal
+  lifecycle/timestamp/provider-reference combinations, and lease start before expiry.
+- Private data: the ledger stores no recipient, capability URL/token, rendered body,
+  raw idempotency reference, request/provider payload, account/profile ID, name, or
+  birth data. It contains purpose/template, HMAC key version, separate reference/request
+  HMACs, state/timestamps, and only a bounded private provider message reference.
+- Authorization: forced RLS admits only `app_auth_email_runtime`; the role has
+  SELECT/INSERT/UPDATE but no DELETE. `app_user`, public, Better Auth runtime, and auth
+  resolver roles have no grant. Signup verification therefore does not fabricate an
+  owner mapping before account bootstrap.
+- Cryptography: configuration accepts one to eight strictly descending unique 32-byte
+  unpadded-base64url keys and rejects browser exposure. The active key derives opaque
+  purpose-separated 256-bit references; repository lookup checks HMACs under every
+  retained key. Old keys must remain for the full 30-day ledger retention window.
+- Concurrency/lifecycle: a safe keyed digest feeds a transaction advisory lock. First
+  reservation inserts; exact concurrent replay is in-progress; changed content under
+  one reference is collision. Only a live reservation completes. Accepted requires a
+  provider reference; rejected/retry/suppressed forbid it; reconciliation may carry it.
+  Expired, abandoned, missing, or late completion cannot reopen and becomes reconcile.
+- Migration safety/recovery: the change is additive with no backfill or table rewrite;
+  the oldest supported schema upgrades cumulatively and leaves the table empty. Apply
+  roles/table/indexes in one transaction during a controlled migration. On failure,
+  rollback; after application adoption, prefer a reviewed forward fix over dropping
+  replay state. Retain rows 30 days after last update, then delete in bounded batches
+  through an operator-only maintenance identity, never the runtime role.
+- Verification: cumulative legacy/overlap migration, empty-state upgrade, role widths,
+  forced RLS, 41 PostgreSQL integration tests, concurrent reservation, replay,
+  collision, rollover, illegal completion, lease expiry, late completion, plaintext
+  scans, denied user/delete access, recovery-index plan, rollback, and pool release pass.
+  Unit coverage then passed 54 files/921 tests at 94.25% statements, 92.16% branches,
+  99.29% functions, and 95.53% lines. The new idempotency boundary is 91.09%
+  statements, 83.78% branches, 100% functions, and 93.93% lines.
+  The full application gate also passed formatting, ESLint, strict TypeScript, all 921
+  tests, and the optimized Next.js build.
+- Security findings: no critical/high issue remains. Residual operational risks are
+  retaining rollover keys for the ledger window, provisioning the dedicated production
+  role/TLS pool, bounded cleanup/backup handling, clock quality, and future adapter
+  ambiguity classification. No SDK, provider call/account/resource, credential, DNS,
+  IAM, queue, email, route/UI, production data, purchase, or deployment was added.
 
 ## Goal 58 authentication-email contract and renderer record
 

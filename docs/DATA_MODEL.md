@@ -200,6 +200,28 @@ the bearer-token digest and is verified before parsing stored public content.
   provider/event ID, and deleted only through subscription/account cascade
 - no raw webhook body, signature, price, checkout value, or provider payload
 
+### `authentication_email_delivery`
+
+- service-only verification/reset purpose and matching local template version
+- active rollover-key version plus separate domain-separated HMAC-SHA-256 digests of
+  the opaque idempotency reference and complete validated request
+- reserved/accepted/rejected/retry/reconciliation-required/suppressed state, bounded
+  lease/completion/update timestamps, and an optional private bounded provider message
+  reference only where the lifecycle permits it
+- unique keyed reference digest serializes first reservation; the state/lease index
+  supports abandoned-send recovery. An expired reservation becomes reconciliation-
+  required and can never reopen or trigger a blind resend
+- forced RLS grants one NOLOGIN authentication-email runtime role only SELECT, INSERT,
+  and UPDATE. It cannot delete; `app_user`, Better Auth runtime/resolver roles, and
+  public users receive no access
+- no account/profile foreign key because signup verification precedes internal account
+  creation. The table never stores recipient, capability URL/token, rendered content,
+  raw idempotency reference, request payload, name, birth/profile data, or account ID
+- retain rows for 30 days after their last update for replay/reconciliation, then remove
+  them through an operator-only bounded maintenance job. Retain every HMAC rollover key
+  for at least that full window; account deletion does not target this content-free,
+  account-unlinked ledger
+
 ### `notification_preference`
 
 - `id`, `profile_id`, channel, event type

@@ -296,3 +296,17 @@ resend. Durable storage may not contain a plaintext recipient, action URL/token,
 rendered body, or provider payload. Goal 58 implements the port, validator, renderer,
 and callback seam only; no concrete dispatcher, idempotency factory/ledger, SDK, route,
 credential, external resource, DNS record, or live delivery exists.
+
+`AuthenticationEmailIdempotencyRepository` now owns the durable pre-provider boundary.
+It validates the complete request, derives separate domain-separated keyed reference
+and request digests, acquires a transaction advisory lock on the active reference
+digest, and reserves a forced-RLS service-only row before any future send. It searches
+all retained rollover-key digests, so replay remains stable during rotation. Exact
+replay returns `in-progress` or the stored terminal disposition; the same reference
+with a different request returns only `collision`.
+
+`complete` can transition only a live reservation. Accepted requires one bounded
+private provider message reference; rejected/retry/suppressed forbid it; reconciliation
+may include one. A missing row, expired lease, abandoned reservation, or late completion
+returns reconciliation-required and never reopens the reference. Results remain fixed
+and contain no recipient, URL/token, digest, row/provider identity, or exception.
