@@ -4,8 +4,8 @@ Last updated: 2026-08-12
 
 ## Current position
 
-Status: Goal 57 complete; Amazon SES API v2 in Canada Central is selected behind a
-privacy-safe authentication-email boundary without an external account or live send.
+Status: Goal 58 complete; the strict authentication-email contract, local `en-CA`
+templates, and privacy-safe Better Auth callback seam are implemented without sending.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 22-table normalized schema, checked-in SQL
@@ -98,6 +98,14 @@ no SDK, account, DNS, credentials, infrastructure, adapter, persistence, or deli
 
 ## Recently completed
 
+- [x] Goal 58: implement strict frozen authentication-email v1 request/result,
+      dispatcher, idempotency-reference-factory, and rendered-message contracts with
+      exact fields, normalized bounded ASCII email, opaque 256-bit references, and
+      purpose/template/path-specific canonical HTTPS URL validation.
+- [x] Add deterministic local `en-CA` verification/reset text and HTML templates plus a
+      Better Auth seam that exposes its raw token only to the injected reference factory,
+      dispatches only a validated frozen request, and collapses every nonaccepted or
+      malformed outcome/dependency failure into one identity-free delivery error.
 - [x] Goal 57: compare Resend 6.19.0, Postmark 5.1.0, Amazon SES API v2 with
       future AWS SDK 3.1108.0, and Canadian-hosted Cakemail using current primary
       documentation across regional processing, delivery controls, pricing, API fit,
@@ -510,24 +518,25 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 58 — implement the pure provider-neutral authentication-email contract and local
-template renderer without persistence, a provider SDK, external resources, or sending.
+Goal 59 — implement the durable privacy-minimized authentication-email idempotency
+ledger and keyed reference derivation without a provider SDK or sending email.
 
 Deliverables:
 
-1. Define strict immutable v1 request, safe disposition, dispatcher, and local-renderer
-   contracts with exact-field validation, bounded normalized email/idempotency values,
-   and canonical HTTPS origin plus purpose-path enforcement.
-2. Implement allowlisted `en-CA` verification and password-reset text/HTML templates
-   with deterministic versioning, correct HTML escaping, generic security copy, and no
-   name/profile/account/provider/tracking data or user-controlled subject/body.
-3. Add a privacy-safe orchestration seam for Better Auth's injected callbacks without
-   exposing a route or claiming delivery. Prove all results/errors remain free of
-   recipient, token/URL, rendered body, request fingerprint, provider payload, or secret.
-4. Apply `security-audit`, document the next persistence/idempotency boundary, and run
-   the full quality gate. Do not install an email SDK, add database state, create an
-   account/resource/DNS record, add credentials, call a provider, send email, or expose
-   public auth UI/routes.
+1. Add a forward-only content-free delivery table and least-privilege database role.
+   Persist only purpose/template, domain-separated keyed request/reference digests,
+   safe state/timestamps, and a bounded private provider-message reference; never
+   recipient, action URL/token, rendered body, raw idempotency reference, or payload.
+2. Implement an HMAC-SHA-256 reference factory with strict rollover-key configuration
+   and a repository that atomically reserves one reference/fingerprint, distinguishes
+   exact replay from collision, binds only valid terminal outcomes, and treats an
+   abandoned reservation or ambiguous transition as reconciliation-required.
+3. Prove cumulative upgrade, concurrent first reservation, replay/collision, illegal
+   transition, two-role/unauthenticated isolation, no plaintext persistence, key/version
+   behavior, deletion/retention posture, rollback, index use, and pool cleanup.
+4. Apply `database-migration` and `security-audit`, update the next adapter goal, and run
+   all database/application gates. Do not install the SES SDK, create AWS/DNS/queue/IAM
+   resources, add live credentials, call a provider, send email, or expose auth routes/UI.
 
 ## Phase queue
 
@@ -577,8 +586,8 @@ Deliverables:
   while eventual production-host runtime and cache behavior remain release gates.
 - Managed database, payment-account, AI, monitoring, and deployment providers remain
   intentionally undecided. Amazon SES is selected only for authentication email.
-- Better Auth still requires an implemented transactional-email contract, durable
-  delivery ledger, SES adapter/infrastructure, account-bootstrap
+- Better Auth still requires a durable delivery ledger/reference implementation, SES
+  adapter/infrastructure, account-bootstrap
   orchestration, public route/UI review, deletion/retention orchestration, browser E2E,
   and production recovery testing. MFA and passkeys remain release-hardening decisions.
 - Production database role provisioning, TLS, pooling, migration timeouts,
@@ -600,6 +609,8 @@ Deliverables:
 | 2026-08-12 | Goal 56 migration/security database gate           | Oldest schema upgraded cumulatively; 33/33 auth/persistence isolation tests passed            |
 | 2026-08-12 | Goal 56 full application gate                      | 52 files/869 tests, strict checks, and optimized build passed                                 |
 | 2026-08-12 | Goal 57 decision plus full application gate        | SES Canada Central selected; 52 files/869 tests, strict checks, and optimized build passed    |
+| 2026-08-12 | Goal 58 focused and PostgreSQL integration gates   | 53 focused checks plus cumulative upgrade and 33/33 database integration tests passed         |
+| 2026-08-12 | Goal 58 full application and coverage gates        | 53 files/905 tests/build passed; coverage 94.38% statements and 92.43% branches               |
 | 2026-08-11 | `npm run db:check`                                 | Drizzle schema, migration journal, and generated snapshot are consistent                      |
 | 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 562 tests, and optimized production build         |
 | 2026-08-11 | `npm run test:coverage`                            | 94.04% statements, 91.04% branches, 99.73% functions, and 95.13% lines                        |
@@ -1157,6 +1168,44 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 58 authentication-email contract and renderer record
+
+- Contracts: `AuthenticationEmailRequest` v1 accepts exactly purpose, normalized ASCII
+  recipient, canonical action URL, matching local template version, and a canonical
+  43-character base64url idempotency reference. The dispatcher result is one exact
+  version/disposition/code pair; provider IDs, payloads, PII, errors, and extra fields
+  fail validation.
+- URL trust: the validator requires the exact configured HTTPS origin and Better Auth
+  verification or 24-character reset path. It rejects credentials, fragments,
+  normalization drift, missing/duplicate/extra parameters, purpose mismatch, and
+  callback destinations outside that same canonical origin. Local HTTP can still
+  configure Better Auth for development, but cannot enter the email callback boundary.
+- Rendering: fixed local template versions `auth.verify-email.en-CA.1` and
+  `auth.reset-password.en-CA.1` emit deterministic generic text plus minimal HTML with
+  an escaped capability link, one-hour expiry aligned to Better Auth configuration, and
+  no recipient/name/account/profile/reference/provider/tracking data. Output is frozen.
+- Callback seam: Better Auth supplies its raw token only to an injected opaque-reference
+  factory. The dispatcher receives a newly validated frozen request without that token.
+  Only exact `accepted/EMAIL_ACCEPTED` completes; request/reference/dispatcher errors,
+  malformed results, rejection, suppression, retry, and reconciliation all collapse to
+  `AuthenticationEmailDeliveryError` without sensitive text.
+- Security audit: assets are the recipient and single-use capability URL; the framework
+  callback and future dispatcher are the trust boundary; no browser or public route was
+  added. Adversarial tests cover PII/control characters, extra fields, mixed purpose,
+  hostile origin/callback redirects, duplicate queries, output injection, raw-token
+  crossing, malformed/augmented results, and exception sanitization. No critical/high
+  finding remains; persistence, durable idempotency, queue feedback, rate behavior, and
+  provider operation remain explicitly outside this goal.
+- Verification: 53 focused contract/configuration checks and the cumulative PostgreSQL
+  18 upgrade with all 33 integration tests passed. The full gate passed formatting,
+  ESLint, strict TypeScript, all 53 test files/905 tests, and the optimized build.
+  Coverage is 94.38% statements, 92.43% branches, 99.26% functions, and 95.60% lines;
+  the new email boundary is 91.66% statements, 95.31% branches, 100% functions, and
+  95.55% lines.
+- Scope result: no package, migration/table, idempotency secret/factory implementation,
+  concrete dispatcher, SDK, provider account/call, credential, DNS/IAM/queue resource,
+  route/UI, email, production data, purchase, or deployment was added.
 
 ## Goal 57 authentication-email provider decision record
 

@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool, type PoolClient } from "pg";
@@ -18,6 +18,7 @@ import {
 } from "@/infrastructure/auth/better-auth-adapters";
 import { betterAuthSchema } from "@/db/auth-schema";
 import { createBetterAuth } from "@/server/better-auth-configuration";
+import type { AuthenticationEmailRequest } from "@/server/authentication-email";
 import type { ActiveSession } from "@/infrastructure/auth/session";
 import {
   CompatibilityReportRepository,
@@ -48,20 +49,30 @@ if (!connectionString) {
 }
 
 const pool = new Pool({ connectionString });
-const authEmailMessages: Array<Readonly<{ to: string; url: string }>> = [];
+const authEmailMessages: AuthenticationEmailRequest[] = [];
 const auth = createBetterAuth(
   drizzle(pool, { schema: betterAuthSchema }),
   {
-    sendVerification: async (message) => {
-      authEmailMessages.push(message);
+    dispatcher: {
+      dispatch: async (message) => {
+        authEmailMessages.push(message);
+        return {
+          version: "1.0.0",
+          disposition: "accepted",
+          code: "EMAIL_ACCEPTED",
+        };
+      },
     },
-    sendPasswordReset: async (message) => {
-      authEmailMessages.push(message);
+    idempotencyReferences: {
+      create: ({ purpose, token }) =>
+        createHash("sha256")
+          .update(`database-test:${purpose}:${token}`)
+          .digest("base64url"),
     },
   },
   {
-    baseUrl: "http://127.0.0.1:3000",
-    trustedOrigins: ["http://127.0.0.1:3000"],
+    baseUrl: "https://app.example.test",
+    trustedOrigins: ["https://app.example.test"],
     secrets: [
       {
         version: 1,
@@ -370,7 +381,7 @@ describe("Better Auth trusted contact isolation", () => {
     });
     expect(signUp.token).toBeNull();
     expect(signUp.user.emailVerified).toBe(false);
-    expect(authEmailMessages.at(-1)).toMatchObject({ to: email });
+    expect(authEmailMessages.at(-1)).toMatchObject({ recipient: email });
 
     await pool.query(
       `update auth."user" set email_verified = true where id = $1`,
@@ -384,7 +395,7 @@ describe("Better Auth trusted contact isolation", () => {
     expect(setCookie).toBeTruthy();
     const headers = new Headers({
       cookie: setCookie!.split(";", 1)[0]!,
-      origin: "http://127.0.0.1:3000",
+      origin: "https://app.example.test",
     });
     const active = await auth.api.getSession({ headers });
     expect(active?.user.id).toBe(signUp.user.id);

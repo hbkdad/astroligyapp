@@ -255,8 +255,8 @@ duplicated contact storage remain outside the contract. No public route exposes 
 
 ## Selected authentication-email dispatch boundary
 
-`AuthenticationEmailDispatcher.dispatch(request)` will be a server-only,
-provider-neutral port. Its exact immutable request is limited to schema version
+`AuthenticationEmailDispatcher.dispatch(request)` is a server-only, provider-neutral
+port. Its exact immutable request is limited to schema version
 `1.0.0`, `verify-email` or `reset-password` purpose, one normalized recipient, one
 absolute action URL on the configured canonical application origin and purpose path,
 one allowlisted local template version, and one opaque idempotency reference. It does
@@ -269,6 +269,19 @@ No result, log, metric, trace, or exception may expose recipient, action URL/tok
 provider message ID/payload, credentials, suppression detail, or request fingerprint.
 Better Auth and public auth responses remain anti-enumerating across every outcome.
 
+`validateAuthenticationEmailRequest` rejects extra fields, non-normalized or non-ASCII
+addresses, noncanonical origins, non-HTTPS URLs, purpose/path/template mismatch,
+missing/duplicate/extra query fields, malformed reset capabilities, and callback
+destinations outside the canonical application origin. `renderAuthenticationEmail`
+then produces only the fixed local `en-CA` text/HTML version for the validated purpose;
+it excludes recipient and idempotency data and HTML-escapes the capability URL.
+
+The Better Auth callback seam is also implemented. It supplies the raw framework token
+only to an injected idempotency-reference factory, then validates and freezes the
+resulting dispatch request. The raw token never enters the dispatcher. Only an exact
+`accepted` result completes the callback; invalid input, malformed results, any other
+disposition, and all dependency errors become one generic delivery-unavailable error.
+
 ADR 0009 selects a future Amazon SES API v2 adapter in `ca-central-1`, pinned at
 `@aws-sdk/client-sesv2` 3.1108.0 when implemented. It must use local versioned
 text/HTML templates, a dedicated authenticated sender domain, no tracking or link
@@ -280,5 +293,6 @@ the opaque reference before provider work and compare a domain-separated keyed
 request fingerprint. Exact replay returns its existing safe state; a content collision
 or an ambiguous provider outcome requires reconciliation and must not trigger a blind
 resend. Durable storage may not contain a plaintext recipient, action URL/token,
-rendered body, or provider payload. No dispatcher, ledger, SDK, route, credential,
-external resource, DNS record, or live delivery is implemented by Goal 57.
+rendered body, or provider payload. Goal 58 implements the port, validator, renderer,
+and callback seam only; no concrete dispatcher, idempotency factory/ledger, SDK, route,
+credential, external resource, DNS record, or live delivery exists.

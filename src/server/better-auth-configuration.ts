@@ -5,19 +5,19 @@ import { betterAuth, type BetterAuthOptions } from "better-auth";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { betterAuthSchema } from "@/db/auth-schema";
+import {
+  createBetterAuthEmailCallbacks,
+  type AuthenticationEmailDispatcher,
+  type AuthenticationEmailIdempotencyReferenceFactory,
+} from "@/server/authentication-email";
 
 const SEVEN_DAYS_SECONDS = 60 * 60 * 24 * 7;
 const ONE_DAY_SECONDS = 60 * 60 * 24;
 const TEN_MINUTES_SECONDS = 60 * 10;
 
-export interface AuthEmailMessage {
-  readonly to: string;
-  readonly url: string;
-}
-
-export interface AuthEmailDispatcher {
-  sendVerification(message: AuthEmailMessage): Promise<void>;
-  sendPasswordReset(message: AuthEmailMessage): Promise<void>;
+export interface BetterAuthEmailDependencies {
+  readonly dispatcher: AuthenticationEmailDispatcher;
+  readonly idempotencyReferences: AuthenticationEmailIdempotencyReferenceFactory;
 }
 
 export interface BetterAuthSecret {
@@ -92,20 +92,26 @@ export function loadBetterAuthConfiguration(
 
 export function createBetterAuth(
   db: NodePgDatabase<typeof betterAuthSchema>,
-  dispatcher: AuthEmailDispatcher,
+  email: BetterAuthEmailDependencies,
   configurationValue: BetterAuthConfiguration,
 ) {
   const configuration = validateConfiguration(configurationValue);
 
-  return betterAuth(createBetterAuthOptions(db, dispatcher, configuration));
+  return betterAuth(createBetterAuthOptions(db, email, configuration));
 }
 
 export function createBetterAuthOptions(
   db: NodePgDatabase<typeof betterAuthSchema>,
-  dispatcher: AuthEmailDispatcher,
+  email: BetterAuthEmailDependencies,
   configurationValue: BetterAuthConfiguration,
 ): BetterAuthOptions {
   const configuration = validateConfiguration(configurationValue);
+  const emailCallbacks = () =>
+    createBetterAuthEmailCallbacks({
+      canonicalOrigin: configuration.baseUrl,
+      dispatcher: email.dispatcher,
+      idempotencyReferences: email.idempotencyReferences,
+    });
 
   return {
     appName: "Personal Cosmic Calendar",
@@ -128,9 +134,9 @@ export function createBetterAuthOptions(
       maxPasswordLength: 128,
       resetPasswordTokenExpiresIn: 60 * 60,
       revokeSessionsOnPasswordReset: true,
-      sendResetPassword: async ({ user, url }) => {
-        await dispatcher.sendPasswordReset(
-          Object.freeze({ to: user.email, url }),
+      sendResetPassword: async ({ user, url, token }) => {
+        await emailCallbacks().sendPasswordReset(
+          Object.freeze({ recipient: user.email, actionUrl: url, token }),
         );
       },
     },
@@ -139,9 +145,9 @@ export function createBetterAuthOptions(
       sendOnSignIn: true,
       autoSignInAfterVerification: false,
       expiresIn: 60 * 60,
-      sendVerificationEmail: async ({ user, url }) => {
-        await dispatcher.sendVerification(
-          Object.freeze({ to: user.email, url }),
+      sendVerificationEmail: async ({ user, url, token }) => {
+        await emailCallbacks().sendVerification(
+          Object.freeze({ recipient: user.email, actionUrl: url, token }),
         );
       },
     },

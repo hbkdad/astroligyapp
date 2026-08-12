@@ -6,9 +6,13 @@ import {
   BetterAuthConfigurationError,
   createBetterAuthOptions,
   loadBetterAuthConfiguration,
-  type AuthEmailDispatcher,
   type BetterAuthConfiguration,
+  type BetterAuthEmailDependencies,
 } from "@/server/better-auth-configuration";
+import {
+  AUTHENTICATION_EMAIL_RESULT_VERSION,
+  type AuthenticationEmailRequest,
+} from "@/server/authentication-email";
 
 const SECRET = "local-test-secret-value-that-is-long-enough-0001";
 
@@ -28,13 +32,25 @@ function configuration(
   };
 }
 
-function dispatcher(): AuthEmailDispatcher & {
-  sendVerification: ReturnType<typeof vi.fn>;
-  sendPasswordReset: ReturnType<typeof vi.fn>;
+function emailDependencies(): BetterAuthEmailDependencies & {
+  dispatcher: {
+    dispatch: ReturnType<typeof vi.fn>;
+  };
+  idempotencyReferences: {
+    create: ReturnType<typeof vi.fn>;
+  };
 } {
   return {
-    sendVerification: vi.fn(async () => undefined),
-    sendPasswordReset: vi.fn(async () => undefined),
+    dispatcher: {
+      dispatch: vi.fn(async () => ({
+        version: AUTHENTICATION_EMAIL_RESULT_VERSION,
+        disposition: "accepted" as const,
+        code: "EMAIL_ACCEPTED" as const,
+      })),
+    },
+    idempotencyReferences: {
+      create: vi.fn(() => "A".repeat(43)),
+    },
   };
 }
 
@@ -102,7 +118,7 @@ describe("Better Auth server configuration", () => {
   it("pins the reviewed database-session, cookie, verification, and rate profile", () => {
     const options = createBetterAuthOptions(
       {} as never,
-      dispatcher(),
+      emailDependencies(),
       configuration(),
     );
 
@@ -167,10 +183,10 @@ describe("Better Auth server configuration", () => {
   });
 
   it("injects email delivery without exposing raw verification tokens", async () => {
-    const delivery = dispatcher();
+    const email = emailDependencies();
     const options = createBetterAuthOptions(
       {} as never,
-      delivery,
+      email,
       configuration(),
     );
     const user = {
@@ -185,26 +201,42 @@ describe("Better Auth server configuration", () => {
 
     await options.emailVerification!.sendVerificationEmail!({
       user,
-      url: "https://app.example.test/verify?token=opaque",
+      url: "https://app.example.test/api/auth/verify-email?token=header.payload.signature&callbackURL=%2F",
       token: "must-not-cross-dispatch-port",
     });
     await options.emailAndPassword!.sendResetPassword!({
       user,
-      url: "https://app.example.test/reset?token=opaque",
+      url: "https://app.example.test/api/auth/reset-password/AbCdEfGhIjKlMnOpQrStUvWx?callbackURL=%2Faccount",
       token: "must-not-cross-dispatch-port",
     });
 
-    expect(delivery.sendVerification).toHaveBeenCalledWith({
-      to: "fixture@example.test",
-      url: "https://app.example.test/verify?token=opaque",
+    expect(email.dispatcher.dispatch).toHaveBeenNthCalledWith(1, {
+      version: "1.0.0",
+      purpose: "verify-email",
+      recipient: "fixture@example.test",
+      actionUrl:
+        "https://app.example.test/api/auth/verify-email?token=header.payload.signature&callbackURL=%2F",
+      templateVersion: "auth.verify-email.en-CA.1",
+      idempotencyReference: "A".repeat(43),
     });
-    expect(delivery.sendPasswordReset).toHaveBeenCalledWith({
-      to: "fixture@example.test",
-      url: "https://app.example.test/reset?token=opaque",
+    expect(email.dispatcher.dispatch).toHaveBeenNthCalledWith(2, {
+      version: "1.0.0",
+      purpose: "reset-password",
+      recipient: "fixture@example.test",
+      actionUrl:
+        "https://app.example.test/api/auth/reset-password/AbCdEfGhIjKlMnOpQrStUvWx?callbackURL=%2Faccount",
+      templateVersion: "auth.reset-password.en-CA.1",
+      idempotencyReference: "A".repeat(43),
     });
-    expect(delivery.sendVerification.mock.calls[0]?.[0]).not.toHaveProperty(
-      "token",
-    );
+    expect(email.idempotencyReferences.create).toHaveBeenNthCalledWith(1, {
+      purpose: "verify-email",
+      token: "must-not-cross-dispatch-port",
+    });
+    expect(
+      JSON.stringify(
+        email.dispatcher.dispatch.mock.calls as AuthenticationEmailRequest[][],
+      ),
+    ).not.toContain("must-not-cross-dispatch-port");
   });
 
   it.each([
@@ -230,10 +262,10 @@ describe("Better Auth server configuration", () => {
     }),
   ])("rejects unsafe configuration without reflecting it", (value) => {
     expect(() =>
-      createBetterAuthOptions({} as never, dispatcher(), value),
+      createBetterAuthOptions({} as never, emailDependencies(), value),
     ).toThrow(BetterAuthConfigurationError);
     try {
-      createBetterAuthOptions({} as never, dispatcher(), value);
+      createBetterAuthOptions({} as never, emailDependencies(), value);
     } catch (error) {
       expect(String(error)).toBe(
         "BetterAuthConfigurationError: Authentication configuration is unavailable",
@@ -243,7 +275,7 @@ describe("Better Auth server configuration", () => {
   });
 
   it("permits explicit loopback HTTP only outside production", () => {
-    const options = createBetterAuthOptions({} as never, dispatcher(), {
+    const options = createBetterAuthOptions({} as never, emailDependencies(), {
       baseUrl: "http://127.0.0.1:3000",
       trustedOrigins: ["http://127.0.0.1:3000"],
       secrets: [{ version: 1, value: SECRET }],

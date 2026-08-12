@@ -437,12 +437,15 @@ tests/
   execute-only roles. Public routes/UI and transactional delivery remain unexposed.
   No managed auth infrastructure is selected. See ADR 0008.
 - Authentication email: Amazon SES API v2 is selected behind a provider-neutral
-  dispatch/result contract, using only the `ca-central-1` regional endpoint. A future
-  adapter pins `@aws-sdk/client-sesv2` 3.1108.0, local versioned templates, dedicated
-  SPF/DKIM/DMARC/custom-MAIL-FROM identity, required configuration-set events, and
-  same-region SNS-to-SQS feedback. A durable content-free idempotency ledger must
-  prevent blind retries. No account, SDK, DNS, credential, queue, route, or send exists
-  yet. See ADR 0009.
+  dispatch/result contract, using only the `ca-central-1` regional endpoint. The strict
+  v1 request/result validators, two fixed local `en-CA` templates, and Better Auth
+  callback seam are implemented. Only the injected reference factory sees the raw
+  framework token; the dispatcher receives a frozen validated request and every unsafe
+  outcome fails generically. A future adapter pins `@aws-sdk/client-sesv2` 3.1108.0,
+  dedicated SPF/DKIM/DMARC/custom-MAIL-FROM identity, required configuration-set
+  events, and same-region SNS-to-SQS feedback. A durable content-free idempotency
+  ledger must prevent blind retries. No concrete factory/dispatcher, account, SDK,
+  DNS, credential, queue, route, or send exists yet. See ADR 0009.
 - Ephemeris: exact Astronomy Engine 2.1.19 for tropical positions and local
   angles, composed with Whole Sign strategy 1.0.0. No silent house-system
   fallback; exact poles fail explicitly. See ADR 0006.
