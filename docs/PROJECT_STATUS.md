@@ -4,7 +4,8 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 40 complete; facts, scores, content projections, and rendered sections now compose into one reconstructable compatibility report payload.
+Status: Goal 41 complete; the validated compatibility report now has a
+versioned read model and an accessible local-demo presentation route.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +94,14 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 41: map only a reconstructed Goal 40 report into a versioned,
+      deeply immutable presentation model with five category summaries and
+      twelve paired fact/reflection items.
+- [x] Add a static local-demo compatibility route with deliberate loading,
+      locked, unavailable, error, empty, unsupported, and ready states.
+- [x] Verify semantic score text, claims separation, keyboard flow, 44px targets,
+      responsive and 200% text layouts, reduced-motion behavior, clean console,
+      privacy exclusions, and no calculation inside React.
 - [x] Goal 40: compose all four validated compatibility layers into one versioned,
       deeply immutable report without recalculation or new interpretation.
 - [x] Reconstruct every child with the declared policy/library and require byte-exact
@@ -368,18 +377,19 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 41 — map and present the compatibility report.
+Goal 42 — define the privacy-safe compatibility share boundary.
 
 Deliverables:
 
-1. Map only a validated Goal 40 report into a versioned immutable read model with
-   five category summaries, paired fact/reflection items, trace, and disclaimer.
-2. Add a responsive local-demo compatibility route with deliberate loading,
-   locked, unavailable, error, empty, unsupported, and ready states.
-3. Verify no calculation in React, semantic score text, keyboard flow, 44px controls,
-   mobile/desktop/200% text, reduced motion, claims separation, and clean console.
-4. Add no persistence, public sharing, account/profile loading, AI, entitlement
-   enforcement, notification, provider call, schema change, or deployment.
+1. Project only validated Goal 40 compatibility reports into a versioned,
+   immutable public-share payload that retains useful scores and rendered copy
+   while excluding private chart, calculation, account, and source identifiers.
+2. Define opaque high-entropy share-token generation, digest, validation,
+   expiry, and revocation contracts independently of HTTP and storage providers.
+3. Verify deterministic redaction, malformed/tampered input rejection, token
+   non-disclosure, expiry boundaries, immutability, and claims separation.
+4. Add no database migration, persistence adapter, public route, account/profile
+   loading, AI, entitlement enforcement, notification, or deployment.
 
 ## Phase queue
 
@@ -437,6 +447,9 @@ Deliverables:
 
 | Date       | Evidence                                           | Result                                                                                        |
 | ---------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 2026-08-11 | Compatibility presentation focused suite           | 56/56 mapping, semantic HTML, state, reconstruction, privacy, and failure tests passed        |
+| 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 554 tests, and optimized production build         |
+| 2026-08-11 | `ui-quality` compatibility browser gate            | Desktop/mobile/200% text, keyboard, touch targets, reduced motion, overflow, console passed   |
 | 2026-08-09 | Station-event focused/cross-layer suite            | 71/71 motion, provider, transit-window, source, trace, direction, and failure tests passed    |
 | 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 330 tests, and production build                   |
 | 2026-08-09 | `npm run test:coverage`                            | 95.64% statements, 92.07% branches, 100% functions, and 96.47% lines                          |
@@ -820,6 +833,39 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 41 compatibility presentation record
+
+- Commands: focused report/read-model/semantic-render suite; `npm run check`;
+  `npm run test:coverage`; `npm audit --omit=dev`; `git diff --check`; and an
+  optimized production-browser review through the `ui-quality` workflow.
+- Boundary: `toCompatibilityReadModel` first reconstructs the complete Goal 40
+  report and requires exact equality. It then exposes only display-ready category
+  labels, scores, confidence/factor text, paired fact/reflection sections, minimal
+  provenance labels, version trace, accounting, and the accepted claims disclaimer
+  under read-model version 1.0.0. The result is deeply frozen.
+- Presentation: `/compatibility` is a static, no-index local-demo route. React
+  receives the read model only; the deterministic demo composition lives outside
+  components. Native landmarks, headings, lists, meters with textual equivalents,
+  details, source labels, a skip link, and separate calculated-fact/tradition-
+  reflection regions preserve meaning without colour.
+- States/accessibility: loading, locked, unavailable, error, empty, unsupported,
+  and ready states render deliberately. Desktop 1440x1000, mobile 390x844, and
+  200% root text scaling had no horizontal overflow. All interactive targets were
+  at least 44px, the skip link moved focus to `main`, reduced-motion styling
+  disabled smooth scrolling/transitions, and the optimized console had zero
+  errors or warnings.
+- Security/scope: the mapper fails closed on report drift and exposes no raw birth
+  instant, location, chart longitude/speed/cusp, account/profile identity, private
+  numerology token, share URL/token, persistence behavior, provider call, or AI.
+  No critical/high finding remains.
+- Evidence: 36 test files and 554 tests passed; coverage was 94.07% statements,
+  91.01% branches, 99.71% functions, and 95.17% lines. The compatibility view had
+  100% statement/line/function and 90.90% branch coverage; the read-model mapper
+  had 96.15% statement, 93.33% branch, 100% function, and 95.83% line coverage.
+  The optimized build passed and the production audit found zero vulnerabilities.
+- Scope: no persistence, public sharing, account/profile loading, entitlement,
+  notification, provider integration, schema change, or deployment was added.
 
 ## Goal 40 compatibility report-composition record
 

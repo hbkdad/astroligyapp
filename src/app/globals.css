@@ -98,9 +98,11 @@ summary:focus-visible {
   gap: 1.5rem;
 }
 .site-header nav a {
+  min-width: 44px;
   min-height: 44px;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   color: var(--muted);
   text-decoration: none;
   font-size: 0.92rem;
@@ -978,6 +980,106 @@ tbody tr:target {
 .numerology-trace {
   margin-top: 1rem;
 }
+
+.compatibility-shell {
+  width: min(1080px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 4rem 0 3rem;
+}
+.compatibility-intro {
+  padding-bottom: 2.5rem;
+}
+.compatibility-intro h1 {
+  overflow-wrap: anywhere;
+}
+.compatibility-disclaimer {
+  max-width: 72ch;
+  padding: 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  color: #d9dfdc;
+}
+.compatibility-panel {
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--surface);
+}
+.compatibility-score-grid,
+.compatibility-factor-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.compatibility-score-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+.compatibility-score-grid li,
+.compatibility-factor-list > li {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--surface-raised);
+}
+.compatibility-score-grid li > div,
+.compatibility-factor-list > li > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+.compatibility-score-grid strong {
+  color: var(--accent);
+  font-size: 1.5rem;
+}
+.compatibility-score-grid meter {
+  width: 100%;
+  min-height: 1rem;
+}
+.compatibility-score-grid p,
+.compatibility-factor-list header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.compatibility-factor-list {
+  display: grid;
+  gap: 1rem;
+}
+.compatibility-factor-list header strong {
+  color: var(--mint);
+  overflow-wrap: anywhere;
+}
+.compatibility-copy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-width: 0;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.compatibility-copy-grid section {
+  padding: 1rem;
+  background: rgb(0 0 0 / 14%);
+  border-left: 3px solid var(--mint);
+}
+.compatibility-copy-grid .compatibility-reflection {
+  border-left-color: var(--accent);
+}
+.compatibility-copy-grid p:last-of-type {
+  margin-bottom: 0;
+}
+.compatibility-factor-list code {
+  display: block;
+  color: var(--mint);
+  overflow-wrap: anywhere;
+}
+.compatibility-trace {
+  margin-top: 1.5rem;
+}
 .dashboard-timeline .section-heading a {
   min-height: 44px;
   display: inline-flex;
@@ -1156,8 +1258,10 @@ tbody tr:target {
     padding: 0.65rem 0;
   }
   .site-header nav {
+    width: 100%;
     grid-column: 1 / -1;
     justify-content: flex-start;
+    flex-wrap: wrap;
     gap: 1.25rem;
     max-width: 100%;
     overflow-x: auto;
@@ -1199,6 +1303,9 @@ tbody tr:target {
   .category-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  .compatibility-score-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 520px) {
@@ -1218,6 +1325,7 @@ tbody tr:target {
   .site-header .brand {
     width: 100%;
     min-width: 0;
+    min-height: 44px;
   }
   .demo-badge {
     max-width: 100%;
@@ -1256,6 +1364,42 @@ tbody tr:target {
   .numerology-shell {
     width: min(100% - 1.25rem, 1080px);
     padding-top: 2.5rem;
+  }
+  .compatibility-shell {
+    width: min(100% - 1.25rem, 1080px);
+    padding-top: 2.5rem;
+  }
+  .compatibility-panel {
+    padding: 1rem;
+  }
+  .compatibility-panel .section-heading,
+  .compatibility-copy-grid {
+    display: block;
+  }
+  .compatibility-factor-list > li > header {
+    display: block;
+  }
+  .compatibility-factor-list > li > header strong {
+    display: block;
+    margin-top: 0.5rem;
+  }
+  .compatibility-panel .section-heading > span {
+    display: block;
+    margin-top: 0.5rem;
+  }
+  .compatibility-score-grid {
+    grid-template-columns: 1fr;
+  }
+  .compatibility-score-grid li > div {
+    display: block;
+    min-width: 0;
+  }
+  .compatibility-score-grid strong {
+    display: block;
+    margin-top: 0.25rem;
+  }
+  .compatibility-copy-grid section + section {
+    margin-top: 0.75rem;
   }
   .horoscope-shell {
     width: min(100% - 1.25rem, 1080px);

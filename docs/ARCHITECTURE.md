@@ -254,6 +254,12 @@ tests/
   `composeCompatibilityReport` reconstructs every prior layer with its declared
   policy/library, requires exact equality, and publishes the complete immutable
   children plus category/contribution and rendered/unsupported section accounting.
+  `toCompatibilityReadModel` reconstructs that report once more at the presentation
+  boundary, then emits only display-ready category summaries, paired factual and
+  tradition-reflection items, trace labels, accounting, and the claims disclaimer.
+  The static compatibility route consumes this immutable model; React owns no
+  calculation, scoring, projection, rendering-template, provider, or private-input
+  dependency.
   Relationship claims, persistence, and public sharing remain separate later layers.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.

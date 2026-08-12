@@ -97,3 +97,18 @@ and rendered output. Composition reconstructs each layer with the declared polic
 and content library and requires byte-exact equality. It also records five category
 and contribution/projection counts plus rendered and unsupported fact/reflection
 section counts, with complete source versions and a report-level claims disclaimer.
+
+## Presentation read model 1.0.0
+
+The presentation mapper accepts only a complete Goal 40 report, reconstructs it
+with its declared policy and library, and requires exact equality before mapping.
+It exposes five ordered category summaries plus paired fact and explicitly
+tradition-framed reflection items, source labels, accounting, version trace, and
+the accepted disclaimer. Scores always retain semantic text alongside native
+meters, so colour and graphics are not required to interpret them.
+
+The mapper performs display-only formatting and deeply freezes its result. It does
+not expose chart placements, longitudes, speeds, cusps, birth/profile/account data,
+private numerology traces, or report-engine dependencies to React. Loading, locked,
+unavailable, error, empty, unsupported, and ready UI states are distinct. Public
+share redaction, tokens, persistence, and routes remain Goal 42 boundaries.
