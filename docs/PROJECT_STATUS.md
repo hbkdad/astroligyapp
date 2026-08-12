@@ -4,8 +4,8 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 45 complete; provider-neutral Free, Personal, and Advanced
-capabilities now resolve through one versioned, server-only entitlement policy.
+Status: Goal 46 complete; normalized subscription events now pass through one
+versioned, deterministic server-only transition engine before entitlements.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -94,6 +94,14 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 46: define strict provider-neutral normalized event and transition-
+      state contracts with canonical IDs, instants, plans, statuses, and periods.
+- [x] Implement explicit trialing/active/past-due/paused/canceled transitions,
+      deterministic duplicate/stale/same-instant outcomes, safe period rules, and
+      terminal cancellation without provider SDK or persistence coupling.
+- [x] Project only validated plan/status/period state into Goal 45 and verify the
+      full status matrix, replays, ordering, renewal/downgrade, access reduction,
+      malformed input, browser-added fields, and immutable output.
 - [x] Goal 45: define nineteen stable feature keys and exact inherited Free,
       Personal, and Advanced capability sets with no price or provider plan ID.
 - [x] Add a pure server-only policy over strict provider-neutral subscription
@@ -411,19 +419,20 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 46 — define the provider-neutral subscription transition engine.
+Goal 47 — persist normalized subscription transitions idempotently.
 
 Deliverables:
 
-1. Define a versioned normalized provider-event contract and immutable transition
-   state independent of Stripe or any other billing SDK/plan identifier.
-2. Implement a pure transition engine for trialing, active, past-due, paused, and
-   canceled states with strict plan/period validation and explicit terminal rules.
-3. Handle duplicate, stale, same-instant conflicting, and out-of-order events
-   deterministically without granting access from browser-owned state.
-4. Verify complete transition matrices, event ordering/idempotency, period changes,
-   malformed input, and add no webhook route, signature adapter, persistence
-   mutation, checkout UI, price, notification, external call, or deployment.
+1. Add only the transition-state version and last-event occurrence fields required
+   to reconstruct Goal 46 state from the existing subscription table.
+2. Implement a server-only repository that locks one provider subscription,
+   applies the pure transition engine atomically, records provider/event identity,
+   and returns only the Goal 45 entitlement projection to authenticated callers.
+3. Enforce event idempotency, stale/conflict behavior, owner isolation, provider-
+   subscription uniqueness, rollback, pooling cleanup, and safe deletion cascades.
+4. Verify forward migration/legacy behavior and two-owner PostgreSQL integration;
+   add no provider SDK, webhook/signature adapter, checkout UI, prices,
+   notification, external call, production credential, or deployment.
 
 ## Phase queue
 
@@ -946,6 +955,45 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   mutation, pricing, checkout, UI, notification, external call, or deployment.
   Future callers must load state server-side; browser plan/status claims are never
   authoritative.
+
+## Goal 46 provider-neutral subscription transition record
+
+- Commands: focused transition/entitlement adversarial suites; Prettier, ESLint,
+  strict TypeScript, all unit tests, server-inclusive coverage, optimized build,
+  production audit, secret-pattern scan, and `git diff --check` through
+  `security-audit`.
+- Contracts: event and state version 1.0.0 use a bounded opaque event ID, canonical
+  UTC occurrence/period instants, internal Personal/Advanced keys, and the five
+  normalized statuses. Unknown/extra/provider/browser fields fail strict shape
+  validation; no SDK, signature, price, external reference, or secret enters the
+  engine.
+- Ordering/idempotency: exact last-event replay is a no-change duplicate; reuse of
+  that ID with different content conflicts; older events are stale; distinct events
+  at the same instant conflict. The engine never invents a lexical tie-break that
+  might grant access differently across deliveries.
+- Lifecycle: the explicit 25-cell matrix permits trial progression, recovery from
+  past-due/paused, and cancellation. Canceled is terminal for that subscription and
+  can only retain or shorten its existing window. Renewing paid events cannot move
+  period boundaries backward; access-reducing past-due/paused/canceled events may
+  shorten them so rejection never leaves stale paid access active.
+- Projection: only strict plan, status, and period fields are frozen into the Goal
+  45 state version. Event IDs and ordering metadata do not enter entitlement
+  decisions, browser output, or product components.
+- Adversarial result: all initial states and transition pairs, exact replay, ID
+  collision, stale/same-time events, renewal, plan change, granting regression,
+  cancellation shortening/extension/reactivation, inactive shortening, malformed
+  IDs/versions/statuses/plans/instants/periods/current state, extra browser fields,
+  clone isolation, output immutability, and Goal 45 composition passed. No
+  critical/high finding remains.
+- Verification result: 41 unit files and 616 tests passed. Coverage was 94.02%
+  statements, 91.41% branches, 99.38% functions, and 95.11% lines; the transition
+  engine had 98.38% statement, 98.85% branch, 100% function, and 100% line coverage.
+  The optimized build passed.
+- Scope/residual risk: signature/freshness verification, provider normalization,
+  persistent global event uniqueness, row locking, authenticated state loading,
+  webhook response/retry behavior, and production observability remain later goals.
+  No database mutation, provider selection, network call, UI, notification, or
+  deployment was added.
 
 ## Goal 43 compatibility persistence and share-security record
 

@@ -117,3 +117,18 @@ allocation is validated when the policy is created, so feature changes require a
 declared code/version update. A future authenticated repository must source state;
 request bodies, query parameters, cookies, or client stores never establish plan or
 status.
+
+## Implemented subscription transition boundary
+
+`applySubscriptionEvent(currentState, normalizedEvent)` is a server-only pure
+function between a future signature-verifying provider adapter and persistence. A
+normalized event contains its schema version, opaque safe event ID, canonical
+occurrence instant, internal paid plan key, normalized status, and canonical period.
+It contains no signature, secret, price, checkout value, or browser field.
+
+The result is immutable and explicitly reports `applied`, `duplicate`, `stale`,
+`conflict`, `invalid-transition`, `invalid-event`, or `invalid-current-state`.
+Different event IDs at the same instant conflict rather than using arbitrary lexical
+ordering. Cancellation is terminal for one provider subscription. Reactivation must
+arrive as a separately authorized subscription lifecycle, not an event that revives
+a canceled record. Persistence and webhook adapters remain subsequent boundaries.

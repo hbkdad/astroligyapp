@@ -301,6 +301,15 @@ tests/
   `past_due`, `paused`, future, expired, malformed, unknown, or version-drifted
   state fails paid access closed. Browser plan/status claims must never be passed
   to this policy; a future authenticated repository boundary supplies the state.
+- Subscription transitions: provider adapters must first normalize signed upstream
+  events into a strict v1 event containing only an opaque event ID, occurrence
+  instant, internal plan key, normalized status, and canonical period. The pure
+  server-only engine applies a complete status matrix. Exact replay is duplicate;
+  older events are stale; different events at the same instant conflict. Canceled
+  is terminal for one provider subscription and cannot extend its access window.
+  Access-reducing past-due, paused, or canceled updates may shorten a period so a
+  defensive ordering rule never preserves stale paid access. Only the strict
+  plan/status/period projection reaches `EntitlementPolicy`.
 
 ## Data and cache principles
 
