@@ -4,8 +4,8 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 48 complete; untrusted billing webhook bytes now pass through a
-bounded provider-neutral verification/orchestration boundary before persistence.
+Status: Goal 49 complete; Paddle is selected for the first exact-SDK billing
+verification adapter behind the provider-neutral webhook boundary.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 21-table normalized schema, checked-in SQL
@@ -17,8 +17,9 @@ boundary. Astronomy Engine 2.1.19 plus Whole Sign strategy 1.0.0 is selected for
 the launch ephemeris boundary, and the natal engine now composes validated
 placements, houses, and aspects with complete calculation provenance. Bounded
 transit, lunar, station, and explicit numerology events can now be composed into
-one immutable timeline-fact aggregate. No production data, managed database,
-authentication, billing, AI, notification, location-resolution, or deployment
+one immutable timeline-fact aggregate. Paddle is selected only for verified
+subscription-event ingestion; no live billing account, production data, managed
+database, authentication, AI, notification, location-resolution, or deployment
 provider is selected.
 
 ## Completed
@@ -94,6 +95,18 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 49: compare current Stripe, Paddle, and Lemon Squeezy pricing,
+      Canada availability, merchant-of-record implications, webhook behavior,
+      Node support, and operating fit; accept Paddle in ADR 0007.
+- [x] Pin official `@paddle/paddle-node-sdk` 3.10.0 and implement only the
+      server-side Goal 48 adapter with exact raw-body verification and a strict
+      bidirectional five-second freshness window.
+- [x] Allowlist eight subscription lifecycle events, enforce dedicated event/
+      status identity, and map only one configured quantity-one recurring price
+      into Personal or Advanced while rejecting every unknown shape/reference.
+- [x] Verify locally signed payloads, both plans, every event, status/period/
+      identifier/product failures, tampering, stale/future delivery, malformed
+      UTF-8/JSON, version pinning, immutability, and no secret/raw-payload logs.
 - [x] Goal 48: define server-only provider adapter, verified identity/event,
       internal owner resolver, subscription writer, trusted clock, and safe
       acknowledge/reject/retry disposition contracts.
@@ -436,22 +449,24 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 49 — select and implement the first billing-provider verification adapter.
+Goal 50 — bind billing-provider customers to internal account owners before
+webhook state mutation.
 
 Deliverables:
 
-1. Research current primary-source pricing, Canada availability, tax/merchant-of-
-   record implications, webhook signature/freshness behavior, Node support, and
-   operating fit for Stripe and credible alternatives; record an ADR.
-2. If one provider satisfies the master-spec/provider-abstraction gates, install an
-   exact supported server SDK and implement only the Goal 48 adapter behind the
-   provider-neutral interface.
-3. Map an explicit allowlist of subscription lifecycle events and configured
-   provider price/plan references into internal Personal/Advanced keys; reject
-   unknown products, customers, statuses, periods, signatures, and stale events.
-4. Verify official fixtures or locally signed payloads, version pinning, no secret/
-   raw-payload logging, and add no live credentials, checkout purchase, public
-   webhook route, production account mutation, notification, or deployment.
+1. Design a provider-neutral durable customer-binding record with one opaque owner,
+   provider key, and customer reference; add a forward-only migration, constraints,
+   indexes, deletion behavior, and forced RLS without weakening existing tables.
+2. Implement an owner-scoped idempotent create/read boundary plus the narrow
+   privileged Goal 48 owner resolver needed before a first subscription row exists.
+   Never resolve ownership from email, browser metadata, or webhook custom data.
+3. Fail provider/customer reuse across owners closed under concurrency, preserve
+   rollback and pooled-role cleanup, and return no account/profile/private details
+   beyond the internal resolver contract.
+4. Verify previous-schema upgrade, overlap writes, two-owner/default-deny isolation,
+   concurrent first binding, resolver least privilege, cascade deletion, and the
+   Paddle adapter-to-orchestrator path with fakes only. Add no live API call,
+   credential, checkout, public route, production mutation, or deployment.
 
 ## Phase queue
 
@@ -1068,6 +1083,57 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 49 Paddle billing verification adapter record
+
+- Research/decision: primary sources current on 2026-08-11 compared Stripe,
+  Paddle, and Lemon Squeezy pricing, Canadian operation, merchant-of-record tax
+  responsibility, subscription support, signing/freshness behavior, and Node
+  tooling. ADR 0007 selects Paddle's 5% + 50-cent merchant-of-record model for
+  early operating simplicity. Stripe direct processing remains a lower-fee future
+  candidate when seller-managed tax/compliance is economical; no live Paddle
+  account or product approval is assumed.
+- Dependency/boundary: official `@paddle/paddle-node-sdk` is exact-pinned at 3.10.0
+  and instantiated server-only with logging disabled and no usable API key. The
+  adapter accepts only cloned Goal 48 bytes/headers/receipt time plus a validated
+  destination secret and disjoint nonempty Personal/Advanced `pri_` allowlists.
+- Verification: exactly one current `ts` and `h1` are required; both the wrapper
+  and official SDK verify the untouched UTF-8 body. The wrapper closes the SDK's
+  one-sided timestamp behavior by requiring the signed second within five seconds
+  in either direction of trusted receipt time. Missing/malformed/modified, invalid
+  UTF-8/JSON, old/future, unsupported, and clock-disagreement inputs fail closed.
+- Mapping: eight explicit subscription lifecycle events are accepted; imported and
+  all non-subscription events are rejected. Dedicated event type and status must
+  agree. Strict `evt_`/`ctm_`/`sub_` references, one quantity-one recurring item,
+  a configured price, allowed item/subscription status, and a valid period are
+  required. Provider-specific data stops at the adapter.
+- Provider edge case: official Paddle schemas make `current_billing_period` null for
+  paused/canceled state. Those access-reducing events use verified `started_at` plus
+  `paused_at`/`canceled_at`; the Goal 46 transition permits that earlier provider
+  lifetime start only when the end cannot extend current access. Active-like states
+  still require the current period. Variable RFC 3339 fractions normalize into the
+  internal millisecond UTC contract.
+- Security result: secret/raw-body console spies, tampering, unknown identity/price,
+  malformed references/status/items/periods, duplicate/future signature shapes,
+  config mutation classes, immutable output, and SDK-version checks passed. No
+  secret, raw payload, price reference, or provider identity reaches dispositions or
+  logs. No critical/high finding remains. The pinned SDK's documented single-`h1`
+  behavior and five-second NTP requirement are explicit operational review gates.
+- Verification result: 43 unit files and 711 tests plus 20 PostgreSQL integration
+  tests passed. Coverage was 94.27% statements, 91.79% branches, 99.40% functions,
+  and 95.37% lines; the Paddle adapter exceeded 96% statements, 95% branches, 100%
+  functions, and 99% lines. Formatting, ESLint, strict TypeScript, optimized build,
+  Drizzle migration check, production dependency audit, secret-pattern review, and
+  `git diff --check` passed.
+- Dependency finding: the Paddle SDK adds no transitive production package and the
+  production audit is clean. The full development audit retains four existing
+  moderate Drizzle/esbuild development-server findings; npm's proposed remedy is an
+  unsafe Drizzle Kit downgrade, so this checkpoint does not apply it.
+- Scope: no live credential/price, API call, checkout, public webhook route,
+  customer-owner binding, production mutation, notification, external account, or
+  deployment was added. Paddle onboarding, actual price creation, destination
+  secret injection, simulator verification, and current-term review remain later
+  production gates.
 
 ## Goal 48 billing webhook orchestration record
 

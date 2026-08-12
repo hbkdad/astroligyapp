@@ -3,3 +3,5 @@ coverage
 node_modules
 codex-scaffold-temp
 package-lock.json
+drizzle/meta/_journal.json
+drizzle/meta/*_snapshot.json

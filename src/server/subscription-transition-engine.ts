@@ -151,10 +151,14 @@ function transitionAllowed(
   }
 
   if (event.status === "canceled") {
-    return nextStart >= currentStart && nextEnd <= currentEnd;
+    return nextEnd <= currentEnd;
   }
 
-  if (event.status === "past_due" || event.status === "paused") {
+  if (event.status === "paused") {
+    return nextEnd <= currentEnd;
+  }
+
+  if (event.status === "past_due") {
     return nextStart >= currentStart;
   }
 

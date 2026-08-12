@@ -206,6 +206,38 @@ describe("provider-neutral subscription transition engine", () => {
     },
   );
 
+  it.each(["paused", "canceled"] as const)(
+    "accepts provider lifetime starts only for access-reducing %s state",
+    (status) => {
+      const state = initialState();
+      const reduced = applySubscriptionEvent(
+        state,
+        later(status, {
+          periodStartsAt: "2026-07-01T00:00:00.000Z",
+          periodEndsAt: "2026-08-20T00:00:00.000Z",
+        }),
+      );
+      expect(reduced).toMatchObject({
+        outcome: "applied",
+        state: {
+          status,
+          periodStartsAt: "2026-07-01T00:00:00.000Z",
+          periodEndsAt: "2026-08-20T00:00:00.000Z",
+        },
+      });
+      expect(
+        applySubscriptionEvent(
+          state,
+          later(status, {
+            eventId: `evt_${status}_extended`,
+            periodStartsAt: "2026-07-01T00:00:00.000Z",
+            periodEndsAt: "2026-10-01T00:00:00.000Z",
+          }),
+        ),
+      ).toMatchObject({ outcome: "invalid-transition", state });
+    },
+  );
+
   it.each([
     undefined,
     {},

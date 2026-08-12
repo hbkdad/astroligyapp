@@ -308,7 +308,9 @@ tests/
   older events are stale; different events at the same instant conflict. Canceled
   is terminal for one provider subscription and cannot extend its access window.
   Access-reducing past-due, paused, or canceled updates may shorten a period so a
-  defensive ordering rule never preserves stale paid access. Only the strict
+  defensive ordering rule never preserves stale paid access. Paused/canceled
+  provider payloads may restore an earlier subscription-lifetime start only when
+  their exact access-ending instant does not extend the current end. Only the strict
   plan/status/period projection reaches `EntitlementPolicy`.
 - Subscription persistence: two additive nullable fields keep legacy/overlap writes
   safe while marking only reconstructable v1 transition rows. A forced-RLS receipt
@@ -330,6 +332,17 @@ tests/
   unbounded provider retries and require aggregate operational reconciliation.
   Dispositions never contain raw body, header/signature, provider/customer/
   subscription/event identity, entitlement state, or exception text.
+- Paddle verification adapter: ADR 0007 selects Paddle only for the first signed
+  subscription-event adapter. Exact SDK 3.10.0 verifies the untouched UTF-8 body;
+  the wrapper independently enforces the documented five-second receipt window in
+  both directions, accepts eight explicit subscription lifecycle event types, and
+  maps one quantity-one recurring `pri_` reference from injected Personal/Advanced
+  allowlists. Dedicated events must agree with status, identifiers and billing
+  periods are validated and normalized. Active-like states require Paddle's current
+  period; paused/canceled states, whose current period is documented as null, use
+  the subscription start plus exact access-ending transition time. Every unknown
+  event/product/shape fails closed. No API key, checkout, route, or account inference
+  enters this layer.
 
 ## Data and cache principles
 

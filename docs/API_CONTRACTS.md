@@ -131,7 +131,9 @@ The result is immutable and explicitly reports `applied`, `duplicate`, `stale`,
 Different event IDs at the same instant conflict rather than using arbitrary lexical
 ordering. Cancellation is terminal for one provider subscription. Reactivation must
 arrive as a separately authorized subscription lifecycle, not an event that revives
-a canceled record.
+a canceled record. Paused or canceled access-reduction may carry an earlier provider
+subscription start only while shortening or retaining the prior end; this supports
+providers whose current billing period becomes null without extending access.
 
 `SubscriptionRepository.applyNormalizedEvent(owner, providerIdentity, event)` is
 the implemented persistence boundary. It validates bounded normalized identity,
@@ -155,3 +157,17 @@ records: processed/conflict acknowledgements (200), generic request/verification
 contract rejection (400), or adapter/clock/owner/persistence retry (503). They do
 not echo adapter rejection reason, raw body, signature, provider identity, customer
 or subscription references, event IDs, entitlement state, or internal exceptions.
+
+`createPaddleBillingProviderAdapter(configuration)` is the first concrete Goal 48
+adapter. Its versioned server configuration contains one destination webhook secret
+and nonempty, disjoint Personal/Advanced `pri_` allowlists. The returned provider key
+is `paddle`. It uses official SDK 3.10.0 to verify the exact raw UTF-8 body and
+`paddle-signature`, requires the signature timestamp to be within five seconds of
+the trusted receipt instant, and returns only the provider-neutral verified/rejected
+contract. Eight declared subscription lifecycle events are supported. Complete
+`evt_`, `ctm_`, `sub_`, status, one recurring item, configured price, and an
+increasing period are required. Active/trialing/past-due states use the current
+billing period. Paddle's documented null-period paused/canceled states instead use
+the subscription start and exact pause/cancel time, ending access safely. Provider
+RFC 3339 values are converted into the internal canonical millisecond UTC form; no
+provider payload or credential is returned or logged.
