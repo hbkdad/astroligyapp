@@ -228,8 +228,10 @@ tests/
   tokens or traces that can contain names or dates. `SynastryAspectEngine`
   independently revalidates two natal results, strips raw birth/house inputs,
   canonicalizes the remaining versioned placement facts, and evaluates the full
-  cross-body aspect matrix without provider access. Its derived placement trace
-  remains private relationship data. Scores, relationship claims, house overlays,
+  cross-body aspect matrix without provider access. `HouseOverlayEngine` reuses
+  that validation/canonicalization boundary and maps both canonical ten-body sets
+  into the opposite chart's Whole Sign cusps. Both derived placement and cusp
+  traces remain private relationship data. Scores, relationship claims,
   persistence, and public sharing remain separate later layers.
 - Domain services: zodiac conversion, aspect detection, lunar classification, natal charts, transits, and combined context.
 - Repositories: persistence contracts expressed in domain types, implemented by infrastructure adapters.

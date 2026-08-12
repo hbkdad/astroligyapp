@@ -4,7 +4,7 @@ Last updated: 2026-08-11
 
 ## Current position
 
-Status: Goal 33 complete; deterministic, symmetric cross-chart synastry aspect facts are implemented and verified.
+Status: Goal 34 complete; deterministic, symmetric cross-chart Whole Sign house-overlay facts are implemented and verified.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 20-table normalized schema, checked-in SQL
@@ -93,6 +93,12 @@ provider is selected.
 
 ## Recently completed
 
+- [x] Goal 34: reuse the validated canonical relationship-chart boundary to
+      project each chart's ten bodies into the other chart's Whole Sign houses.
+- [x] Produce twenty versioned bidirectional overlay facts with stable IDs/order,
+      exact house/cusp identity, provider/strategy trace, and no provider call.
+- [x] Verify every house, exact/just-below cusps, zodiac wrap, reversed-input byte
+      symmetry, corrupt charts/cusps, immutability, and raw birth-input exclusion.
 - [x] Goal 33: revalidate two complete natal-chart results at the synastry
       boundary and canonicalize privacy-minimized chart fact sources.
 - [x] Evaluate every ordered cross-chart body pair through a declared, versioned
@@ -326,17 +332,18 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 34 — implement deterministic cross-chart house-overlay facts.
+Goal 35 — compose one validated compatibility fact aggregate.
 
 Deliverables:
 
-1. Reuse the validated/canonical chart-fact boundary and project each chart's ten
-   bodies into the other chart's declared Whole Sign cusps without provider calls.
-2. Produce versioned bidirectional overlay facts with stable symmetric identity,
-   canonical ordering, exact house numbers, cusp-policy versions, and source trace.
-3. Verify every body and house, exact/just-below cusp boundaries, zodiac wrap,
-   reversed-chart symmetry, malformed/version-drift charts, duplicate identity,
-   deterministic ordering, immutability, and raw birth-input exclusion.
+1. Accept only version-matched Goal 32 phase-one, Goal 33 synastry, and Goal 34
+   overlay results; recheck identities, canonical chart sources, and fact coverage.
+2. Bind zodiac signs to canonical Sun placements, verify overlay sources are an
+   exact privacy-minimized projection of synastry sources, and preserve all facts
+   and provenance in one deeply immutable symmetric aggregate.
+3. Verify missing/duplicate/reordered facts, cross-result source/version drift,
+   sign-placement mismatch, reversed-source symmetry, malformed claims, and
+   absence of raw birth/profile inputs.
 4. Add no compatibility category weights, interpretation, persistence, sharing
    URL, UI, AI, entitlement, notification, or deployment.
 
@@ -779,6 +786,43 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   score; no new influence is inferred.
 - Scope: no AI, persistence, entitlement, notification, delivery, HTTP, or UI
   behavior was added.
+
+## Goal 34 cross-chart house-overlay record
+
+- Commands: focused overlay/synastry/natal suites; `npm run check`;
+  `npm run test:coverage`; `npm audit --omit=dev`; and `git diff --check` through
+  the `astro-validation` and `security-audit` procedures.
+- Boundary: `HouseOverlayEngine` calls the Goal 33 reusable validation and
+  canonicalization boundary, not an ephemeris adapter. Both complete natal charts
+  are therefore rechecked for strict request/provider metadata, canonical tropical
+  placements, zodiac/house consistency, Whole Sign/engine/policy versions, and
+  exact natal-aspect completeness before overlay calculation. Boundary failures
+  map to one generic overlay error.
+- Geometry/identity: the fixed canonical directions are chart A bodies into chart
+  B cusps, then chart B bodies into chart A cusps, each in the ten-body order.
+  `findHouseNumber` owns normalized wrap and half-open cusp containment. Every fact
+  retains source side/body/longitude plus target side/house/exact cusp; stable IDs
+  include both sides, body, and house. Exactly twenty unique facts are returned.
+- Astro validation: tests exercise all twelve exact cusps and values 0.000001°
+  below each cusp, including the 270° first-cusp/zodiac-wrap transition; every
+  house number; both directions; unique deterministic order; incomplete/version-
+  drift charts; cusp loss/order corruption; and inconsistent placement houses.
+  Expected houses come directly from the declared half-open Whole Sign geometry;
+  no celestial fixture, provider call, tolerance change, or interpretation exists.
+- Symmetry/provenance/privacy: reversing input charts produces byte-equivalent
+  output. Trace retains chart engine, position and house provider/data versions,
+  coordinate conventions, Whole Sign strategy, ten source longitudes, and twelve
+  cusps, and is deeply frozen. Private instant, timezone/source, observer location,
+  provider calculation timestamps, subject labels, and input order are excluded
+  and never logged. Derived placements/cusps remain private relationship data and
+  require a later redacted share projection. No critical or high finding remains.
+- Evidence: 33 test files and 480 tests passed; coverage was 94.58% statements,
+  91.66% branches, 99.63% functions, and 95.37% lines. The overlay engine had 100%
+  statement/branch/function/line coverage. The optimized build passed and the
+  production dependency audit found zero vulnerabilities.
+- Scope: no provider call, category weight, interpretation, persistence, share
+  token/URL, UI, AI, entitlement, notification, schema change, or deployment was
+  added.
 
 ## Goal 33 cross-chart synastry aspect record
 
