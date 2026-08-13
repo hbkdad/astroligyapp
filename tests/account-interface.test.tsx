@@ -7,12 +7,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   AccountActivation,
+  AccountDeletion,
   AccountOverview,
   ForgotPasswordForm,
   ResetPasswordForm,
   SignInForm,
   SignUpForm,
   type AccountActivationAction,
+  type AccountDeletionAction,
 } from "@/components/account-experiences";
 import { AccountNavigation } from "@/components/account-navigation";
 import {
@@ -27,6 +29,10 @@ afterEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
 });
+
+const unusedDeletionAction = vi.fn<AccountDeletionAction>(async () => ({
+  status: "retry",
+}));
 
 describe("account HTTP projection", () => {
   it("accepts only exact Goal 64 public response shapes", async () => {
@@ -307,6 +313,7 @@ describe("account entry and recovery journeys", () => {
         activationAction={vi.fn<AccountActivationAction>(async () => ({
           status: "ready",
         }))}
+        deletionAction={unusedDeletionAction}
       />,
     );
 
@@ -337,6 +344,7 @@ describe("account entry and recovery journeys", () => {
         activationAction={vi.fn<AccountActivationAction>(async () => ({
           status: "ready",
         }))}
+        deletionAction={unusedDeletionAction}
       />,
     );
 
@@ -428,6 +436,128 @@ describe("account entry and recovery journeys", () => {
       });
       if (retryable) expect(retry).toBeInTheDocument();
       else expect(retry).not.toBeInTheDocument();
+    },
+  );
+
+  it("requires exact confirmation and current password in the danger zone", async () => {
+    const deletionAction = vi.fn<AccountDeletionAction>(async () => ({
+      status: "authorize",
+    }));
+    const user = userEvent.setup();
+    render(<AccountDeletion action={deletionAction} onDeleted={vi.fn()} />);
+
+    expect(
+      screen.getByText(/permanently removes local profiles/i),
+    ).toBeVisible();
+    expect(screen.getByLabelText("Current password")).toHaveAttribute(
+      "autocomplete",
+      "current-password",
+    );
+    await user.type(
+      screen.getByLabelText("Type DELETE MY ACCOUNT"),
+      "DELETE MY ACCOUNT",
+    );
+    await user.type(
+      screen.getByLabelText("Current password"),
+      "current-password-123",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Permanently delete account" }),
+    );
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Deletion was not authorized");
+    expect(alert).toHaveFocus();
+    expect(deletionAction).toHaveBeenCalledOnce();
+    const [, data] = deletionAction.mock.calls[0]!;
+    expect([...data.keys()]).toEqual([
+      "version",
+      "confirmation",
+      "currentPassword",
+    ]);
+    expect(screen.getByLabelText("Current password")).toHaveValue("");
+  });
+
+  it("disables double submission and announces the pending deletion", async () => {
+    let finish: ((state: { status: "deleted" }) => void) | undefined;
+    const deletionAction = vi.fn<AccountDeletionAction>(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const user = userEvent.setup();
+    render(<AccountDeletion action={deletionAction} onDeleted={vi.fn()} />);
+    await user.type(
+      screen.getByLabelText("Type DELETE MY ACCOUNT"),
+      "DELETE MY ACCOUNT",
+    );
+    await user.type(screen.getByLabelText("Current password"), "password-123");
+    await user.click(
+      screen.getByRole("button", { name: "Permanently delete account" }),
+    );
+
+    expect(
+      await screen.findByRole("button", { name: "Deleting account…" }),
+    ).toBeDisabled();
+    expect(deletionAction).toHaveBeenCalledOnce();
+    finish?.({ status: "deleted" });
+  });
+
+  it.each([
+    ["authenticate", "Sign in again"],
+    ["authorize", "Deletion was not authorized"],
+    ["retry", "Deletion is temporarily unavailable"],
+  ] as const)(
+    "announces and focuses the %s deletion result",
+    async (status, title) => {
+      const user = userEvent.setup();
+      render(
+        <AccountDeletion
+          action={vi.fn(async () => ({ status }))}
+          onDeleted={vi.fn()}
+        />,
+      );
+      await user.type(
+        screen.getByLabelText("Type DELETE MY ACCOUNT"),
+        "DELETE MY ACCOUNT",
+      );
+      await user.type(
+        screen.getByLabelText("Current password"),
+        "password-123",
+      );
+      await user.click(
+        screen.getByRole("button", { name: "Permanently delete account" }),
+      );
+      const alert = await screen.findByRole("alert");
+      expect(alert).toHaveTextContent(title);
+      expect(alert).toHaveFocus();
+    },
+  );
+
+  it.each(["deleted", "reconcile"] as const)(
+    "confirms the terminal %s result before leaving the danger zone",
+    async (status) => {
+      const onDeleted = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <AccountDeletion
+          action={vi.fn(async () => ({ status }))}
+          onDeleted={onDeleted}
+        />,
+      );
+      await user.type(
+        screen.getByLabelText("Type DELETE MY ACCOUNT"),
+        "DELETE MY ACCOUNT",
+      );
+      await user.type(
+        screen.getByLabelText("Current password"),
+        "password-123",
+      );
+      await user.click(
+        screen.getByRole("button", { name: "Permanently delete account" }),
+      );
+      expect(onDeleted).toHaveBeenCalledWith(status);
     },
   );
 });

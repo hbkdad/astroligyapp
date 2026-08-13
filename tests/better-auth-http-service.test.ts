@@ -117,5 +117,10 @@ describe("Better Auth HTTP process service", () => {
         new Request(`${ORIGIN}/internal/account-bootstrap`, { method: "POST" }),
       ),
     ).rejects.toThrow("Authentication HTTP service is unavailable");
+    await expect(
+      service.deleteAccount(
+        new Request(`${ORIGIN}/internal/account-deletion`, { method: "POST" }),
+      ),
+    ).rejects.toThrow("Authentication HTTP service is unavailable");
   });
 });

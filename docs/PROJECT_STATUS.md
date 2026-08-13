@@ -4,8 +4,8 @@ Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 66 complete; verified-session internal-account activation is exposed only
-through a zero-field first-party Server Action with fixed readiness states.
+Status: Goal 67 complete; reauthenticated account deletion is exposed only through a strict
+first-party Server Action and accessible danger zone with fixed identity-free states.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -21,7 +21,7 @@ one immutable timeline-fact aggregate. Paddle is selected only for verified
 subscription-event ingestion. Better Auth 1.6.27 is installed with four isolated auth
 tables, strict server configuration, database sessions, and execute-only account and
 contact lookups plus a hardened public email/password HTTP boundary. No live billing
-account, production data, managed database/auth infrastructure, account-deletion UI, AI, general notification, location-resolution,
+account, production data, managed database/auth infrastructure, AI, general notification, location-resolution,
 or deployment provider is selected. Authentication email has a provider decision, exact
 SDK/adapter, and injected feedback/suppression seam, but no account, DNS, credentials,
 AWS infrastructure, signature implementation, queue polling, or live delivery.
@@ -99,6 +99,15 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 67: expose the accepted Goal 63 workflow through an exact ordered-intent Server
+      Action that ignores prior state, reconstructs trusted request metadata, forwards only a
+      bounded cookie, and returns fixed deleted/authenticate/authorize/retry/reconcile states.
+- [x] Add a separated danger zone with explicit irreversible/retention consequences, typed
+      confirmation, current-password semantics, password clearing, pending suppression,
+      focused failures, and terminal local-deletion/reconciliation presentation.
+- [x] Route live composition through the existing Better Auth session/password adapters,
+      execute-only deletion repository, and bounded account pool without adding public routes,
+      direct table grants, provider calls, schema changes, credentials, or deployment work.
 - [x] Goal 66: add a zero-named-field Server Action that ignores client prior state, copies
       only a bounded framework cookie, re-runs the Goal 62 live-session/bootstrap/resolver/
       readiness chain, and returns only ready/authenticate/retry/reconcile.
@@ -583,27 +592,25 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 67 — expose the accepted Goal 63 account-deletion workflow through a reauthenticated,
-deliberate first-party Server Action and accessible danger-zone UI without weakening its
-transactional retention/reconciliation rules.
+Goal 68 — add the first protected profile read/create/update/delete composition for private
+display and birth data, using live server authorization and identity-scoped transactions.
 
 Deliverables:
 
-1. Add one Server Action that accepts only the exact Goal 63 version, confirmation phrase,
-   and current password; derives cookie/origin/fetch-site from trusted framework/deployment
-   state; and delegates to the existing recent-session, active-owner, password-proof, and
-   transactional-erasure composition. Never accept subject, owner, account, email, or redirect.
-2. Add a separated danger zone with explicit consequences, typed confirmation, current-
-   password autocomplete, pending/failure focus, no optimistic deletion, and fixed deleted/
-   authenticate/authorize/retry/reconcile results. Sign out/navigate only after confirmed
-   local deletion; distinguish retained external billing reconciliation without provider IDs.
-3. Prove hostile field/header/state rejection, wrong password privacy, stale/revoked sessions,
-   double-submit/replay/concurrency, complete rollback, retained billing/safety ledgers,
-   public-share removal, keyboard/status behavior, and mocked browser interaction plus the
-   disposable PostgreSQL lifecycle.
-4. Apply `security-audit` and `ui-quality`, update contracts/status, set one next goal, and
-   run every gate. Do not call Paddle/SES, create external resources or credentials, modify
-   production data outside disposable tests, purchase, or deploy.
+1. Define strict versioned private profile read/mutation contracts for bounded display name,
+   birth date, optional exact local time, IANA timezone, optional coordinates, time precision,
+   and explicit deletion. Do not select or call a geocoder or infer missing birth data.
+2. Implement identity-scoped repositories and Server Component/Server Action compositions that
+   derive ownership only from a fresh verified session/internal account and enforce the current
+   profile entitlement limit server-side. Never accept owner/account/subject/entitlement state.
+3. Add an accessible private profile UI with clear precision/location privacy controls, safe
+   validation feedback, no raw birth data in URLs/analytics/logs, and no chart calculation until
+   the saved profile passes its own later deterministic composition.
+4. Prove two-owner isolation, create/update/delete/concurrency/rollback, timezone/date/time and
+   coordinate boundaries, entitlement enforcement, hostile fields, fixed safe projections,
+   browser keyboard/mobile behavior, and disposable PostgreSQL behavior. Apply database,
+   security, and UI skills; update records; run every gate. Do not add geocoding, provider,
+   billing, production, purchase, or deployment changes.
 
 ## Phase queue
 
@@ -1257,6 +1264,42 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 67 first-party account deletion record
+
+- Action boundary: `deleteAccountAction` ignores React's browser-supplied prior state and,
+  after framework metadata is removed, accepts only the exact ordered version, confirmation,
+  and current-password fields. Duplicate, reordered, file, identity, owner, email, redirect,
+  and extra fields fail before process service construction. Only a bounded cookie is copied;
+  canonical HTTPS origin, same-origin fetch marker, method, path, content type, and byte length
+  are reconstructed from trusted server configuration.
+- Authorization/runtime: the lazy process service delegates to the accepted Goal 63 recent
+  verified-session, independent active-owner, Better Auth current-password, and transactional
+  deletion composition. The bounded account executor additionally needs membership in the
+  execute-only `app_account_deletion` role but receives no direct table authority. No public
+  Better Auth route or stock delete-user endpoint was enabled.
+- Projection/privacy: exact internal results collapse to frozen deleted/authenticate/authorize/
+  retry/reconcile states. Incorrect passwords and malformed intent share authorization failure;
+  subjects, sessions, UUIDs, email, provider/billing references, internal codes, exceptions, and
+  database details never reach React. Deleted and reconcile are terminal only after confirmed
+  local erasure; reconcile states only that retained external billing work remains.
+- UI/accessibility: the verified-session view reveals, but does not authorize, a separated
+  danger zone with irreversible and retention consequences, exact typed confirmation,
+  `current-password` autocomplete, 48-pixel controls, pending double-submit suppression,
+  password clearing, and focused fixed failure feedback. At 390 pixels and desktop width,
+  Chrome shows no console error; 200% zoom has no horizontal overflow; reduced motion resolves
+  to auto scrolling; the hidden skip link remains offscreen until focus.
+- Database/security evidence: focused action/UI/workflow tests pass 71 cases. All 58 disposable
+  PostgreSQL cases pass with the action adapter included in the live Better Auth lifecycle;
+  prior Goal 63 cases continue to prove wrong-password privacy, stale/revoked sessions,
+  concurrency/replay convergence, rollback, complete private/auth/share removal, tombstone
+  nonresurrection, retained billing reconciliation, and retained safety ledgers. The high audit
+  gate reports no high/critical advisory; four moderate Drizzle Kit legacy esbuild-loader
+  findings remain the documented development-only residual risk.
+- Verification: coverage passes 67 files/1139 tests at 92.03% statements, 90.89% branches,
+  98.65% functions, and 93.78% lines. The optimized Next.js 16.3 build completes with the six
+  static account pages and lazy actions. No schema change, Paddle/SES call, external resource,
+  credential, production mutation, purchase, or deployment occurred.
 
 ## Goal 66 first-party account activation record
 

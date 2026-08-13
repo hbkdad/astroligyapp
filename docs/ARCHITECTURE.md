@@ -436,6 +436,14 @@ tests/
   and proves `app_user` readiness. Only ready/authenticate/retry/reconcile reaches React.
   A separate bounded account pool uses `AUTH_ACCOUNT_DATABASE_URL`; it shares no Better Auth
   direct-table or email-delivery authority.
+- Account deletion presentation: a separate `/account` danger-zone Server Action accepts only
+  ordered version/confirmation/current-password fields, ignores prior view state, reconstructs
+  canonical origin and same-origin fetch metadata, and forwards only a bounded cookie into the
+  Goal 63 workflow. The account executor additionally holds the execute-only
+  `app_account_deletion` role and receives no direct deletion-table grants. Only fixed
+  deleted/authenticate/authorize/retry/reconcile states reach React. The UI clears the password
+  after each attempt and replaces session presentation only after confirmed local deletion,
+  including the reconciliation-required terminal outcome.
 
 ## Data and cache principles
 

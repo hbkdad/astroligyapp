@@ -61,8 +61,8 @@ IP/user-agent data, recovery tokens, provider errors, or exceptions. Cookies rem
 
 `auth.api.verifyPassword` remains a server-only call used by the independently protected
 account-deletion workflow. Internal account bootstrap and deletion are not Better Auth
-public endpoints. Bootstrap is exposed separately through a first-party zero-field Server
-Action that re-verifies the complete Goal 62 trust chain. Change-email and package
+public endpoints. They are exposed separately through narrow first-party Server Actions that
+re-verify the complete Goal 62/63 trust chains. Change-email and package
 delete-user remain disabled in configuration;
 the transactional local deletion workflow is authoritative.
 

@@ -1,14 +1,14 @@
 # Account entry and recovery UI
 
-Status: Goals 65-66 local implementation accepted on 2026-08-13.
+Status: Goals 65-67 local implementation accepted on 2026-08-13.
 
 ## Scope
 
 The account surface is a first-party browser client for the reviewed Goal 64 public
-authentication contract. It adds no Better Auth route, provider capability, automatic
-internal-account bootstrap, account deletion, private product read, live email, external
-resource, credential, production mutation, or deployment behavior. Goal 66 adds one explicit
-first-party activation mutation over the already accepted Goal 62 internal workflow.
+authentication contract. It adds no Better Auth route, provider capability, private product
+read, live email, external resource, credential, production mutation, or deployment behavior.
+Goals 66-67 add explicit first-party activation and deletion mutations over the already
+accepted Goal 62 and Goal 63 internal workflows.
 
 The routes are:
 
@@ -26,6 +26,13 @@ Its form has no named fields. The action ignores React's client-supplied prior s
 only the bounded cookie from framework headers, and re-verifies the complete Goal 62 session,
 bootstrap, active-account, and identity-readiness chain before returning a four-state UI
 projection.
+
+The verified account view also exposes a visually separated danger zone. Its Server Action
+accepts only the fixed version, exact `DELETE MY ACCOUNT` phrase, and current password. The
+action ignores prior view state, reconstructs canonical origin/fetch metadata, forwards only
+the bounded cookie, and returns only deleted/authenticate/authorize/retry/reconcile. A terminal
+deleted or reconcile result replaces the session presentation; no browser state authorizes the
+operation.
 
 All pages are no-indexed and inherit `no-referrer`. Browser requests use same-origin
 credentials, no-store caching, explicit JSON only where the Goal 64 endpoint requires it,
@@ -54,6 +61,9 @@ or malformed projections become one local `unavailable` state.
 - The account activation control is only a presentation trigger. It sends no owner, subject,
   account, email, profile, entitlement, plan, or redirect. The action accepts only a fresh
   server-verified session and returns no ID or internal failure code.
+- The deletion form uses `current-password` autocomplete, clears entered credentials after an
+  attempt, disables double submission, focuses fixed failure feedback, and never submits an
+  owner, subject, account, email, redirect, billing reference, or provider identifier.
 
 ## Interaction and accessibility contract
 
@@ -79,6 +89,10 @@ error, and success text have at least 7.91:1 contrast against the raised dark su
 - Account activation tests cover the zero-field Server Action, hostile prior state/form/header
   exclusion, bounded cookie projection, exact safe results, malformed service output,
   checking/focus/retry/reconcile UI, closed process state, and separate account-pool config.
+- Account deletion tests cover exact ordered intent, hostile/duplicate/file fields, bounded
+  cookie-only forwarding, wrong-password privacy, fixed projections, pending/focus/credential
+  clearing, terminal deletion/reconciliation, closed runtime behavior, and the full disposable
+  PostgreSQL rollback/concurrency/retention/share-removal lifecycle.
 - The existing Goal 64 and disposable PostgreSQL integration suites retain backend proof for
   actual signup, email verification, sign-in, session, sign-out, rate limiting, reset, session
   revocation, and data isolation.
@@ -92,6 +106,5 @@ error, and success text have at least 7.91:1 contrast against the raised dark su
 Live configured browser journeys still require production-like PostgreSQL roles, trusted
 proxy rewriting, shared abuse limiting, log/trace redaction for capability URLs, SES/SNS/SQS
 resources and credentials, real delivery/recovery tests, monitoring, and deployment review.
-MFA/passkey scope remains a later release-hardening decision. Goal 67 must expose account
-deletion only through its separately reauthenticated Goal 63 composition with explicit intent;
-activation readiness and browser session state must not authorize deletion.
+MFA/passkey scope remains a later release-hardening decision. Protected profile CRUD is the
+next application boundary; activation readiness and browser session state must not authorize it.

@@ -5,12 +5,18 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
 import { betterAuthSchema } from "@/db/auth-schema";
+import { LocalAccountDeletionRepository } from "@/infrastructure/auth/account";
 import {
   BetterAuthAccountBootstrapper,
   BetterAuthActiveBillingAccountResolver,
+  BetterAuthCurrentPasswordReauthenticator,
   BetterAuthVerifiedSessionVerifier,
   IdentityScopedAccountReadinessVerifier,
 } from "@/infrastructure/auth/better-auth-adapters";
+import {
+  deleteAccountForRequest,
+  type AuthenticatedAccountDeletionResult,
+} from "@/server/authenticated-account-deletion";
 import {
   bootstrapAccountForRequest,
   type AuthenticatedAccountBootstrapResult,
@@ -61,6 +67,7 @@ export interface ProductionBetterAuthHttpService extends BetterAuthHttpService {
   activateAccount(
     request: Request,
   ): Promise<AuthenticatedAccountBootstrapResult>;
+  deleteAccount(request: Request): Promise<AuthenticatedAccountDeletionResult>;
   close(): Promise<void>;
 }
 
@@ -145,6 +152,15 @@ export function createBetterAuthHttpService(
         accountPool,
       ),
     });
+    const deletionDependencies = Object.freeze({
+      canonicalOrigin: configuration.auth.baseUrl,
+      sessionVerifier: new BetterAuthVerifiedSessionVerifier(auth.api),
+      accountResolver: new BetterAuthActiveBillingAccountResolver(accountPool),
+      passwordReauthenticator: new BetterAuthCurrentPasswordReauthenticator(
+        auth.api,
+      ),
+      eraser: new LocalAccountDeletionRepository(accountPool),
+    });
     let closed = false;
     return Object.freeze({
       canonicalOrigin: configuration.auth.baseUrl,
@@ -157,6 +173,11 @@ export function createBetterAuthHttpService(
         if (closed)
           throw new Error("Authentication HTTP service is unavailable");
         return bootstrapAccountForRequest(request, activationDependencies);
+      },
+      async deleteAccount(request: Request) {
+        if (closed)
+          throw new Error("Authentication HTTP service is unavailable");
+        return deleteAccountForRequest(request, deletionDependencies);
       },
       async close() {
         if (closed) return;

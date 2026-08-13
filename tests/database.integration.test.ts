@@ -26,6 +26,7 @@ import { createBetterAuth } from "@/server/better-auth-configuration";
 import { createBetterAuthHttpHandler } from "@/server/better-auth-http";
 import { bootstrapAccountForRequest } from "@/server/authenticated-account-bootstrap";
 import { activateAccountFromHeaders } from "@/server/account-activation-action";
+import { deleteAccountFromForm } from "@/server/account-deletion-action";
 import { deleteAccountForRequest } from "@/server/authenticated-account-deletion";
 import type { AuthenticationEmailRequest } from "@/server/authentication-email";
 import { AuthenticationEmailFeedbackRepository } from "@/server/authentication-email-feedback";
@@ -1180,6 +1181,14 @@ describe("verified-session account deletion lifecycle", () => {
     };
   }
 
+  function deletionForm(password: string) {
+    const data = new FormData();
+    data.append("version", "1.0.0");
+    data.append("confirmation", "DELETE MY ACCOUNT");
+    data.append("currentPassword", password);
+    return data;
+  }
+
   it("erases local private/auth/share state, retains safety ledgers, and flags billing reconciliation", async () => {
     const fixture = await createFixture("billing");
     const privateRows = await addPrivateRows(fixture);
@@ -1216,15 +1225,16 @@ describe("verified-session account deletion lifecycle", () => {
       code: "deletion-not-authorized",
     });
     await expect(
-      deleteAccountForRequest(
-        deletionRequest(fixture),
-        deletionDependencies(fixture),
+      deleteAccountFromForm(
+        fixture.sessionHeaders,
+        deletionForm(fixture.password),
+        () => ({
+          canonicalOrigin: "https://app.example.test",
+          deleteAccount: (request) =>
+            deleteAccountForRequest(request, deletionDependencies(fixture)),
+        }),
       ),
-    ).resolves.toEqual({
-      version: "1.0.0",
-      disposition: "reconcile",
-      code: "external-account-reconciliation-required",
-    });
+    ).resolves.toEqual({ status: "reconcile" });
 
     const state = await pool.query<{
       deleted: boolean;

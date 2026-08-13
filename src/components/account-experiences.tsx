@@ -9,12 +9,18 @@ import {
   useRef,
   useState,
   type FormEvent,
+  type ReactNode,
+  type RefObject,
 } from "react";
 
 import {
   INITIAL_ACCOUNT_ACTIVATION_STATE,
   type AccountActivationState,
 } from "@/presentation/account-activation-state";
+import {
+  INITIAL_ACCOUNT_DELETION_STATE,
+  type AccountDeletionState,
+} from "@/presentation/account-deletion-state";
 import {
   AUTH_SESSION_CHANGED_EVENT,
   getAuthSession,
@@ -34,10 +40,17 @@ export type AccountActivationAction = (
   formData: FormData,
 ) => Promise<AccountActivationState>;
 
+export type AccountDeletionAction = (
+  previousState: AccountDeletionState,
+  formData: FormData,
+) => Promise<AccountDeletionState>;
+
 export function AccountOverview({
   activationAction,
+  deletionAction,
 }: {
   activationAction: AccountActivationAction;
+  deletionAction: AccountDeletionAction;
 }) {
   const [state, setState] = useState<
     AuthSessionResult | Readonly<{ status: "checking" }>
@@ -45,6 +58,9 @@ export function AccountOverview({
     status: "checking",
   });
   const [signingOut, setSigningOut] = useState(false);
+  const [deletionOutcome, setDeletionOutcome] = useState<
+    "deleted" | "reconcile" | null
+  >(null);
 
   function refresh() {
     setState({ status: "checking" });
@@ -54,6 +70,11 @@ export function AccountOverview({
   useEffect(() => {
     void getAuthSession().then(setState);
   }, []);
+
+  function handleDeletionConfirmed(outcome: "deleted" | "reconcile") {
+    setDeletionOutcome(outcome);
+    window.dispatchEvent(new Event(AUTH_SESSION_CHANGED_EVENT));
+  }
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -73,6 +94,21 @@ export function AccountOverview({
     return (
       <section className="account-panel account-status" aria-live="polite">
         Checking your session…
+      </section>
+    );
+
+  if (deletionOutcome)
+    return (
+      <section className="account-panel account-status" role="status">
+        <p className="section-kicker">Account deleted</p>
+        <h2>Your local account is closed</h2>
+        <p>
+          Private data and public shares were removed.
+          {deletionOutcome === "reconcile"
+            ? " External billing reconciliation remains and will be handled without reopening the account."
+            : " No external billing reconciliation was reported."}
+        </p>
+        <Link href="/account/sign-up">Create a new account</Link>
       </section>
     );
 
@@ -105,7 +141,13 @@ export function AccountOverview({
           </button>
         </div>
         {state.user.emailVerified ? (
-          <AccountActivation action={activationAction} />
+          <>
+            <AccountActivation action={activationAction} />
+            <AccountDeletion
+              action={deletionAction}
+              onDeleted={handleDeletionConfirmed}
+            />
+          </>
         ) : null}
         <p className="account-boundary-note">
           This status is for presentation only. Every private read and change is
@@ -233,6 +275,122 @@ export function AccountActivation({
         </form>
       ) : null}
     </section>
+  );
+}
+
+export function AccountDeletion({
+  action,
+  onDeleted,
+}: {
+  action: AccountDeletionAction;
+  onDeleted: (outcome: "deleted" | "reconcile") => void;
+}) {
+  const [state, formAction, pending] = useActionState(
+    action,
+    INITIAL_ACCOUNT_DELETION_STATE,
+  );
+  const formReference = useRef<HTMLFormElement>(null);
+  const statusReference = useRef<HTMLDivElement>(null);
+  const wasPending = useRef(false);
+
+  useEffect(() => {
+    if (wasPending.current && !pending) formReference.current?.reset();
+    wasPending.current = pending;
+  }, [pending]);
+
+  useEffect(() => {
+    if (state.status === "deleted" || state.status === "reconcile") {
+      onDeleted(state.status);
+      return;
+    }
+    if (state.status !== "idle") statusReference.current?.focus();
+  }, [onDeleted, state]);
+
+  return (
+    <section
+      className="account-danger"
+      aria-labelledby="account-danger-heading"
+    >
+      <p className="section-kicker">Danger zone</p>
+      <h3 id="account-danger-heading">Delete this account</h3>
+      <p>
+        This permanently removes local profiles, calculations, reports, and
+        public share links. The account cannot be restored. Safety records and
+        limited billing reconciliation may be retained where required.
+      </p>
+      {state.status === "authenticate" ? (
+        <DeletionStatus reference={statusReference} title="Sign in again">
+          Your session is no longer eligible. Sign in and restart deletion.
+        </DeletionStatus>
+      ) : state.status === "authorize" ? (
+        <DeletionStatus
+          reference={statusReference}
+          title="Deletion was not authorized"
+        >
+          Check the exact confirmation phrase and current password. No account
+          data was changed.
+        </DeletionStatus>
+      ) : state.status === "retry" ? (
+        <DeletionStatus
+          reference={statusReference}
+          title="Deletion is temporarily unavailable"
+        >
+          No deletion result was confirmed. Review the fields and try again.
+        </DeletionStatus>
+      ) : null}
+      {state.status !== "authenticate" ? (
+        <form ref={formReference} action={formAction} aria-busy={pending}>
+          <input type="hidden" name="version" value="1.0.0" />
+          <label htmlFor="account-deletion-confirmation">
+            Type DELETE MY ACCOUNT
+          </label>
+          <input
+            id="account-deletion-confirmation"
+            name="confirmation"
+            type="text"
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            required
+          />
+          <label htmlFor="account-deletion-password">Current password</label>
+          <input
+            id="account-deletion-password"
+            name="currentPassword"
+            type="password"
+            autoComplete="current-password"
+            minLength={8}
+            maxLength={128}
+            required
+          />
+          <button type="submit" disabled={pending}>
+            {pending ? "Deleting account…" : "Permanently delete account"}
+          </button>
+        </form>
+      ) : null}
+    </section>
+  );
+}
+
+function DeletionStatus({
+  reference,
+  title,
+  children,
+}: {
+  reference: RefObject<HTMLDivElement | null>;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      ref={reference}
+      className="account-deletion-status"
+      role="alert"
+      tabIndex={-1}
+    >
+      <strong>{title}</strong>
+      <p>{children}</p>
+    </div>
   );
 }
 

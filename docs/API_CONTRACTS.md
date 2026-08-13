@@ -442,6 +442,22 @@ receipts and keyed suppression are retained because they are not linked to the a
 remain safety/abuse controls. No Paddle/AWS call, live deletion, public route, UI, provider
 identity, account UUID, subject, email, session, or exception is exposed by this contract.
 
+### First-party account deletion Server Action
+
+`deleteAccountAction` accepts React prior state only as framework input and ignores it. After
+removing framework `$ACTION_` fields, the exact ordered form is `{version, confirmation,
+currentPassword}`; duplicate, reordered, missing, file, identity, owner, email, redirect, or
+extra fields fail before runtime service construction. The action copies only a bounded cookie
+from framework headers and reconstructs the canonical HTTPS origin, same-origin fetch marker,
+content type, content length, path, and method required by `deleteAccountForRequest`.
+
+The client receives only `{status: "deleted" | "authenticate" | "authorize" | "retry" |
+"reconcile"}`. Incorrect password and malformed intent share `authorize`; internal codes,
+subjects, sessions, UUIDs, emails, billing/provider references, database details, and exceptions
+remain server-only. `deleted` and `reconcile` both confirm completed local erasure; reconcile
+means only that retained external billing work remains. Next.js origin checks supplement, but
+do not replace, the Goal 63 live-session/password/transaction authorization chain.
+
 ## Better Auth public HTTP boundary
 
 The public catch-all exists only at `/api/auth/[...all]` and delegates through
@@ -484,6 +500,12 @@ When the public projection says the email is verified, the overview may display 
 account-activation control. This is presentation only: a forged action call still traverses
 the complete Server Action and Goal 62 trust chain. The UI renders checking, ready,
 authenticate, retry, and reconciliation states without receiving an internal identifier.
+
+The same verified browser projection may reveal the danger-zone form, but does not authorize
+it. Every submission traverses the deletion Server Action and Goal 63 checks. The form uses an
+exact typed phrase and current-password semantics, disables pending resubmission, clears the
+password after an attempt, focuses fixed failure feedback, and leaves the account presentation
+only after a confirmed local-deletion result.
 
 Signup/signin, verification resend, forgot-password, and reset-password forms send only the
 fixed Goal 64 fields and same-origin callback paths recorded in
