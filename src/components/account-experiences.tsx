@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {
+  useActionState,
   useEffect,
   useId,
   useLayoutEffect,
@@ -10,6 +11,10 @@ import {
   type FormEvent,
 } from "react";
 
+import {
+  INITIAL_ACCOUNT_ACTIVATION_STATE,
+  type AccountActivationState,
+} from "@/presentation/account-activation-state";
 import {
   AUTH_SESSION_CHANGED_EVENT,
   getAuthSession,
@@ -24,7 +29,16 @@ type Feedback = Readonly<{
   message: string;
 }> | null;
 
-export function AccountOverview() {
+export type AccountActivationAction = (
+  previousState: AccountActivationState,
+  formData: FormData,
+) => Promise<AccountActivationState>;
+
+export function AccountOverview({
+  activationAction,
+}: {
+  activationAction: AccountActivationAction;
+}) {
   const [state, setState] = useState<
     AuthSessionResult | Readonly<{ status: "checking" }>
   >({
@@ -90,6 +104,9 @@ export function AccountOverview() {
             {signingOut ? "Signing out…" : "Sign out"}
           </button>
         </div>
+        {state.user.emailVerified ? (
+          <AccountActivation action={activationAction} />
+        ) : null}
         <p className="account-boundary-note">
           This status is for presentation only. Every private read and change is
           authorized again on the server.
@@ -122,6 +139,99 @@ export function AccountOverview() {
       <button type="button" onClick={refresh}>
         Retry session check
       </button>
+    </section>
+  );
+}
+
+export function AccountActivation({
+  action,
+}: {
+  action: AccountActivationAction;
+}) {
+  const [state, formAction, pending] = useActionState(
+    action,
+    INITIAL_ACCOUNT_ACTIVATION_STATE,
+  );
+  const statusReference = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (
+      state.status === "authenticate" ||
+      state.status === "retry" ||
+      state.status === "reconcile"
+    )
+      statusReference.current?.focus();
+  }, [state]);
+
+  return (
+    <section
+      className="account-activation"
+      aria-labelledby="account-activation-heading"
+    >
+      <p className="section-kicker">Private workspace</p>
+      <h3 id="account-activation-heading">Account readiness</h3>
+      {pending ? (
+        <p role="status">Checking your verified account…</p>
+      ) : state.status === "ready" ? (
+        <div
+          ref={statusReference}
+          className="account-activation-status ready"
+          role="status"
+        >
+          <strong>Private account ready</strong>
+          <p>Your server-verified account boundary is active.</p>
+        </div>
+      ) : state.status === "authenticate" ? (
+        <div
+          ref={statusReference}
+          className="account-activation-status"
+          role="alert"
+          tabIndex={-1}
+        >
+          <strong>Verification is required</strong>
+          <p>
+            Sign in again and verify your email before activating private
+            account features.
+          </p>
+          <Link href="/account/sign-in">Return to sign in</Link>
+        </div>
+      ) : state.status === "reconcile" ? (
+        <div
+          ref={statusReference}
+          className="account-activation-status"
+          role="alert"
+          tabIndex={-1}
+        >
+          <strong>Account activation needs review</strong>
+          <p>No private data was opened. Try again later.</p>
+        </div>
+      ) : state.status === "retry" ? (
+        <div
+          ref={statusReference}
+          className="account-activation-status"
+          role="alert"
+          tabIndex={-1}
+        >
+          <strong>Account readiness is temporarily unavailable</strong>
+          <p>No readiness decision was made. Retry the server check.</p>
+        </div>
+      ) : (
+        <p>
+          Activate the internal account boundary before creating private
+          profiles or calculations.
+        </p>
+      )}
+      {state.status === "idle" || state.status === "retry" ? (
+        <form action={formAction} aria-busy={pending}>
+          <button type="submit" disabled={pending}>
+            {pending
+              ? "Checking account…"
+              : state.status === "retry"
+                ? "Retry account activation"
+                : "Activate private account"}
+          </button>
+        </form>
+      ) : null}
     </section>
   );
 }

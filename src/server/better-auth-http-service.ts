@@ -6,6 +6,16 @@ import { Pool } from "pg";
 
 import { betterAuthSchema } from "@/db/auth-schema";
 import {
+  BetterAuthAccountBootstrapper,
+  BetterAuthActiveBillingAccountResolver,
+  BetterAuthVerifiedSessionVerifier,
+  IdentityScopedAccountReadinessVerifier,
+} from "@/infrastructure/auth/better-auth-adapters";
+import {
+  bootstrapAccountForRequest,
+  type AuthenticatedAccountBootstrapResult,
+} from "@/server/authenticated-account-bootstrap";
+import {
   createBetterAuth,
   loadBetterAuthConfiguration,
   type BetterAuthConfiguration,
@@ -26,6 +36,7 @@ import { loadAuthenticationEmailFeedbackConfiguration } from "@/server/authentic
 
 const PROHIBITED_PUBLIC_KEYS = [
   "NEXT_PUBLIC_BETTER_AUTH_DATABASE_URL",
+  "NEXT_PUBLIC_AUTH_ACCOUNT_DATABASE_URL",
   "NEXT_PUBLIC_AUTH_EMAIL_DATABASE_URL",
   "NEXT_PUBLIC_AUTH_EMAIL_FEEDBACK_DATABASE_URL",
 ] as const;
@@ -33,6 +44,7 @@ const PROHIBITED_PUBLIC_KEYS = [
 export interface BetterAuthHttpServiceConfiguration {
   readonly auth: BetterAuthConfiguration;
   readonly authDatabaseUrl: string;
+  readonly accountDatabaseUrl: string;
   readonly emailDatabaseUrl: string;
   readonly feedbackDatabaseUrl: string;
   readonly idempotency: ReturnType<
@@ -46,6 +58,9 @@ export interface BetterAuthHttpServiceConfiguration {
 
 export interface ProductionBetterAuthHttpService extends BetterAuthHttpService {
   readonly canonicalOrigin: string;
+  activateAccount(
+    request: Request,
+  ): Promise<AuthenticatedAccountBootstrapResult>;
   close(): Promise<void>;
 }
 
@@ -71,6 +86,7 @@ export function loadBetterAuthHttpServiceConfiguration(
     return Object.freeze({
       auth: loadBetterAuthConfiguration(environment),
       authDatabaseUrl: databaseUrl(environment.BETTER_AUTH_DATABASE_URL),
+      accountDatabaseUrl: databaseUrl(environment.AUTH_ACCOUNT_DATABASE_URL),
       emailDatabaseUrl: databaseUrl(environment.AUTH_EMAIL_DATABASE_URL),
       feedbackDatabaseUrl: databaseUrl(
         environment.AUTH_EMAIL_FEEDBACK_DATABASE_URL,
@@ -89,6 +105,7 @@ export function createBetterAuthHttpService(
   createSesClient: () => SESv2Client = createSesV2Client,
 ): ProductionBetterAuthHttpService {
   const authPool = pool(configuration.authDatabaseUrl, 8);
+  const accountPool = pool(configuration.accountDatabaseUrl, 4);
   const emailPool = pool(configuration.emailDatabaseUrl, 4);
   const feedbackPool = pool(configuration.feedbackDatabaseUrl, 4);
   let sesClient: SESv2Client;
@@ -120,6 +137,14 @@ export function createBetterAuthHttpService(
       },
       configuration.auth,
     );
+    const activationDependencies = Object.freeze({
+      sessionVerifier: new BetterAuthVerifiedSessionVerifier(auth.api),
+      bootstrapper: new BetterAuthAccountBootstrapper(accountPool),
+      accountResolver: new BetterAuthActiveBillingAccountResolver(accountPool),
+      readinessVerifier: new IdentityScopedAccountReadinessVerifier(
+        accountPool,
+      ),
+    });
     let closed = false;
     return Object.freeze({
       canonicalOrigin: configuration.auth.baseUrl,
@@ -128,12 +153,18 @@ export function createBetterAuthHttpService(
           throw new Error("Authentication HTTP service is unavailable");
         return auth.handler(request);
       },
+      async activateAccount(request: Request) {
+        if (closed)
+          throw new Error("Authentication HTTP service is unavailable");
+        return bootstrapAccountForRequest(request, activationDependencies);
+      },
       async close() {
         if (closed) return;
         closed = true;
         sesClient.destroy();
         await Promise.all([
           authPool.end(),
+          accountPool.end(),
           emailPool.end(),
           feedbackPool.end(),
         ]);
@@ -141,6 +172,7 @@ export function createBetterAuthHttpService(
     });
   } catch (error) {
     void authPool.end();
+    void accountPool.end();
     void emailPool.end();
     void feedbackPool.end();
     throw error;

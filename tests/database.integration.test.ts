@@ -25,6 +25,7 @@ import { betterAuthSchema } from "@/db/auth-schema";
 import { createBetterAuth } from "@/server/better-auth-configuration";
 import { createBetterAuthHttpHandler } from "@/server/better-auth-http";
 import { bootstrapAccountForRequest } from "@/server/authenticated-account-bootstrap";
+import { activateAccountFromHeaders } from "@/server/account-activation-action";
 import { deleteAccountForRequest } from "@/server/authenticated-account-deletion";
 import type { AuthenticationEmailRequest } from "@/server/authentication-email";
 import { AuthenticationEmailFeedbackRepository } from "@/server/authentication-email-feedback";
@@ -779,23 +780,20 @@ describe("Better Auth trusted contact isolation", () => {
     expect(active?.user.id).toBe(signUp.user.id);
     expect(active?.session.expiresAt.getTime()).toBeGreaterThan(Date.now());
 
-    const bootstrapRequest = new Request(
-      "https://app.example.test/internal/account-bootstrap?owner=attacker",
-      { method: "POST", headers },
-    );
     const bootstrapDependencies = {
       sessionVerifier: new BetterAuthVerifiedSessionVerifier(auth.api),
       bootstrapper: authAccountBootstrapper,
       accountResolver: authAccountResolver,
       readinessVerifier: authAccountReadiness,
     };
+    const activationService = {
+      canonicalOrigin: "https://app.example.test",
+      activateAccount: (request: Request) =>
+        bootstrapAccountForRequest(request, bootstrapDependencies),
+    };
     await expect(
-      bootstrapAccountForRequest(bootstrapRequest, bootstrapDependencies),
-    ).resolves.toEqual({
-      version: "1.0.0",
-      disposition: "ready",
-      code: "account-ready",
-    });
+      activateAccountFromHeaders(headers, false, () => activationService),
+    ).resolves.toEqual({ status: "ready" });
     const internal = await pool.query<{ id: string }>(
       `select id from user_account where identity_provider_subject = $1`,
       [signUp.user.id],
@@ -805,12 +803,8 @@ describe("Better Auth trusted contact isolation", () => {
     await auth.api.revokeSessions({ headers });
     await expect(auth.api.getSession({ headers })).resolves.toBeNull();
     await expect(
-      bootstrapAccountForRequest(bootstrapRequest, bootstrapDependencies),
-    ).resolves.toEqual({
-      version: "1.0.0",
-      disposition: "authenticate",
-      code: "authentication-required",
-    });
+      activateAccountFromHeaders(headers, false, () => activationService),
+    ).resolves.toEqual({ status: "authenticate" });
     await pool.query("delete from user_account where id = $1", [
       internal.rows[0]!.id,
     ]);

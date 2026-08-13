@@ -1457,6 +1457,60 @@ tbody tr:target {
 .account-boundary-note {
   margin: 1.5rem 0 0;
 }
+.account-activation {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+.account-activation h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+}
+.account-activation > p:not(.section-kicker),
+.account-activation-status p {
+  color: var(--muted);
+}
+.account-activation form {
+  margin-top: 1rem;
+}
+.account-activation form button,
+.account-activation-status a {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--mint);
+  border-radius: 0.65rem;
+  padding: 0.7rem 1rem;
+  background: transparent;
+  color: var(--mint);
+  font: inherit;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+.account-activation form button:hover,
+.account-activation-status a:hover {
+  background: rgb(139 203 184 / 12%);
+}
+.account-activation form button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+.account-activation-status {
+  border-left: 3px solid var(--accent);
+  padding-left: 1rem;
+}
+.account-activation-status.ready {
+  border-color: var(--mint);
+}
+.account-activation-status strong {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+.account-activation-status p {
+  margin-bottom: 0.75rem;
+}
 .account-claims-note {
   margin: 1.5rem 0 0;
 }

@@ -425,9 +425,17 @@ tests/
   operations and parse exact privacy projections. The shared session display is advisory
   presentation, never authorization. Passwords remain uncontrolled and are cleared after
   attempts; reset credentials live only in a component reference and are removed from the
-  URL before interaction. Internal bootstrap, deletion, private reads, billing, and
-  entitlements remain separate server-authorized compositions. See
+  URL before interaction. Internal bootstrap is now a separate zero-field Server Action;
+  deletion, private reads, billing, and entitlements remain separate server-authorized
+  compositions. See
   `ACCOUNT_ENTRY_RECOVERY_UI.md`.
+- Account activation: the `/account` Server Action ignores prior client state, rejects every
+  named form field, copies only one bounded cookie header from Next.js request state, and
+  delegates to the Goal 62 workflow. The workflow re-verifies a recent live email-verified
+  session, bootstraps through an execute-only role, independently resolves the active owner,
+  and proves `app_user` readiness. Only ready/authenticate/retry/reconcile reaches React.
+  A separate bounded account pool uses `AUTH_ACCOUNT_DATABASE_URL`; it shares no Better Auth
+  direct-table or email-delivery authority.
 
 ## Data and cache principles
 
@@ -481,8 +489,9 @@ tests/
   `emailVerified: true` is the only identity source. The orchestration invokes a dedicated
   execute-only security-definer function, independently resolves the active mapping, and
   proves identity-scoped transaction readiness before returning a fixed identity-free
-  result. Deleted mappings do not reactivate, browser identity fields are ignored, and no
-  public auth route invokes the workflow yet.
+  result. Deleted mappings do not reactivate and browser identity fields are ignored. One
+  first-party zero-field Server Action invokes the workflow; it is not part of the public
+  Better Auth HTTP router and exposes no internal identity.
 - Authentication email: Amazon SES API v2 is selected behind a provider-neutral
   dispatch/result contract, using only the `ca-central-1` regional endpoint. The strict
   v1 request/result validators, two fixed local `en-CA` templates, and Better Auth

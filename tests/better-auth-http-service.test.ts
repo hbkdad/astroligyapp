@@ -28,6 +28,8 @@ function environment(overrides: Record<string, unknown> = {}) {
     BETTER_AUTH_IP_HEADER: "x-forwarded-for",
     BETTER_AUTH_TRUSTED_PROXIES: "192.0.2.10",
     BETTER_AUTH_DATABASE_URL: "postgresql://auth:local@127.0.0.1:5432/cosmic",
+    AUTH_ACCOUNT_DATABASE_URL:
+      "postgresql://account:local@127.0.0.1:5432/cosmic",
     AUTH_EMAIL_DATABASE_URL: "postgresql://email:local@127.0.0.1:5432/cosmic",
     AUTH_EMAIL_FEEDBACK_DATABASE_URL:
       "postgresql://feedback:local@127.0.0.1:5432/cosmic",
@@ -51,6 +53,7 @@ describe("Better Auth HTTP process service", () => {
     expect(configuration).toMatchObject({
       auth: { baseUrl: ORIGIN, production: true },
       authDatabaseUrl: "postgresql://auth:local@127.0.0.1:5432/cosmic",
+      accountDatabaseUrl: "postgresql://account:local@127.0.0.1:5432/cosmic",
       emailDatabaseUrl: "postgresql://email:local@127.0.0.1:5432/cosmic",
       feedbackDatabaseUrl: "postgresql://feedback:local@127.0.0.1:5432/cosmic",
       idempotency: { leaseMilliseconds: 120_000 },
@@ -65,10 +68,15 @@ describe("Better Auth HTTP process service", () => {
   it.each([
     {},
     environment({ BETTER_AUTH_DATABASE_URL: undefined }),
+    environment({ AUTH_ACCOUNT_DATABASE_URL: "https://database.example" }),
     environment({ AUTH_EMAIL_DATABASE_URL: "https://database.example" }),
     environment({ AUTH_EMAIL_FEEDBACK_DATABASE_URL: "postgresql://localhost" }),
     environment({
       NEXT_PUBLIC_BETTER_AUTH_DATABASE_URL:
+        "postgresql://public:leak@localhost/cosmic",
+    }),
+    environment({
+      NEXT_PUBLIC_AUTH_ACCOUNT_DATABASE_URL:
         "postgresql://public:leak@localhost/cosmic",
     }),
     environment({
@@ -103,6 +111,11 @@ describe("Better Auth HTTP process service", () => {
     expect(destroy).toHaveBeenCalledOnce();
     await expect(
       service.handle(new Request(`${ORIGIN}/api/auth/get-session`)),
+    ).rejects.toThrow("Authentication HTTP service is unavailable");
+    await expect(
+      service.activateAccount(
+        new Request(`${ORIGIN}/internal/account-bootstrap`, { method: "POST" }),
+      ),
     ).rejects.toThrow("Authentication HTTP service is unavailable");
   });
 });

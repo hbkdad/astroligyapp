@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { activateAccountAction } from "@/app/account/actions";
 import { AccountOverview } from "@/components/account-experiences";
 import { AccountShell } from "@/components/account-shell";
 
@@ -15,7 +16,7 @@ export default function AccountPage() {
       title="Your account"
       summary="Check the current session or choose a secure account entry path."
     >
-      <AccountOverview />
+      <AccountOverview activationAction={activateAccountAction} />
     </AccountShell>
   );
 }

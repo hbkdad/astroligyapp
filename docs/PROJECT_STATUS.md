@@ -4,8 +4,8 @@ Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 65 complete; accessible account entry, session presentation, and recovery
-pages now consume only the privacy-projecting Goal 64 email/password allowlist.
+Status: Goal 66 complete; verified-session internal-account activation is exposed only
+through a zero-field first-party Server Action with fixed readiness states.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -21,7 +21,7 @@ one immutable timeline-fact aggregate. Paddle is selected only for verified
 subscription-event ingestion. Better Auth 1.6.27 is installed with four isolated auth
 tables, strict server configuration, database sessions, and execute-only account and
 contact lookups plus a hardened public email/password HTTP boundary. No live billing
-account, production data, managed database/auth infrastructure, protected account activation UI, AI, general notification, location-resolution,
+account, production data, managed database/auth infrastructure, account-deletion UI, AI, general notification, location-resolution,
 or deployment provider is selected. Authentication email has a provider decision, exact
 SDK/adapter, and injected feedback/suppression seam, but no account, DNS, credentials,
 AWS infrastructure, signature implementation, queue polling, or live delivery.
@@ -99,6 +99,15 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 66: add a zero-named-field Server Action that ignores client prior state, copies
+      only a bounded framework cookie, re-runs the Goal 62 live-session/bootstrap/resolver/
+      readiness chain, and returns only ready/authenticate/retry/reconcile.
+- [x] Add a separately configured bounded account executor pool, reject browser identity,
+      redirect, profile, plan, and entitlement fields before service construction, validate
+      exact internal results, and keep all UUIDs/subjects/sessions/failure codes server-only.
+- [x] Add explicit activation/checking/ready/authenticate/retry/reconcile presentation to
+      `/account`, with focused failure states and no claim that public session state
+      authorizes private work.
 - [x] Goal 65: add no-index sign-in, signup, verification guidance/resend,
       forgot-password, reset-password, and session overview pages over the exact Goal 64
       public projection, with semantic forms and password-manager autocomplete.
@@ -574,24 +583,27 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 66 — expose verified-session internal-account activation through one first-party
-server composition and integrate its fixed readiness states into the account page without
-making browser session presentation authoritative.
+Goal 67 — expose the accepted Goal 63 account-deletion workflow through a reauthenticated,
+deliberate first-party Server Action and accessible danger-zone UI without weakening its
+transactional retention/reconciliation rules.
 
 Deliverables:
 
-1. Add one Server Action or equivalent first-party server-only composition that derives the
-   request from trusted framework state and invokes the accepted Goal 62 bootstrap workflow.
-   Do not accept browser subject, account, email, owner, profile, entitlement, or redirect data.
-2. Integrate explicit activate/checking/ready/authenticate/retry/reconcile presentation into
-   `/account`. A projected browser session may guide copy but must never authorize activation
-   or protected data. Do not expose internal UUIDs, subjects, session IDs, or provider errors.
-3. Prove same-origin Server Action behavior, live-session freshness/verification, deleted-user
-   nonreactivation, concurrency/idempotency, fixed result projection, keyboard/status behavior,
-   mocked interaction, and the existing disposable PostgreSQL trust chain.
-4. Apply `security-audit` and `ui-quality`, update contracts/status, set one next goal, and run
-   every gate. Do not expose deletion yet, call SES/Paddle, create external resources or
-   credentials, modify production data, purchase, or deploy.
+1. Add one Server Action that accepts only the exact Goal 63 version, confirmation phrase,
+   and current password; derives cookie/origin/fetch-site from trusted framework/deployment
+   state; and delegates to the existing recent-session, active-owner, password-proof, and
+   transactional-erasure composition. Never accept subject, owner, account, email, or redirect.
+2. Add a separated danger zone with explicit consequences, typed confirmation, current-
+   password autocomplete, pending/failure focus, no optimistic deletion, and fixed deleted/
+   authenticate/authorize/retry/reconcile results. Sign out/navigate only after confirmed
+   local deletion; distinguish retained external billing reconciliation without provider IDs.
+3. Prove hostile field/header/state rejection, wrong password privacy, stale/revoked sessions,
+   double-submit/replay/concurrency, complete rollback, retained billing/safety ledgers,
+   public-share removal, keyboard/status behavior, and mocked browser interaction plus the
+   disposable PostgreSQL lifecycle.
+4. Apply `security-audit` and `ui-quality`, update contracts/status, set one next goal, and
+   run every gate. Do not call Paddle/SES, create external resources or credentials, modify
+   production data outside disposable tests, purchase, or deploy.
 
 ## Phase queue
 
@@ -646,6 +658,10 @@ Deliverables:
   prove trusted client-IP rewriting. The SES SNS signature authenticator and
   regional queue infrastructure remain external gates. MFA and passkeys remain
   release-hardening decisions.
+- Production must provision the account-workflow LOGIN with only the three required NOLOGIN
+  memberships, TLS/pool limits, and monitoring. Multi-instance deployment must share a
+  rotated `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` and verify proxy host/origin behavior before
+  the activation action is considered production-ready.
 - Production database role provisioning, TLS, pooling, migration timeouts,
   backup/restore, and managed-provider parity remain release gates.
 - Drizzle Kit has four moderate findings through a legacy esbuild development loader.
@@ -1241,6 +1257,50 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 66 first-party account activation record
+
+- Entry boundary: `activateAccountAction` is an explicit Server Action with no named form
+  fields. It ignores React's browser-supplied prior state, rejects any named field, reads
+  framework headers, and copies only one bounded cookie into the fixed internal bootstrap
+  request. Host/origin/forwarding/authorization and browser identity/redirect fields do not
+  cross the seam; Next.js applies its additional Origin-versus-Host CSRF check.
+- Authorization/projection: every invocation re-runs the Goal 62 recent live email-verified
+  Better Auth session, execute-only bootstrap, independent active-account resolution, UUID
+  equality, and `app_user` readiness proof. The action validates the exact internal result
+  and returns only ready/authenticate/retry/reconcile, with no version, code, subject,
+  session, UUID, email, profile, entitlement, database, provider, or exception data.
+- Runtime isolation: the lazy process service now owns a fourth bounded pool from
+  `AUTH_ACCOUNT_DATABASE_URL`. Its LOGIN executor needs only membership in
+  `app_auth_account_bootstrap`, `app_auth_account_resolver`, and `app_user`; Better Auth,
+  delivery-ledger, feedback, and SES authority remain in separate pools/dependencies. Build
+  performs no configuration lookup, connection, or external call.
+- UI/accessibility: the verified-session presentation may reveal an explicit private-account
+  activation control but never authorizes it. Account readiness exposes idle/checking/ready/
+  authenticate/retry/reconcile states, a disabled labelled pending control, focused assertive
+  failures, a polite ready status, and an explicit retry without optimistic private access.
+- Browser proof: Playwright mocked only the Goal 64 public session projection. The actual
+  zero-field Server Action POST hit the optimized local app and safely returned focused retry
+  because credentials were absent. Its multipart body contained only React action state/
+  reference machinery and no named identity field. At 390px and 200% text there was zero
+  overflow, reduced motion kept auto scrolling, storage remained unused, and the console had
+  zero errors/warnings after the mock was installed.
+- Security audit: protected assets are the auth-subject-to-owner mapping, deletion tombstone,
+  session freshness/verification, private RLS identity, and response privacy. Tests reject
+  hostile prior state/form/header/cookie/origin/service output, short-circuit before process
+  construction, prove fixed projections and closed-service behavior, and retain Goal 62's
+  concurrency/nonreactivation/role isolation. No critical/high finding remains.
+- Verification: focused action, process-service, bootstrap, UI, and server-action tests pass;
+  Drizzle consistency, cumulative migration upgrade, and all 58 disposable PostgreSQL cases
+  pass, including live Better Auth activation and post-revocation authentication collapse.
+  Coverage passes 65 files/1118 tests at 92.08% statements, 90.89% branches, 98.72%
+  functions, and 93.81% lines. The optimized build completes with six static account pages
+  and the lazy action performs no build-time configuration, database, or provider work.
+- Scope/residual gates: no schema change, deletion exposure, profile read, Paddle/SES call,
+  external resource, credential, production mutation, purchase, or deployment occurred.
+  Production must provision the account executor memberships/TLS pool, stable multi-instance
+  Server Action encryption, trusted proxy/allowed-origin policy, shared abuse control, and
+  live configured browser verification.
 
 ## Goal 65 account entry and recovery UI record
 

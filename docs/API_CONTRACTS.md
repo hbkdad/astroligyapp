@@ -383,8 +383,31 @@ The workflow then resolves the active account through the independent execute-on
 requires its UUID to match the bootstrapped UUID, and proves `app_user` plus
 `app.current_user_id` transaction readiness. Results are frozen `ready`, `authenticate`,
 `retry`, or `reconcile` values with fixed codes and never expose subject, session, internal
-account UUID, email, profile, database error, or caller-supplied data. No public route,
-cookie name, page, form, redirect, or automatic invocation is selected by this contract.
+account UUID, email, profile, database error, or caller-supplied data. It is now invoked only
+by the first-party account activation Server Action described below; no public auth route,
+redirect, or automatic invocation is selected by this contract.
+
+### First-party account activation Server Action
+
+`activateAccountAction` is a reachable mutation boundary and therefore re-authorizes every
+call. It accepts React's prior view state only because `useActionState` supplies it and never
+reads it. The form intentionally has no named user fields; any named `FormData` entry rejects
+before process-service construction. Account, owner, subject, email, profile, entitlement,
+plan, redirect, and provider values cannot enter the workflow.
+
+The action reads framework request headers, copies only a bounded cookie header into a fixed
+`POST https://<canonical-origin>/internal/account-bootstrap` request, and delegates to the
+Goal 62 orchestration through the lazy process service. Host, origin, forwarding,
+authorization, and identity headers are not forwarded. Next.js additionally applies its
+Server Action Origin-versus-Host CSRF check and default body bound; these framework controls
+do not replace the live session/account/readiness checks in the workflow.
+
+The action validates the exact Goal 62 result and projects only `{status: "ready" |
+"authenticate" | "retry" | "reconcile"}`. Version, internal failure code, subject, session,
+UUID, database/provider detail, request headers, and exceptions never reach the client.
+Runtime composition adds one bounded `AUTH_ACCOUNT_DATABASE_URL` pool for the bootstrap,
+active-account resolver, and identity-scoped readiness roles; Better Auth and email pools
+remain isolated.
 
 ## Verified-session account-deletion boundary
 
@@ -456,6 +479,11 @@ projected name/email/verification status, and sign-out. This state is not an aut
 decision. No internal account, subject, session ID/token, entitlement, provider, or private
 profile identifier enters the client contract. Protected Server Components, Server Actions,
 and repositories must perform their own live session and ownership checks.
+
+When the public projection says the email is verified, the overview may display an explicit
+account-activation control. This is presentation only: a forged action call still traverses
+the complete Server Action and Goal 62 trust chain. The UI renders checking, ready,
+authenticate, retry, and reconciliation states without receiving an internal identifier.
 
 Signup/signin, verification resend, forgot-password, and reset-password forms send only the
 fixed Goal 64 fields and same-origin callback paths recorded in

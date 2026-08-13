@@ -61,14 +61,16 @@ IP/user-agent data, recovery tokens, provider errors, or exceptions. Cookies rem
 
 `auth.api.verifyPassword` remains a server-only call used by the independently protected
 account-deletion workflow. Internal account bootstrap and deletion are not Better Auth
-public endpoints. Change-email and package delete-user remain disabled in configuration;
+public endpoints. Bootstrap is exposed separately through a first-party zero-field Server
+Action that re-verifies the complete Goal 62 trust chain. Change-email and package
+delete-user remain disabled in configuration;
 the transactional local deletion workflow is authoritative.
 
 ## Runtime composition and residual gates
 
 The App Router catch-all is dynamic on the Node.js runtime. Its process service lazily
-loads three separate server-only PostgreSQL URLs (Better Auth, email delivery ledger, and
-feedback/suppression), rollover secrets, canonical origin/proxy policy, and the selected SES
+loads four separate server-only PostgreSQL URLs (Better Auth, account workflow, email delivery
+ledger, and feedback/suppression), rollover secrets, canonical origin/proxy policy, and the selected SES
 Canada Central adapter. Construction makes no network call. The SES client, bounded pools,
 idempotency repository, suppression resolver, and auth handler are process-scoped and
 closable.
@@ -77,6 +79,6 @@ The current Better Auth limiter is in-memory and per process. Production require
 reviewed shared limiter/edge control or proof that the deployment topology cannot multiply
 the configured limits. The ingress proxy must overwrite the configured client-IP header and
 match the explicit trusted-proxy list. Access logs, tracing, analytics, support tooling, and
-error capture must redact verification/reset token query and path values. Browser E2E,
-account UI, recovery UX, real proxy behavior, live SES/SNS resources, credentials, and
+error capture must redact verification/reset token query and path values. Live configured
+browser E2E, recovery UX, real proxy behavior, live SES/SNS resources, credentials, and
 production recovery testing remain later gates.

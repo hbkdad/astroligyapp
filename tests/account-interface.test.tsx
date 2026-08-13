@@ -6,11 +6,13 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  AccountActivation,
   AccountOverview,
   ForgotPasswordForm,
   ResetPasswordForm,
   SignInForm,
   SignUpForm,
+  type AccountActivationAction,
 } from "@/components/account-experiences";
 import { AccountNavigation } from "@/components/account-navigation";
 import {
@@ -300,7 +302,13 @@ describe("account entry and recovery journeys", () => {
       .mockResolvedValueOnce(json(200, { status: "accepted" }));
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
-    render(<AccountOverview />);
+    render(
+      <AccountOverview
+        activationAction={vi.fn<AccountActivationAction>(async () => ({
+          status: "ready",
+        }))}
+      />,
+    );
 
     expect(
       await screen.findByRole("heading", { name: "Welcome, Mira Chen" }),
@@ -324,7 +332,13 @@ describe("account entry and recovery journeys", () => {
       .mockResolvedValueOnce(json(200, { status: "anonymous" }));
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
-    render(<AccountOverview />);
+    render(
+      <AccountOverview
+        activationAction={vi.fn<AccountActivationAction>(async () => ({
+          status: "ready",
+        }))}
+      />,
+    );
 
     expect(screen.getByText("Checking your session…")).toHaveAttribute(
       "aria-live",
@@ -343,6 +357,79 @@ describe("account entry and recovery journeys", () => {
     ).toBeVisible();
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
+
+  it("activates the private account through a zero-field server action", async () => {
+    const activationAction = vi.fn<AccountActivationAction>(async () => ({
+      status: "ready",
+    }));
+    const user = userEvent.setup();
+    render(<AccountActivation action={activationAction} />);
+
+    expect(
+      screen.getByText(
+        "Activate the internal account boundary before creating private profiles or calculations.",
+      ),
+    ).toBeVisible();
+    await user.click(
+      screen.getByRole("button", { name: "Activate private account" }),
+    );
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Private account ready",
+    );
+    expect(activationAction).toHaveBeenCalledOnce();
+    const [, formData] = activationAction.mock.calls[0]!;
+    expect([...formData.keys()]).toEqual([]);
+  });
+
+  it("exposes a disabled checking state while account activation is pending", async () => {
+    let finish: ((state: { status: "ready" }) => void) | undefined;
+    const activationAction = vi.fn<AccountActivationAction>(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const user = userEvent.setup();
+    render(<AccountActivation action={activationAction} />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Activate private account" }),
+    );
+    expect(
+      await screen.findByRole("button", { name: "Checking account…" }),
+    ).toBeDisabled();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Checking your verified account…",
+    );
+
+    finish?.({ status: "ready" });
+    expect(await screen.findByText("Private account ready")).toBeVisible();
+  });
+
+  it.each([
+    ["authenticate", "Verification is required", false],
+    ["retry", "temporarily unavailable", true],
+    ["reconcile", "needs review", false],
+  ] as const)(
+    "announces and focuses the %s activation result",
+    async (status, message, retryable) => {
+      const user = userEvent.setup();
+      render(<AccountActivation action={vi.fn(async () => ({ status }))} />);
+      await user.click(
+        screen.getByRole("button", { name: "Activate private account" }),
+      );
+
+      const alert = await screen.findByRole("alert");
+      expect(alert).toHaveTextContent(message);
+      expect(alert).toHaveFocus();
+      const retry = screen.queryByRole("button", {
+        name: "Retry account activation",
+      });
+      if (retryable) expect(retry).toBeInTheDocument();
+      else expect(retry).not.toBeInTheDocument();
+    },
+  );
 });
 
 function json(status: number, value: unknown): Response {
