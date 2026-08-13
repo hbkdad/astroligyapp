@@ -566,3 +566,12 @@ product contract yet justifies that private derived record. The fixed-clock comp
 reproducible from the saved natal provenance and version trace; future caching must introduce an
 explicit time bucket and complete cache identity before changing this rule. See
 `docs/PERSONAL_TODAY_BOUNDARY.md`.
+
+## Protected notification boundary
+
+Dynamic `/account/alerts` posts only exact opaque profile and preference commands. The server
+repeats live-session, owner, forced-RLS, profile-revision, chart, and centralized `alerts`
+entitlement checks before storing versioned consent or materializing validated Goal 71 facts.
+Contact destination, owner, plan, natal timezone, calculation identity, and facts are never
+browser-controlled. Candidates remain inert in `pending-provider`; no general delivery provider
+or production worker is selected. See `docs/NOTIFICATION_BOUNDARY.md`.

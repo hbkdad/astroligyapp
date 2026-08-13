@@ -1,0 +1,35 @@
+ALTER TABLE "notification_delivery" ADD COLUMN "event_type" text;--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD COLUMN "event_occurs_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD COLUMN "preference_revision" integer;--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD COLUMN "materialization_version" text;--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD COLUMN "identity" jsonb DEFAULT '{}'::jsonb NOT NULL;--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD COLUMN "attempt_count" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD COLUMN "next_attempt_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD COLUMN "invalidated_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD COLUMN "created_at" timestamp with time zone DEFAULT now() NOT NULL;--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD COLUMN "updated_at" timestamp with time zone DEFAULT now() NOT NULL;--> statement-breakpoint
+ALTER TABLE "notification_preference" ADD COLUMN "contract_version" text;--> statement-breakpoint
+ALTER TABLE "notification_preference" ADD COLUMN "revision" integer;--> statement-breakpoint
+ALTER TABLE "notification_preference" ADD COLUMN "consent_state" text;--> statement-breakpoint
+ALTER TABLE "notification_preference" ADD COLUMN "consented_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "notification_preference" ADD COLUMN "lead_minutes" integer;--> statement-breakpoint
+ALTER TABLE "notification_preference" ADD COLUMN "quiet_hours_start" time;--> statement-breakpoint
+ALTER TABLE "notification_preference" ADD COLUMN "quiet_hours_end" time;--> statement-breakpoint
+CREATE INDEX "notification_delivery_due_idx" ON "notification_delivery" USING btree ("status" text_ops,"scheduled_at" timestamptz_ops);--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD CONSTRAINT "notification_delivery_idempotency_key_check" CHECK (materialization_version is null or idempotency_key ~ '^sha256:[0-9a-f]{64}$');--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD CONSTRAINT "notification_delivery_status_check" CHECK (materialization_version is null or status in ('pending-provider', 'queued', 'sent', 'failed', 'stale', 'canceled'));--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD CONSTRAINT "notification_delivery_event_type_check" CHECK (event_type is null or event_type in ('personal-transit', 'primary-phase', 'moon-sign-ingress', 'planetary-station', 'personal-year-boundary', 'personal-month-boundary', 'personal-day-boundary'));--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD CONSTRAINT "notification_delivery_preference_revision_check" CHECK (preference_revision is null or preference_revision between 1 and 999999999);--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD CONSTRAINT "notification_delivery_materialization_version_check" CHECK (materialization_version is null or materialization_version = '1.0.0');--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD CONSTRAINT "notification_delivery_attempt_count_check" CHECK (attempt_count between 0 and 100);--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD CONSTRAINT "notification_delivery_terminal_state_check" CHECK (materialization_version is null or ((status = 'sent' and attempt_count between 1 and 4 and next_attempt_at is null and sent_at is not null and failed_at is null and failure_code is null and invalidated_at is null) or (status = 'failed' and attempt_count = 4 and next_attempt_at is null and sent_at is null and failed_at is not null and failure_code ~ '^[a-z0-9][a-z0-9-]{0,63}$' and invalidated_at is null) or (status in ('stale', 'canceled') and next_attempt_at is null and sent_at is null and failed_at is null and failure_code is null and invalidated_at is not null) or (status = 'pending-provider' and attempt_count = 0 and next_attempt_at is null and sent_at is null and failed_at is null and failure_code is null and invalidated_at is null) or (status = 'queued' and attempt_count between 0 and 3 and next_attempt_at is not null and sent_at is null and failed_at is null and failure_code is null and invalidated_at is null)));--> statement-breakpoint
+ALTER TABLE "notification_delivery" ADD CONSTRAINT "notification_delivery_versioned_identity_check" CHECK ((materialization_version is null and event_type is null and event_occurs_at is null and preference_revision is null) or (materialization_version = '1.0.0' and event_type is not null and event_occurs_at is not null and preference_revision is not null and jsonb_typeof(identity) = 'object' and identity ?& array['profileId','profileRevision','calculationRunId','preferenceId','preferenceRevision','preference','eventReference','eventType','eventOccursAt','scheduledAt','timeline']));--> statement-breakpoint
+ALTER TABLE "notification_preference" ADD CONSTRAINT "notification_preference_channel_check" CHECK (contract_version is null or channel = 'email');--> statement-breakpoint
+ALTER TABLE "notification_preference" ADD CONSTRAINT "notification_preference_event_type_check" CHECK (contract_version is null or event_type in ('personal-transit', 'primary-phase', 'moon-sign-ingress', 'planetary-station', 'personal-year-boundary', 'personal-month-boundary', 'personal-day-boundary'));--> statement-breakpoint
+ALTER TABLE "notification_preference" ADD CONSTRAINT "notification_preference_timezone_length_check" CHECK (contract_version is null or char_length(timezone) between 1 and 128);--> statement-breakpoint
+ALTER TABLE "notification_preference" ADD CONSTRAINT "notification_preference_contract_version_check" CHECK (contract_version is null or contract_version = '1.0.0');--> statement-breakpoint
+ALTER TABLE "notification_preference" ADD CONSTRAINT "notification_preference_revision_check" CHECK (contract_version is null or revision between 1 and 999999999);--> statement-breakpoint
+ALTER TABLE "notification_preference" ADD CONSTRAINT "notification_preference_consent_state_check" CHECK (contract_version is null or consent_state in ('not-consented', 'consented', 'withdrawn'));--> statement-breakpoint
+ALTER TABLE "notification_preference" ADD CONSTRAINT "notification_preference_consent_consistency_check" CHECK (contract_version is null or ((opted_in and consent_state = 'consented' and consented_at is not null) or (not opted_in and consent_state <> 'consented' and consented_at is null)));--> statement-breakpoint
+ALTER TABLE "notification_preference" ADD CONSTRAINT "notification_preference_lead_minutes_check" CHECK (contract_version is null or lead_minutes in (0, 60, 360, 1440));--> statement-breakpoint
+ALTER TABLE "notification_preference" ADD CONSTRAINT "notification_preference_quiet_hours_check" CHECK (contract_version is null or ((quiet_hours_start is null and quiet_hours_end is null) or (quiet_hours_start is not null and quiet_hours_end is not null and quiet_hours_start <> quiet_hours_end)));

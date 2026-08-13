@@ -10,6 +10,7 @@ import { PrivateProfileRepository } from "@/infrastructure/persistence/private-p
 import { ProtectedNatalChartRepository } from "@/infrastructure/persistence/protected-natal-chart-repository";
 import { PersonalTodayRepository } from "@/infrastructure/persistence/personal-today-repository";
 import { PersonalTimelineRepository } from "@/infrastructure/persistence/personal-timeline-repository";
+import { NotificationPreferenceRepository } from "@/infrastructure/persistence/notification-preference-repository";
 import {
   BetterAuthAccountBootstrapper,
   BetterAuthActiveBillingAccountResolver,
@@ -45,6 +46,15 @@ import {
   type PersonalTimelineResponse,
 } from "@/server/authenticated-personal-timeline";
 import type { PersonalTimelineCommand } from "@/server/personal-timeline-contracts";
+import {
+  loadNotificationPreferencesForRequest,
+  replaceNotificationPreferencesForRequest,
+  type NotificationPreferenceResponse,
+} from "@/server/authenticated-notification-preferences";
+import type {
+  NotificationPreferenceCommand,
+  NotificationPreferenceSelection,
+} from "@/server/notification-preference-contracts";
 import {
   bootstrapAccountForRequest,
   type AuthenticatedAccountBootstrapResult,
@@ -114,6 +124,14 @@ export interface ProductionBetterAuthHttpService extends BetterAuthHttpService {
     request: Request,
     command: PersonalTimelineCommand,
   ): Promise<PersonalTimelineResponse>;
+  loadNotificationPreferences(
+    request: Request,
+    selection: NotificationPreferenceSelection,
+  ): Promise<NotificationPreferenceResponse>;
+  replaceNotificationPreferences(
+    request: Request,
+    command: NotificationPreferenceCommand,
+  ): Promise<NotificationPreferenceResponse>;
   close(): Promise<void>;
 }
 
@@ -227,6 +245,11 @@ export function createBetterAuthHttpService(
       accountResolver: new BetterAuthActiveBillingAccountResolver(accountPool),
       timelines: new PersonalTimelineRepository(accountPool),
     });
+    const notificationPreferenceDependencies = Object.freeze({
+      sessionVerifier: new BetterAuthVerifiedSessionVerifier(auth.api),
+      accountResolver: new BetterAuthActiveBillingAccountResolver(accountPool),
+      preferences: new NotificationPreferenceRepository(accountPool),
+    });
     let closed = false;
     return Object.freeze({
       canonicalOrigin: configuration.auth.baseUrl,
@@ -304,6 +327,30 @@ export function createBetterAuthHttpService(
           request,
           command,
           personalTimelineDependencies,
+        );
+      },
+      async loadNotificationPreferences(
+        request: Request,
+        selection: NotificationPreferenceSelection,
+      ) {
+        if (closed)
+          throw new Error("Authentication HTTP service is unavailable");
+        return loadNotificationPreferencesForRequest(
+          request,
+          selection,
+          notificationPreferenceDependencies,
+        );
+      },
+      async replaceNotificationPreferences(
+        request: Request,
+        command: NotificationPreferenceCommand,
+      ) {
+        if (closed)
+          throw new Error("Authentication HTTP service is unavailable");
+        return replaceNotificationPreferencesForRequest(
+          request,
+          command,
+          notificationPreferenceDependencies,
         );
       },
       async close() {

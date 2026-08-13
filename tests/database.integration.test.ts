@@ -72,6 +72,12 @@ import {
   PersonalTimelineLockedError,
   PersonalTimelineRepository,
 } from "@/infrastructure/persistence/personal-timeline-repository";
+import {
+  NotificationPreferenceAuthorizationError,
+  NotificationPreferenceConflictError,
+  NotificationPreferenceLockedError,
+  NotificationPreferenceRepository,
+} from "@/infrastructure/persistence/notification-preference-repository";
 import { DEMO_COMPATIBILITY_REPORT } from "@/presentation/compatibility-demo";
 import {
   SUBSCRIPTION_TRANSITION_EVENT_VERSION,
@@ -3393,6 +3399,7 @@ describe("protected personalized Today composition", () => {
   const charts = new ProtectedNatalChartRepository(pool, () => now);
   const today = new PersonalTodayRepository(pool, () => now);
   const timelines = new PersonalTimelineRepository(pool, () => now);
+  const notifications = new NotificationPreferenceRepository(pool, () => now);
 
   async function account(subject: string) {
     return bootstrapAccount(pool, activeSession(subject));
@@ -3445,6 +3452,17 @@ describe("protected personalized Today composition", () => {
       profileId: profile.profileId,
       birthProfileId: profile.birthProfileId,
       revision: profile.revision,
+    } as const;
+  }
+
+  function notificationSelection(
+    profile: Awaited<ReturnType<typeof createProfile>>,
+  ) {
+    return {
+      version: "1.0.0",
+      profileId: profile.profileId,
+      birthProfileId: profile.birthProfileId,
+      profileRevision: profile.revision,
     } as const;
   }
 
@@ -3610,6 +3628,111 @@ describe("protected personalized Today composition", () => {
     } finally {
       await pool.query("delete from user_account where id=$1", [owner]);
     }
+  });
+
+  it("protects, revisions, deduplicates, and withdraws notification candidates", async () => {
+    const owner = await account(`notification-owner-${randomUUID()}`);
+    const other = await account(`notification-other-${randomUUID()}`);
+    let savedProfileId: string | null = null;
+    try {
+      const profile = await createProfile(owner);
+      savedProfileId = profile.profileId;
+      const selection = notificationSelection(profile);
+      await expect(notifications.load(owner, selection)).rejects.toBeInstanceOf(
+        NotificationPreferenceLockedError,
+      );
+      await grant(owner);
+      await expect(notifications.load(other, selection)).rejects.toBeInstanceOf(
+        NotificationPreferenceAuthorizationError,
+      );
+      await charts.generate(owner, command(profile));
+
+      const initial = await notifications.load(owner, selection);
+      expect(initial).toMatchObject({
+        preferenceRevision: 0,
+        consent: false,
+        channelAvailability: "provider-unavailable",
+      });
+      const enabled = await notifications.replace(owner, {
+        ...selection,
+        operation: "replace",
+        preferenceRevision: 0,
+        channel: "email",
+        consent: true,
+        eventTypes: ["primary-phase", "moon-sign-ingress"],
+        leadMinutes: 60,
+        quietHours: { start: "22:00", end: "07:00" },
+      });
+      expect(enabled).toMatchObject({
+        preferenceRevision: 1,
+        consent: true,
+        timezone: "America/Toronto",
+        eventTypes: ["primary-phase", "moon-sign-ingress"],
+      });
+      await expect(
+        notifications.replace(owner, {
+          ...selection,
+          operation: "replace",
+          preferenceRevision: 0,
+          channel: "email",
+          consent: false,
+          eventTypes: [],
+          leadMinutes: 60,
+          quietHours: null,
+        }),
+      ).rejects.toBeInstanceOf(NotificationPreferenceConflictError);
+
+      const concurrent = await Promise.all([
+        notifications.materialize(owner, selection),
+        notifications.materialize(owner, selection),
+      ]);
+      expect(concurrent[0]!.inserted + concurrent[1]!.inserted).toBeGreaterThan(
+        0,
+      );
+      expect(concurrent[0]!.existing + concurrent[1]!.existing).toBeGreaterThan(
+        0,
+      );
+      const prepared = await notifications.load(owner, selection);
+      expect(prepared.deliveries.length).toBeGreaterThan(0);
+      expect(
+        prepared.deliveries.every(
+          ({ status, attemptCount }) =>
+            status === "pending-provider" && attemptCount === 0,
+        ),
+      ).toBe(true);
+
+      const withdrawn = await notifications.replace(owner, {
+        ...selection,
+        operation: "replace",
+        preferenceRevision: 1,
+        channel: "email",
+        consent: false,
+        eventTypes: [],
+        leadMinutes: 60,
+        quietHours: null,
+      });
+      expect(withdrawn).toMatchObject({
+        preferenceRevision: 2,
+        consent: false,
+      });
+      expect(
+        withdrawn.deliveries.every(({ status }) => status === "canceled"),
+      ).toBe(true);
+      await expect(
+        notifications.materialize(owner, selection),
+      ).resolves.toMatchObject({ inserted: 0, existing: 0 });
+    } finally {
+      await pool.query("delete from user_account where id in ($1,$2)", [
+        owner,
+        other,
+      ]);
+    }
+    const erased = await pool.query<{ count: string }>(
+      `select count(*)::text as count
+         from notification_preference where profile_id=$1`,
+      [savedProfileId],
+    );
+    expect(erased.rows[0]!.count).toBe("0");
   });
 });
 

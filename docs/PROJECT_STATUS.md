@@ -4,8 +4,8 @@ Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 71 complete; saved private charts now compose a protected, bounded upcoming
-personal timeline and feed its nearest validated events into the private Today dashboard.
+Status: Goal 72 complete; protected alert preferences now materialize inert, private,
+idempotent candidates from validated personal-timeline facts without invoking a delivery provider.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -21,7 +21,7 @@ one immutable timeline-fact aggregate. Paddle is selected only for verified
 subscription-event ingestion. Better Auth 1.6.27 is installed with four isolated auth
 tables, strict server configuration, database sessions, and execute-only account and
 contact lookups plus a hardened public email/password HTTP boundary. No live billing
-account, production data, managed database/auth infrastructure, AI, general notification, location-resolution,
+account, production data, managed database/auth infrastructure, AI, general notification delivery, location-resolution,
 or deployment provider is selected. Authentication email has a provider decision, exact
 SDK/adapter, and injected feedback/suppression seam, but no account, DNS, credentials,
 AWS infrastructure, signature implementation, queue polling, or live delivery.
@@ -99,6 +99,19 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 72: add exact versioned email preference commands for seven Goal 71 event families,
+      explicit consent, server-owned natal timezone, lead time, quiet hours, and optimistic
+      revisions behind live session/owner/RLS/profile/chart and centralized `alerts` checks.
+- [x] Add forward migration `0015_serious_synch` with overlap-safe nullable versions, complete
+      candidate audit identity, SHA-256 semantic deduplication, constrained retry/terminal states,
+      stale/withdrawal invalidation, existing owner RLS, and account-erasure cascades.
+- [x] Materialize only validated Goal 71 facts into inert `pending-provider` candidates; handle
+      interval clamping, zero lead, overnight quiet hours, DST gaps/folds, past-event omission,
+      concurrent replay, provider failure, and complete provider/config/preference trace without
+      sending email, push, SMS, or invoking any live provider.
+- [x] Add dynamic no-index `/account/alerts` with private profile selection, consent/event/lead/
+      quiet-hour controls, bounded delivery history, explicit provider-unavailable messaging,
+      keyboard focus behavior, and strict privacy projections.
 - [x] Goal 71: add a request-local personal timeline engine with one shared 12-hour observation
       pass, validated transit/lunar/station refiners, local-midnight numerology boundaries,
       deterministic ordering, explicit boundary omissions, and plan/event truncation trace.
@@ -628,23 +641,23 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 72 — add protected notification preferences and idempotent due-event materialization over
-Goal 71 timeline facts, without selecting or invoking a live delivery provider.
+Goal 73 — establish the public SEO architecture over the existing useful horoscope, Moon,
+numerology, astrology-reference, and timeline content without generating thin pages.
 
 Deliverables:
 
-1. Define exact versioned preference contracts for enabled event families, delivery channel,
-   natal-local quiet hours, lead time, and consent state. Keep contact destination, owner, plan,
-   chart, timezone, and event facts server-owned; require centralized `alerts` entitlement.
-2. Extend the normalized preference/delivery model only through a checked-in forward migration
-   if the existing schema cannot represent the contract. Preserve default deny, two-owner RLS,
-   revision safety, account erasure, and explicit channel/provider unavailability.
-3. Materialize due notification candidates only from validated Goal 71 fact IDs plus complete
-   profile/interval/provider/config/preference identity. Prove deterministic lead-time/quiet-hour
-   handling, deduplication, concurrency, retry state, stale-event invalidation, and no spam.
-4. Add a protected accessible preference surface and delivery-history projection, but do not send
-   email/push/SMS, purchase infrastructure, or mutate production. Apply database, security, astro,
-   lunar, numerology, and UI skills and record the later provider/release gates explicitly.
+1. Inventory current public routes and define one canonical, indexability, metadata, breadcrumb,
+   structured-data, internal-link, sitemap, and robots contract. Keep every account/share/private
+   route excluded and never place private identifiers or calculation inputs in public URLs.
+2. Build only pages backed by existing validated deterministic facts or genuinely useful static
+   reference content. Add date/sign/number route validation, explicit not-found behavior, source/
+   version trace where applicable, and no AI-generated or templated doorway-page expansion.
+3. Implement XML sitemap and robots behavior with stable canonical URLs, semantic headings,
+   accessible breadcrumbs, and supported schema.org types. Do not claim scientific prediction,
+   guaranteed outcomes, or unsupported freshness.
+4. Apply the SEO and UI-quality skills; test metadata/routes/sitemap/robots, inspect representative
+   desktop/mobile pages, and record caching, content-maintenance, analytics, and production-host
+   verification as later gates. Do not select hosting, analytics, or mutate production.
 
 ## Phase queue
 
@@ -656,8 +669,8 @@ Deliverables:
 | 4     | Interpretation, dashboard, and natal-chart foundation    | Complete    |
 | 5     | Timelines, daily/public readings, retention content      | Complete    |
 | 6     | Compatibility and privacy-safe sharing                   | Complete    |
-| 7     | Subscriptions, entitlements, notifications               | In progress |
-| 8     | SEO and useful public content                            | Pending     |
+| 7     | Subscriptions, entitlements, notifications               | Complete    |
+| 8     | SEO and useful public content                            | In progress |
 | 9     | Security, privacy, performance, accessibility, QA        | Pending     |
 | 10    | Deployment and production verification                   | Pending     |
 
@@ -3060,6 +3073,53 @@ tests/lunar-phase.test.ts tests/public-daily-readings.test.ts`;
 - Scope: no inferred-speed fallback, interpretation, category, score, timeline
   composition/UI, persistence, entitlement, notification, production provider
   call, or deployment was added.
+
+## Goal 72 notification boundary record
+
+- Commands: `npm run check` passed 96 files, 1,272 tests, and the production build. Independent
+  `npm run test:coverage` passed at 89.93% statements, 87.71% branches, 96.73% functions, and
+  92.04% lines. Focused preference/materialization/transition/auth/action/JSDOM suites,
+  `npm run db:check`,
+  `npm run test:database` (71 tests); `npm audit --omit=dev`; and Playwright CLI inspection of
+  the optimized protected route at 1440x1000 and 390x844. The first coverage run hit one
+  pre-existing account-activation timing assertion after the normal suite had passed; the
+  isolated full coverage rerun passed all 1,272 tests.
+- Database migration review: `0015_serious_synch` is additive. New contract/version fields are
+  nullable only for legacy overlap; versioned writes receive strict consent, identity, status,
+  and lifecycle checks. The compatibility harness upgrades populated old-schema notification
+  rows and proves old application writes remain accepted. No backfill, production database,
+  role, or policy mutation occurred. Recovery is backup restore or a reviewed forward fix.
+- Security review: session and active owner resolve before RLS access; owner, verified contact,
+  plan, chart, timezone, interval, facts, and provider/config state are server-owned. Exact forms
+  reject duplicate/extra/contact fields; exact response projections omit owner/contact/run/
+  preference/idempotency/audit identifiers. Two-owner denial, entitlement denial, lost-update
+  conflict, account erasure, and malformed internal responses fail closed. No critical or high
+  finding remains.
+- Calculation validation: astro, lunar, and numerology facts are consumed from the unchanged
+  validated Goal 71 aggregate rather than recalculated or altered. Complete provider/config
+  identity is compared and stored. Tests cover instant and peak selection, zero and bounded lead,
+  overnight quiet hours, Toronto DST gaps/folds, past/late omission, trace mismatch, semantic
+  concurrency dedupe, stale invalidation, and frozen output. No new astronomical or numerological
+  tolerance or external fixture was needed.
+- Delivery/spam boundary: all candidates begin `pending-provider`; no code path invokes email,
+  push, SMS, contact lookup, or a live delivery client. The versioned pure lifecycle permits only
+  explicit future approval, bounded 1/5/30-minute retries, four total attempts, and terminal
+  sent/failed/stale/canceled states; database checks mirror these invariants. Consent withdrawal
+  cancels active older-revision candidates and repeated/concurrent materialization converges on
+  one SHA-256 semantic identity.
+- UI review: the protected page is dynamic and no-index, has semantic fieldsets/table/history,
+  explicit provider-unavailable and no-send copy, keyboard-reachable skip navigation, focused
+  errors, disabled invalid/no-event submissions, a focusable overflow table, and no mobile
+  horizontal overflow in the optimized 390px screenshot. Ready-state controls and exact POST
+  contents passed JSDOM interaction tests. The unauthenticated optimized browser correctly showed
+  no private settings; its session retry control logged the expected missing local runtime auth/
+  database configuration error, so configured live-account browser E2E remains a release gate.
+- Dependency audit: four existing moderate `esbuild` findings remain through Drizzle Kit's legacy
+  development loader. npm offers only a breaking forced downgrade; no new runtime package was
+  added and no unsafe forced fix was applied. No high or critical advisory was reported.
+- Scope: no general notification provider was selected, no verified contact was exposed or
+  duplicated, no provider/client/credential/account/DNS/worker was added, and no email/push/SMS,
+  purchase, production migration, production mutation, or deployment occurred.
 
 ## Goal 21 lunar event-search record
 

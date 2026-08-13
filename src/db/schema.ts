@@ -16,6 +16,7 @@ import {
   boolean,
   primaryKey,
   pgEnum,
+  time,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -1267,6 +1268,16 @@ export const notificationPreference = pgTable(
     optedIn: boolean("opted_in").default(false).notNull(),
     timezone: text().notNull(),
     frequency: jsonb().default({}).notNull(),
+    contractVersion: text("contract_version"),
+    revision: integer(),
+    consentState: text("consent_state"),
+    consentedAt: timestamp("consented_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
+    leadMinutes: integer("lead_minutes"),
+    quietHoursStart: time("quiet_hours_start"),
+    quietHoursEnd: time("quiet_hours_end"),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -1297,6 +1308,42 @@ export const notificationPreference = pgTable(
    FROM profile
   WHERE ((profile.id = notification_preference.profile_id) AND (profile.owner_user_id = app.current_user_id()))))`,
     }),
+    check(
+      "notification_preference_channel_check",
+      sql`contract_version is null or channel = 'email'`,
+    ),
+    check(
+      "notification_preference_event_type_check",
+      sql`contract_version is null or event_type in ('personal-transit', 'primary-phase', 'moon-sign-ingress', 'planetary-station', 'personal-year-boundary', 'personal-month-boundary', 'personal-day-boundary')`,
+    ),
+    check(
+      "notification_preference_timezone_length_check",
+      sql`contract_version is null or char_length(timezone) between 1 and 128`,
+    ),
+    check(
+      "notification_preference_contract_version_check",
+      sql`contract_version is null or contract_version = '1.0.0'`,
+    ),
+    check(
+      "notification_preference_revision_check",
+      sql`contract_version is null or revision between 1 and 999999999`,
+    ),
+    check(
+      "notification_preference_consent_state_check",
+      sql`contract_version is null or consent_state in ('not-consented', 'consented', 'withdrawn')`,
+    ),
+    check(
+      "notification_preference_consent_consistency_check",
+      sql`contract_version is null or ((opted_in and consent_state = 'consented' and consented_at is not null) or (not opted_in and consent_state <> 'consented' and consented_at is null))`,
+    ),
+    check(
+      "notification_preference_lead_minutes_check",
+      sql`contract_version is null or lead_minutes in (0, 60, 360, 1440)`,
+    ),
+    check(
+      "notification_preference_quiet_hours_check",
+      sql`contract_version is null or ((quiet_hours_start is null and quiet_hours_end is null) or (quiet_hours_start is not null and quiet_hours_end is not null and quiet_hours_start <> quiet_hours_end))`,
+    ),
   ],
 );
 
@@ -1315,6 +1362,29 @@ export const notificationDelivery = pgTable(
     sentAt: timestamp("sent_at", { withTimezone: true, mode: "string" }),
     failedAt: timestamp("failed_at", { withTimezone: true, mode: "string" }),
     failureCode: text("failure_code"),
+    eventType: text("event_type"),
+    eventOccursAt: timestamp("event_occurs_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
+    preferenceRevision: integer("preference_revision"),
+    materializationVersion: text("materialization_version"),
+    identity: jsonb().default({}).notNull(),
+    attemptCount: integer("attempt_count").default(0).notNull(),
+    nextAttemptAt: timestamp("next_attempt_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
+    invalidatedAt: timestamp("invalidated_at", {
+      withTimezone: true,
+      mode: "string",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true, mode: "string" })
+      .defaultNow()
+      .notNull(),
   },
   (table) => [
     uniqueIndex("notification_delivery_idempotency_uidx").using(
@@ -1324,6 +1394,11 @@ export const notificationDelivery = pgTable(
     index("notification_delivery_preference_idx").using(
       "btree",
       table.preferenceId.asc().nullsLast().op("uuid_ops"),
+    ),
+    index("notification_delivery_due_idx").using(
+      "btree",
+      table.status.asc().nullsLast().op("text_ops"),
+      table.scheduledAt.asc().nullsLast().op("timestamptz_ops"),
     ),
     foreignKey({
       columns: [table.preferenceId],
@@ -1343,6 +1418,38 @@ export const notificationDelivery = pgTable(
      JOIN profile ON ((profile.id = notification_preference.profile_id)))
   WHERE ((notification_preference.id = notification_delivery.preference_id) AND (profile.owner_user_id = app.current_user_id()))))`,
     }),
+    check(
+      "notification_delivery_idempotency_key_check",
+      sql`materialization_version is null or idempotency_key ~ '^sha256:[0-9a-f]{64}$'`,
+    ),
+    check(
+      "notification_delivery_status_check",
+      sql`materialization_version is null or status in ('pending-provider', 'queued', 'sent', 'failed', 'stale', 'canceled')`,
+    ),
+    check(
+      "notification_delivery_event_type_check",
+      sql`event_type is null or event_type in ('personal-transit', 'primary-phase', 'moon-sign-ingress', 'planetary-station', 'personal-year-boundary', 'personal-month-boundary', 'personal-day-boundary')`,
+    ),
+    check(
+      "notification_delivery_preference_revision_check",
+      sql`preference_revision is null or preference_revision between 1 and 999999999`,
+    ),
+    check(
+      "notification_delivery_materialization_version_check",
+      sql`materialization_version is null or materialization_version = '1.0.0'`,
+    ),
+    check(
+      "notification_delivery_attempt_count_check",
+      sql`attempt_count between 0 and 100`,
+    ),
+    check(
+      "notification_delivery_terminal_state_check",
+      sql`materialization_version is null or ((status = 'sent' and attempt_count between 1 and 4 and next_attempt_at is null and sent_at is not null and failed_at is null and failure_code is null and invalidated_at is null) or (status = 'failed' and attempt_count = 4 and next_attempt_at is null and sent_at is null and failed_at is not null and failure_code ~ '^[a-z0-9][a-z0-9-]{0,63}$' and invalidated_at is null) or (status in ('stale', 'canceled') and next_attempt_at is null and sent_at is null and failed_at is null and failure_code is null and invalidated_at is not null) or (status = 'pending-provider' and attempt_count = 0 and next_attempt_at is null and sent_at is null and failed_at is null and failure_code is null and invalidated_at is null) or (status = 'queued' and attempt_count between 0 and 3 and next_attempt_at is not null and sent_at is null and failed_at is null and failure_code is null and invalidated_at is null))`,
+    ),
+    check(
+      "notification_delivery_versioned_identity_check",
+      sql`(materialization_version is null and event_type is null and event_occurs_at is null and preference_revision is null) or (materialization_version = '1.0.0' and event_type is not null and event_occurs_at is not null and preference_revision is not null and jsonb_typeof(identity) = 'object' and identity ?& array['profileId','profileRevision','calculationRunId','preferenceId','preferenceRevision','preference','eventReference','eventType','eventOccursAt','scheduledAt','timeline'])`,
+    ),
   ],
 );
 

@@ -62,6 +62,26 @@ try {
      returning id`,
   );
   const legacyId = legacy.rows[0].id;
+  const legacyNotification = await pool.query(
+    `with preference as (
+       insert into notification_preference
+         (profile_id, channel, event_type, opted_in, timezone, frequency)
+       select p.id, 'legacy-channel', 'legacy-event', true, 'UTC', '{}'
+         from compatibility_report r
+         join birth_profile b on b.id=r.primary_birth_profile_id
+         join profile p on p.id=b.profile_id
+        where r.id=$1
+       returning id
+     )
+     insert into notification_delivery
+       (preference_id, event_reference, idempotency_key, status, scheduled_at)
+     select id, 'legacy-reference', 'legacy-idempotency', 'legacy-state',
+            '2026-08-14T12:00:00Z'
+       from preference
+     returning id, preference_id`,
+    [legacyId],
+  );
+  const legacyNotificationDeliveryId = legacyNotification.rows[0].id;
   await pool.query(
     `update compatibility_report
      set share_token_hash = $2, share_expires_at = '2099-01-01T00:00:00Z'
@@ -149,6 +169,29 @@ try {
     throw new Error(
       "Legacy subscription was not preserved as unverified state",
     );
+  const upgradedNotification = await pool.query(
+    `select d.materialization_version, d.event_type, d.event_occurs_at,
+            d.preference_revision, d.identity, d.attempt_count,
+            p.contract_version, p.revision, p.consent_state, p.lead_minutes
+       from notification_delivery d
+       join notification_preference p on p.id=d.preference_id
+      where d.id=$1`,
+    [legacyNotificationDeliveryId],
+  );
+  const notificationRow = upgradedNotification.rows[0];
+  if (
+    notificationRow?.materialization_version !== null ||
+    notificationRow.event_type !== null ||
+    notificationRow.event_occurs_at !== null ||
+    notificationRow.preference_revision !== null ||
+    JSON.stringify(notificationRow.identity) !== "{}" ||
+    notificationRow.attempt_count !== 0 ||
+    notificationRow.contract_version !== null ||
+    notificationRow.revision !== null ||
+    notificationRow.consent_state !== null ||
+    notificationRow.lead_minutes !== null
+  )
+    throw new Error("Legacy notification rows were not preserved safely");
 
   const overlap = await pool.query(
     `insert into compatibility_report
@@ -180,6 +223,33 @@ try {
     overlapSubscription.rows[0]?.last_provider_event_occurred_at !== null
   )
     throw new Error("Previous subscription writes are not overlap-safe");
+  const overlapNotification = await pool.query(
+    `with preference as (
+       insert into notification_preference
+         (profile_id, channel, event_type, opted_in, timezone, frequency)
+       select p.id, 'overlap-channel', 'overlap-event', false, 'UTC', '{}'
+         from compatibility_report r
+         join birth_profile b on b.id=r.primary_birth_profile_id
+         join profile p on p.id=b.profile_id
+        where r.id=$1
+       returning id, contract_version
+     ), delivery as (
+       insert into notification_delivery
+         (preference_id, event_reference, idempotency_key, status, scheduled_at)
+       select id, 'overlap-reference', 'overlap-idempotency', 'overlap-state',
+              '2026-08-15T12:00:00Z'
+         from preference
+       returning materialization_version
+     )
+     select preference.contract_version, delivery.materialization_version
+       from preference, delivery`,
+    [legacyId],
+  );
+  if (
+    overlapNotification.rows[0]?.contract_version !== null ||
+    overlapNotification.rows[0]?.materialization_version !== null
+  )
+    throw new Error("Previous notification writes are not overlap-safe");
 
   const bindingUpgrade = await pool.query(
     `select count(*)::text as count from billing_customer_binding`,
@@ -315,7 +385,7 @@ try {
     throw new Error("Narrow reader privileges are broader than intended");
 
   process.stdout.write(
-    "Compatibility/subscription/billing/auth/email upgrade: legacy rows, overlap writes, no fabricated state, and narrow roles passed\n",
+    "Compatibility/subscription/billing/auth/email/notification upgrade: legacy rows, overlap writes, no fabricated state, and narrow roles passed\n",
   );
 } finally {
   await pool.end();
