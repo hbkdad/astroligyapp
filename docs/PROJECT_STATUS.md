@@ -1,11 +1,11 @@
 # Project status
 
-Last updated: 2026-08-12
+Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 64 complete; the first public Better Auth HTTP surface is an explicit,
-privacy-projecting email/password allowlist rather than the package's broad router.
+Status: Goal 65 complete; accessible account entry, session presentation, and recovery
+pages now consume only the privacy-projecting Goal 64 email/password allowlist.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -21,7 +21,7 @@ one immutable timeline-fact aggregate. Paddle is selected only for verified
 subscription-event ingestion. Better Auth 1.6.27 is installed with four isolated auth
 tables, strict server configuration, database sessions, and execute-only account and
 contact lookups plus a hardened public email/password HTTP boundary. No live billing
-account, production data, managed database/auth infrastructure, account UI, AI, general notification, location-resolution,
+account, production data, managed database/auth infrastructure, protected account activation UI, AI, general notification, location-resolution,
 or deployment provider is selected. Authentication email has a provider decision, exact
 SDK/adapter, and injected feedback/suppression seam, but no account, DNS, credentials,
 AWS infrastructure, signature implementation, queue polling, or live delivery.
@@ -99,6 +99,15 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 65: add no-index sign-in, signup, verification guidance/resend,
+      forgot-password, reset-password, and session overview pages over the exact Goal 64
+      public projection, with semantic forms and password-manager autocomplete.
+- [x] Add session-aware shared navigation as presentation only; reject extra/malformed
+      public fields, clear passwords after attempts, preserve generic recovery copy, and
+      keep internal bootstrap/deletion/private data behind later server compositions.
+- [x] Remove reset credentials from the URL before interaction, keep them only in a
+      component-local reference for an unconfirmed retry, never render/store them, and
+      clear them after a confirmed terminal result.
 - [x] Goal 64: inventory exact Better Auth 1.6.27 routes and publish only reviewed email
       signup/signin, verification, password-reset, GET session, and sign-out operations.
       Current-password verification remains server-only; social/provider, account-linking,
@@ -565,23 +574,24 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 65 — implement the accessible account entry and recovery UI against the reviewed auth
-HTTP contract without live email, external resources, production changes, or deployment.
+Goal 66 — expose verified-session internal-account activation through one first-party
+server composition and integrate its fixed readiness states into the account page without
+making browser session presentation authoritative.
 
 Deliverables:
 
-1. Add focused sign-in, signup, verify-email guidance, forgot-password, and reset-password
-   states using semantic forms, password-manager-compatible autocomplete, safe generic copy,
-   and the exact Goal 64 response projection. Do not expose auth/internal IDs or retain tokens.
-2. Integrate session-aware navigation and signed-out/signed-in presentation without making
-   browser state authoritative. Keep account bootstrap/deletion and protected product data as
-   later server compositions rather than direct client mutations.
-3. Prove validation, loading/retry/rate-limit/recovery states, keyboard/focus, screen-reader
-   names/status, 200% text, mobile/desktop layout, reduced motion, no token leakage, and mocked
-   browser journeys while backend integration remains covered by disposable PostgreSQL.
-4. Apply `ui-quality` and `security-audit`, document remaining live-email/proxy/shared-limit/
-   recovery gates, set one next goal, and run every gate. Do not call SES, create credentials or
-   infrastructure, modify production data, purchase, or deploy.
+1. Add one Server Action or equivalent first-party server-only composition that derives the
+   request from trusted framework state and invokes the accepted Goal 62 bootstrap workflow.
+   Do not accept browser subject, account, email, owner, profile, entitlement, or redirect data.
+2. Integrate explicit activate/checking/ready/authenticate/retry/reconcile presentation into
+   `/account`. A projected browser session may guide copy but must never authorize activation
+   or protected data. Do not expose internal UUIDs, subjects, session IDs, or provider errors.
+3. Prove same-origin Server Action behavior, live-session freshness/verification, deleted-user
+   nonreactivation, concurrency/idempotency, fixed result projection, keyboard/status behavior,
+   mocked interaction, and the existing disposable PostgreSQL trust chain.
+4. Apply `security-audit` and `ui-quality`, update contracts/status, set one next goal, and run
+   every gate. Do not expose deletion yet, call SES/Paddle, create external resources or
+   credentials, modify production data, purchase, or deploy.
 
 ## Phase queue
 
@@ -631,7 +641,7 @@ Deliverables:
   while eventual production-host runtime and cache behavior remain release gates.
 - Managed database, payment-account, AI, monitoring, and deployment providers remain
   intentionally undecided. Amazon SES is selected only for authentication email.
-- Better Auth still requires account UI/browser E2E and production recovery testing. The
+- Better Auth still requires live configured browser E2E and production recovery testing. The
   current per-process memory limiter requires a shared production control, and ingress must
   prove trusted client-IP rewriting. The SES SNS signature authenticator and
   regional queue infrastructure remain external gates. MFA and passkeys remain
@@ -1231,6 +1241,42 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 65 account entry and recovery UI record
+
+- Surface: six no-index pages provide account overview, signin, signup, verification
+  guidance/resend, forgot-password, and reset-password states. Shared headers include a
+  session-aware account control while preserving existing demo/public navigation.
+- Client boundary: `auth-http-client.ts` calls only the Goal 64 same-origin operations with
+  cookie credentials, no-store, and redirect rejection. It requires exact status-code/JSON
+  projections and collapses malformed content, extra fields, network errors, or dependency
+  failure to `unavailable`; auth/internal/session/provider identifiers cannot pass.
+- Privacy and recovery: passwords remain uncontrolled form values and are cleared after
+  validation or every attempt. Generic signup/reset/verification copy does not confirm
+  account presence. Reset credentials are synchronously removed from the URL, held only in
+  a component reference, absent from DOM/storage, retained only for an unconfirmed
+  unavailable/rate-limited retry, and cleared after a confirmed terminal result.
+- Authorization: projected session state changes presentation only. The browser cannot call
+  internal bootstrap/deletion repositories, select identity, load protected data, or grant
+  entitlements. Every later private operation must independently verify session, owner, and
+  authorization at its server/data boundary.
+- Accessibility/UI: forms use labels, native constraints, correct autocomplete, pending
+  labels, polite success, focused assertive errors, 44px targets, visible focus, and a skip
+  link that focuses `main`. Playwright inspected 1280x900 desktop and 390x844 mobile; 390px
+  at 200% text had zero overflow, and reduced motion produced `scroll-behavior: auto`.
+  Foreground, muted, accent, mint, error, and success text have at least 7.91:1 contrast
+  against the dark raised surface.
+- Verification: 63 unit/contract files and 1101 tests pass, including JSDOM/user-event
+  account journeys. Drizzle check, cumulative migration upgrade, and all 58 disposable
+  PostgreSQL integration cases pass. Coverage passes at 92.11% statements, 90.88% branches,
+  98.71% functions, and 93.81% lines. The optimized build exposes six static pages and
+  retains the dynamic auth route. Local browser
+  storage stayed empty and the reset token was absent from URL/DOM; the only console error
+  was the expected fixed auth-session 503 with deliberately absent runtime credentials.
+- Security/UI audits: no critical/high issue remains. Remaining gates are live configured
+  email/browser recovery, trusted proxy and shared limiting, sensitive-URL log redaction,
+  production-like database roles/TLS, monitoring, and deployment. No SES/Paddle call,
+  external resource, credential, production mutation, purchase, or deployment occurred.
 
 ## Goal 64 minimal Better Auth public HTTP record
 

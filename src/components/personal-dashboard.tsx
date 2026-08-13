@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { HeaderUtilities } from "@/components/header-utilities";
 import type { DashboardState } from "@/presentation/dashboard-read-model";
 
 export function PersonalDashboard({ state }: { state: DashboardState }) {
@@ -32,7 +33,7 @@ export function PersonalDashboard({ state }: { state: DashboardState }) {
           <Link href="/chart">My chart</Link>
           <a href="#trace">Trace</a>
         </nav>
-        <span className="demo-badge">Local demo data</span>
+        <HeaderUtilities badge="Local demo data" />
       </header>
 
       <main id="dashboard-content" className="dashboard-shell" tabIndex={-1}>

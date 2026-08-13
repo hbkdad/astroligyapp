@@ -1,0 +1,353 @@
+// @vitest-environment jsdom
+
+import { cleanup, render, screen } from "@testing-library/react";
+import "@testing-library/jest-dom/vitest";
+import userEvent from "@testing-library/user-event";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+import {
+  AccountOverview,
+  ForgotPasswordForm,
+  ResetPasswordForm,
+  SignInForm,
+  SignUpForm,
+} from "@/components/account-experiences";
+import { AccountNavigation } from "@/components/account-navigation";
+import {
+  parseMutationResponse,
+  parseSessionResponse,
+} from "@/presentation/auth-http-client";
+
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+  window.history.replaceState({}, "", "/");
+  window.localStorage.clear();
+  window.sessionStorage.clear();
+});
+
+describe("account HTTP projection", () => {
+  it("accepts only exact Goal 64 public response shapes", async () => {
+    await expect(
+      parseSessionResponse(
+        json(200, {
+          status: "authenticated",
+          user: {
+            name: "Mira Chen",
+            email: "mira@example.test",
+            emailVerified: true,
+            id: "private-id",
+          },
+        }),
+      ),
+    ).resolves.toEqual({ status: "unavailable" });
+
+    await expect(
+      parseMutationResponse(json(200, { status: "authenticated" })),
+    ).resolves.toEqual({ status: "authenticated" });
+    await expect(
+      parseMutationResponse(json(200, { status: "rejected" })),
+    ).resolves.toEqual({ status: "unavailable" });
+  });
+});
+
+describe("account entry and recovery journeys", () => {
+  it("updates shared navigation from the projected session without using it as authorization", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async () =>
+        json(200, {
+          status: "authenticated",
+          user: {
+            name: "Mira Chen",
+            email: "mira@example.test",
+            emailVerified: true,
+          },
+        }),
+      ),
+    );
+    render(<AccountNavigation />);
+
+    expect(screen.getByRole("link", { name: "Account" })).toHaveAttribute(
+      "href",
+      "/account/sign-in",
+    );
+    expect(await screen.findByRole("link", { name: "Mira" })).toHaveAttribute(
+      "href",
+      "/account",
+    );
+  });
+
+  it("submits normalized sign-in fields, clears the password, and exposes no auth identifiers", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () =>
+      json(200, { status: "authenticated" }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    const { container } = render(<SignInForm />);
+
+    const email = screen.getByRole("textbox", { name: "Email" });
+    const password = screen.getByLabelText("Password");
+    expect(email).toHaveAttribute("autocomplete", "username");
+    expect(password).toHaveAttribute("autocomplete", "current-password");
+
+    await user.type(email, "MIRA@EXAMPLE.TEST");
+    await user.type(password, "Passphrase!2026");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Signed in. Continue to your account.",
+    );
+    expect(password).toHaveValue("");
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const [path, options] = fetchMock.mock.calls[0]!;
+    expect(path).toBe("/api/auth/sign-in/email");
+    expect(JSON.parse(String(options?.body))).toEqual({
+      email: "mira@example.test",
+      password: "Passphrase!2026",
+      callbackURL: "/account",
+      rememberMe: false,
+    });
+    expect(container.innerHTML).not.toMatch(/private-id|sessionToken|userId/u);
+    expect(window.localStorage).toHaveLength(0);
+    expect(window.sessionStorage).toHaveLength(0);
+  });
+
+  it("keeps signup rejection generic and uses password-manager-compatible fields", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () =>
+      json(400, { status: "rejected" }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<SignUpForm />);
+
+    expect(screen.getByLabelText("Name")).toHaveAttribute(
+      "autocomplete",
+      "name",
+    );
+    expect(screen.getByRole("textbox", { name: "Email" })).toHaveAttribute(
+      "autocomplete",
+      "email",
+    );
+    const password = screen.getByLabelText("Password");
+    const confirmation = screen.getByLabelText("Confirm password");
+    expect(password).toHaveAttribute("autocomplete", "new-password");
+    expect(confirmation).toHaveAttribute("autocomplete", "new-password");
+
+    await user.type(screen.getByLabelText("Name"), "Mira Chen");
+    await user.type(
+      screen.getByRole("textbox", { name: "Email" }),
+      "mira@example.test",
+    );
+    await user.type(password, "Passphrase!2026");
+    await user.type(confirmation, "Passphrase!2026");
+    await user.click(screen.getByRole("button", { name: "Create account" }));
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "If the request can be completed, check your email for the next step.",
+    );
+    expect(password).toHaveValue("");
+    expect(confirmation).toHaveValue("");
+  });
+
+  it("gives verification-required sign-in a safe recovery path", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async () =>
+        json(403, { status: "verification-required" }),
+      ),
+    );
+    const user = userEvent.setup();
+    render(<SignInForm />);
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Email" }),
+      "mira@example.test",
+    );
+    await user.type(screen.getByLabelText("Password"), "Passphrase!2026");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Email verification is required",
+    );
+    expect(
+      screen.getByRole("link", { name: "Need a verification email?" }),
+    ).toHaveAttribute("href", "/account/verify-email");
+  });
+
+  it("announces rate limiting, focuses the failure, and permits a later retry", async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(json(429, { status: "rate-limited" }))
+      .mockResolvedValueOnce(json(200, { status: "accepted" }));
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<ForgotPasswordForm />);
+
+    const email = screen.getByRole("textbox", { name: "Email" });
+    await user.clear(email);
+    await user.type(email, "mira@example.test");
+    expect(email).toHaveValue("mira@example.test");
+    await user.click(
+      screen.getByRole("button", { name: "Send reset instructions" }),
+    );
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Too many attempts");
+    expect(alert).toHaveFocus();
+
+    await user.clear(email);
+    await user.type(email, "mira@example.test");
+    await user.click(
+      screen.getByRole("button", { name: "Send reset instructions" }),
+    );
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "If an eligible account exists, reset instructions will be sent.",
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("scrubs the reset token from the URL and DOM, uses it once, then clears the form", async () => {
+    const resetToken = "AbCdEfGhIjKlMnOpQrStUvWx";
+    window.history.replaceState(
+      {},
+      "",
+      `/account/reset-password?token=${resetToken}`,
+    );
+    const fetchMock = vi.fn<typeof fetch>(async () =>
+      json(200, { status: "accepted" }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    const { container } = render(<ResetPasswordForm />);
+
+    const submit = await screen.findByRole("button", {
+      name: "Update password",
+    });
+    expect(window.location.search).toBe("");
+    expect(container.innerHTML).not.toContain(resetToken);
+    expect(container.querySelector('input[type="hidden"]')).toBeNull();
+
+    const password = screen.getByLabelText("New password");
+    const confirmation = screen.getByLabelText("Confirm new password");
+    await user.type(password, "Replacement!2026");
+    await user.type(confirmation, "Replacement!2026");
+    await user.click(submit);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Your password was updated.",
+    );
+    const [, options] = fetchMock.mock.calls[0]!;
+    expect(JSON.parse(String(options?.body))).toEqual({
+      newPassword: "Replacement!2026",
+      token: resetToken,
+    });
+    expect(container.innerHTML).not.toContain(resetToken);
+    expect(window.localStorage).toHaveLength(0);
+    expect(window.sessionStorage).toHaveLength(0);
+  });
+
+  it("keeps an unconfirmed reset credential only in memory for a retry", async () => {
+    window.history.replaceState(
+      {},
+      "",
+      "/account/reset-password?token=AbCdEfGhIjKlMnOpQrStUvWx",
+    );
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(json(503, { status: "unavailable" }))
+      .mockResolvedValueOnce(json(200, { status: "accepted" }));
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<ResetPasswordForm />);
+
+    await screen.findByRole("button", { name: "Update password" });
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      await user.type(
+        screen.getByLabelText("New password"),
+        "Replacement!2026",
+      );
+      await user.type(
+        screen.getByLabelText("Confirm new password"),
+        "Replacement!2026",
+      );
+      await user.click(screen.getByRole("button", { name: "Update password" }));
+      if (attempt === 0) {
+        expect(await screen.findByRole("alert")).toHaveTextContent(
+          "temporarily unavailable",
+        );
+      }
+    }
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Your password was updated.",
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("renders projected session details and signs out with an empty request body", async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        json(200, {
+          status: "authenticated",
+          user: {
+            name: "Mira Chen",
+            email: "mira@example.test",
+            emailVerified: true,
+          },
+        }),
+      )
+      .mockResolvedValueOnce(json(200, { status: "accepted" }));
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<AccountOverview />);
+
+    expect(
+      await screen.findByRole("heading", { name: "Welcome, Mira Chen" }),
+    ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+    expect(
+      await screen.findByRole("heading", { name: "Choose how to continue" }),
+    ).toBeVisible();
+    const [path, options] = fetchMock.mock.calls[1]!;
+    expect(path).toBe("/api/auth/sign-out");
+    expect(options?.body).toBeUndefined();
+    expect(
+      (options?.headers as Record<string, string>)["Content-Type"],
+    ).toBeUndefined();
+  });
+
+  it("shows session loading, then recovers from an unavailable check", async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockResolvedValueOnce(json(200, { status: "anonymous" }));
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    render(<AccountOverview />);
+
+    expect(screen.getByText("Checking your session…")).toHaveAttribute(
+      "aria-live",
+      "polite",
+    );
+    expect(
+      await screen.findByRole("heading", {
+        name: "Session status is temporarily unavailable",
+      }),
+    ).toBeVisible();
+    await user.click(
+      screen.getByRole("button", { name: "Retry session check" }),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Choose how to continue" }),
+    ).toBeVisible();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+function json(status: number, value: unknown): Response {
+  return new Response(JSON.stringify(value), {
+    status,
+    headers: { "Content-Type": "application/json; charset=utf-8" },
+  });
+}

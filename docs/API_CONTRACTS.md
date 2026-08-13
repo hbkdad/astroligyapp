@@ -443,3 +443,23 @@ server-only configuration. It performs no work during build and no network call 
 construction. Missing/malformed configuration or dependency failure becomes one fixed 503.
 No live email, external resource, credential, production mutation, or deployment is part of
 this contract checkpoint.
+
+## Account entry and recovery presentation
+
+The no-index `/account` route family is a browser presentation over the exact public Better
+Auth boundary above. `auth-http-client.ts` uses same-origin cookie credentials and accepts
+only exact projected results whose HTTP status agrees with the public state. It exposes no
+general Better Auth client and cannot call any rejected package path.
+
+The account navigation and overview may display anonymous/authenticated/unavailable state,
+projected name/email/verification status, and sign-out. This state is not an authorization
+decision. No internal account, subject, session ID/token, entitlement, provider, or private
+profile identifier enters the client contract. Protected Server Components, Server Actions,
+and repositories must perform their own live session and ownership checks.
+
+Signup/signin, verification resend, forgot-password, and reset-password forms send only the
+fixed Goal 64 fields and same-origin callback paths recorded in
+`ACCOUNT_ENTRY_RECOVERY_UI.md`. Passwords are never stored in component state or browser
+storage. The reset credential is transient, removed from the URL before interaction, sent
+once per explicit attempt, and cleared after a confirmed terminal result. Generic recovery
+copy preserves account anti-enumeration.

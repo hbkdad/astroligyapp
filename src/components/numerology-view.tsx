@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HeaderUtilities } from "@/components/header-utilities";
 import type { NumerologyViewState } from "@/presentation/numerology-read-model";
 
 export function NumerologyView({ state }: { state: NumerologyViewState }) {
@@ -27,7 +28,7 @@ export function NumerologyView({ state }: { state: NumerologyViewState }) {
           <Link href="/timeline">Timeline</Link>
           <a href="#numerology-trace">Trace</a>
         </nav>
-        <span className="demo-badge">Local deterministic demo</span>
+        <HeaderUtilities badge="Local deterministic demo" />
       </header>
       <main id="numerology-content" className="numerology-shell" tabIndex={-1}>
         <header className="numerology-intro">

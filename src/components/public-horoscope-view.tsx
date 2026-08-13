@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { HeaderUtilities } from "@/components/header-utilities";
 import type { PublicHoroscopeViewState } from "@/presentation/public-horoscope-read-model";
 
 export function PublicHoroscopeView({
@@ -36,11 +37,13 @@ export function PublicHoroscopeView({
           <a href="#daily-facts">Daily facts</a>
           <a href="#horoscope-trace">Trace</a>
         </nav>
-        <span className="demo-badge">
-          {deliveryMode === "current-preview"
-            ? "No-index current preview"
-            : "No-index local demo"}
-        </span>
+        <HeaderUtilities
+          badge={
+            deliveryMode === "current-preview"
+              ? "No-index current preview"
+              : "No-index local demo"
+          }
+        />
       </header>
 
       <main id="horoscope-content" className="horoscope-shell" tabIndex={-1}>

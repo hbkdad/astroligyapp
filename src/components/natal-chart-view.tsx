@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { HeaderUtilities } from "@/components/header-utilities";
 import type { NatalChartViewState } from "@/presentation/natal-chart-read-model";
 
 export function NatalChartView({ state }: { state: NatalChartViewState }) {
@@ -30,7 +31,7 @@ export function NatalChartView({ state }: { state: NatalChartViewState }) {
           <a href="#aspects">Aspects</a>
           <a href="#chart-trace">Trace</a>
         </nav>
-        <span className="demo-badge">Sourced demo chart</span>
+        <HeaderUtilities badge="Sourced demo chart" />
       </header>
 
       <main id="chart-content" className="chart-shell" tabIndex={-1}>

@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   },
   description:
     "A deterministic astrology, lunar, and numerology intelligence platform in development.",
+  referrer: "no-referrer",
 };
 
 export default function RootLayout({

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HeaderUtilities } from "@/components/header-utilities";
 import type { CompatibilityViewState } from "@/presentation/compatibility-read-model";
 
 export function CompatibilityView({
@@ -30,7 +31,7 @@ export function CompatibilityView({
           <a href="#comparison-factors">Factors</a>
           <a href="#compatibility-trace">Trace</a>
         </nav>
-        <span className="demo-badge">Private local demo</span>
+        <HeaderUtilities badge="Private local demo" />
       </header>
       <main
         id="compatibility-content"

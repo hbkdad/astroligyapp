@@ -421,6 +421,13 @@ tests/
   construction make no external call. The current memory limiter is a local safety seam,
   not proof of distributed production abuse control; ingress IP trust, shared limiting,
   sensitive-URL log redaction, browser E2E, and live recovery remain release gates.
+- Account entry UI: six no-index first-party pages call only the reviewed public auth
+  operations and parse exact privacy projections. The shared session display is advisory
+  presentation, never authorization. Passwords remain uncontrolled and are cleared after
+  attempts; reset credentials live only in a component reference and are removed from the
+  URL before interaction. Internal bootstrap, deletion, private reads, billing, and
+  entitlements remain separate server-authorized compositions. See
+  `ACCOUNT_ENTRY_RECOVERY_UI.md`.
 
 ## Data and cache principles
 
@@ -448,13 +455,16 @@ tests/
   access, infrastructure, DNS, credentials, retention operations, and adapter remain
   unprovisioned.
 - Coordinate and timezone resolution providers for user-entered locations.
-- Browser end-to-end runner and observability stack.
+- Production browser end-to-end runner and observability stack. Local critical journeys use
+  JSDOM interaction tests plus Playwright CLI inspection without adding a runtime dependency.
 
 ## Baseline decisions
 
 - Application: Next.js 16.3 App Router, React 19.2, strict TypeScript, and Tailwind CSS 4.
 - Runtime: Node.js, with a project minimum of 20.19 and Node 24 in CI.
-- Testing: Vitest for deterministic unit and contract tests; browser runner deferred until the first user workflow.
+- Testing: Vitest for deterministic unit/contract tests and JSDOM critical-workflow tests;
+  Playwright CLI is the local real-browser inspection path. A production CI browser runner
+  remains a release decision.
 - Quality: Prettier, ESLint with Next.js Core Web Vitals and TypeScript rules, strict `tsc`, production build, and GitHub Actions CI.
 - API style: Server Components for internal reads, Server Actions for first-party mutations, and Route Handlers for external/public HTTP contracts.
 - Deployment: platform-agnostic Node.js server contract; no hosting provider selected.
@@ -464,7 +474,8 @@ tests/
 - Authentication: exact Better Auth 1.6.27 installed for self-hosted database sessions
   in an isolated PostgreSQL schema. Protected work remains behind `SessionVerifier`;
   trusted billing email is read live only from the verified auth user row through
-  execute-only roles. Public routes/UI and transactional delivery remain unexposed.
+  execute-only roles. The minimal public route and account entry/recovery UI are exposed;
+  protected internal-account work remains unexposed.
   No managed auth infrastructure is selected. See ADR 0008.
 - Internal account bootstrap: a recent live Better Auth database session with current
   `emailVerified: true` is the only identity source. The orchestration invokes a dedicated

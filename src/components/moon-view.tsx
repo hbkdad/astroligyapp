@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { HeaderUtilities } from "@/components/header-utilities";
 import type { MoonViewState } from "@/presentation/moon-read-model";
 
 export function MoonView({ state }: { state: MoonViewState }) {
@@ -29,7 +30,7 @@ export function MoonView({ state }: { state: MoonViewState }) {
           <Link href="/timeline">Timeline</Link>
           <a href="#moon-trace">Trace</a>
         </nav>
-        <span className="demo-badge">Local calculated demo</span>
+        <HeaderUtilities badge="Local calculated demo" />
       </header>
       <main id="moon-content" className="moon-shell" tabIndex={-1}>
         <section

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { HeaderUtilities } from "@/components/header-utilities";
 import {
   type TimelineFilter,
   type TimelineState,
@@ -48,7 +49,7 @@ function ReadyTimeline({
           <a href="#event-table">Table</a>
           <a href="#timeline-trace">Trace</a>
         </nav>
-        <span className="demo-badge">Local calculated demo</span>
+        <HeaderUtilities badge="Local calculated demo" />
       </header>
 
       <main id="timeline-content" className="timeline-shell" tabIndex={-1}>
