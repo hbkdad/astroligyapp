@@ -4,7 +4,17 @@ import type { ReactNode } from "react";
 import { HeaderUtilities } from "@/components/header-utilities";
 import type { DashboardState } from "@/presentation/dashboard-read-model";
 
-export function PersonalDashboard({ state }: { state: DashboardState }) {
+export function PersonalDashboard({
+  state,
+  badge = "Local demo data",
+  chartHref = "/chart",
+  timelineHref = "/timeline",
+}: {
+  state: DashboardState;
+  badge?: string;
+  chartHref?: string;
+  timelineHref?: string;
+}) {
   if (state.status !== "ready") return <DashboardStatus state={state} />;
   const { model } = state;
   return (
@@ -29,11 +39,11 @@ export function PersonalDashboard({ state }: { state: DashboardState }) {
           <Link href="/numerology">Numerology</Link>
           <a href="#signals">Signals</a>
           <a href="#categories">Categories</a>
-          <Link href="/timeline">Timeline</Link>
-          <Link href="/chart">My chart</Link>
+          <Link href={timelineHref}>Timeline</Link>
+          <Link href={chartHref}>My chart</Link>
           <a href="#trace">Trace</a>
         </nav>
-        <HeaderUtilities badge="Local demo data" />
+        <HeaderUtilities badge={badge} />
       </header>
 
       <main id="dashboard-content" className="dashboard-shell" tabIndex={-1}>
@@ -116,7 +126,7 @@ export function PersonalDashboard({ state }: { state: DashboardState }) {
                 <p className="section-kicker">What comes next</p>
                 <h2 id="timeline-preview-heading">Timeline preview</h2>
               </div>
-              <Link href="/timeline">View full timeline</Link>
+              <Link href={timelineHref}>View full timeline</Link>
             </div>
             {model.nextEvent ? (
               <article className="next-event-card">

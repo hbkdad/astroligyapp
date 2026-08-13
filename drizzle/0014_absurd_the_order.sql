@@ -1,0 +1,2 @@
+ALTER TABLE "birth_profile" ADD COLUMN "birth_name" text;--> statement-breakpoint
+ALTER TABLE "birth_profile" ADD CONSTRAINT "birth_profile_birth_name_length_check" CHECK (birth_name is null or char_length(birth_name) between 1 and 160);

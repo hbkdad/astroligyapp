@@ -15,6 +15,7 @@ const BIRTH = "22222222-2222-4222-8222-222222222222";
 function write(overrides: Record<string, unknown> = {}) {
   return {
     displayName: "  José   Chen  ",
+    birthName: "  José   Antonio   Chen  ",
     currentTimezone: "America/Toronto",
     birthDate: "1990-02-28",
     birthTimePrecision: "exact",
@@ -32,6 +33,7 @@ describe("private profile contracts", () => {
     expect(value).toEqual({
       ...write(),
       displayName: "José Chen",
+      birthName: "José Antonio Chen",
     });
     expect(Object.isFrozen(value)).toBe(true);
   });
@@ -56,6 +58,8 @@ describe("private profile contracts", () => {
   it.each([
     { displayName: "\u0000hidden" },
     { displayName: "x".repeat(81) },
+    { birthName: "x".repeat(161) },
+    { birthName: "Mira\u0000 Chen" },
     { currentTimezone: "Mars/Olympus" },
     { birthTimezone: "America/Toronto\nleak" },
     { birthDate: "2026-02-30" },
@@ -75,14 +79,14 @@ describe("private profile contracts", () => {
   it("validates exact create, update, and delete commands", () => {
     expect(
       validatePrivateProfileCommand(
-        { version: "1.0.0", operation: "create", value: write() },
+        { version: "1.1.0", operation: "create", value: write() },
         NOW,
       ),
     ).toMatchObject({ operation: "create" });
     expect(
       validatePrivateProfileCommand(
         {
-          version: "1.0.0",
+          version: "1.1.0",
           operation: "update",
           profileId: PROFILE,
           birthProfileId: BIRTH,
@@ -95,7 +99,7 @@ describe("private profile contracts", () => {
     expect(
       validatePrivateProfileCommand(
         {
-          version: "1.0.0",
+          version: "1.1.0",
           operation: "delete",
           profileId: PROFILE,
           birthProfileId: BIRTH,
@@ -109,20 +113,20 @@ describe("private profile contracts", () => {
   it.each([
     { version: "2.0.0", operation: "create", value: write() },
     {
-      version: "1.0.0",
+      version: "1.1.0",
       operation: "delete",
       profileId: PROFILE,
       birthProfileId: BIRTH,
       revision: 0,
     },
     {
-      version: "1.0.0",
+      version: "1.1.0",
       operation: "delete",
       profileId: "attacker",
       birthProfileId: BIRTH,
       revision: 1,
     },
-    { version: "1.0.0", operation: "create", value: write(), ownerId: PROFILE },
+    { version: "1.1.0", operation: "create", value: write(), ownerId: PROFILE },
   ])("rejects malformed or hostile command %#", (command) => {
     expect(validatePrivateProfileCommand(command, NOW)).toBeNull();
   });
@@ -134,7 +138,10 @@ describe("private profile contracts", () => {
       revision: 1,
       ...write({ displayName: "Mira" }),
     };
-    expect(validatePrivateProfileView(view)).toEqual(view);
+    expect(validatePrivateProfileView(view)).toEqual({
+      ...view,
+      birthName: "José Antonio Chen",
+    });
     expect(
       validatePrivateProfileView({ ...view, subject: "private" }),
     ).toBeNull();

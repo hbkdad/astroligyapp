@@ -95,6 +95,7 @@ function commandFromForm(formData: FormData): PrivateProfileCommand {
       "version",
       "operation",
       "displayName",
+      "birthName",
       "currentTimezone",
       "birthDate",
       "birthTimePrecision",
@@ -117,6 +118,7 @@ function commandFromForm(formData: FormData): PrivateProfileCommand {
       "birthProfileId",
       "revision",
       "displayName",
+      "birthName",
       "currentTimezone",
       "birthDate",
       "birthTimePrecision",
@@ -165,6 +167,7 @@ function write(object: Record<string, string>) {
   const precision = object.birthTimePrecision;
   return Object.freeze({
     displayName: object.displayName!,
+    birthName: object.birthName === "" ? null : object.birthName!,
     currentTimezone: object.currentTimezone!,
     birthDate: object.birthDate!,
     birthTimePrecision: precision as "date-only" | "approximate" | "exact",

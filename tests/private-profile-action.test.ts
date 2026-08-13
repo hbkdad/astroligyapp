@@ -18,9 +18,10 @@ const ORIGIN = "https://app.example.test";
 function createForm() {
   const data = new FormData();
   const entries: Array<[string, string]> = [
-    ["version", "1.0.0"],
+    ["version", "1.1.0"],
     ["operation", "create"],
     ["displayName", "Mira"],
+    ["birthName", "Mira Sol Chen"],
     ["currentTimezone", "America/Toronto"],
     ["birthDate", "1990-01-01"],
     ["birthTimePrecision", "exact"],
@@ -37,7 +38,7 @@ function fixture() {
   const loadPrivateProfiles = vi.fn<
     (request: Request) => Promise<PrivateProfileReadResult>
   >(async () => ({
-    version: "1.0.0",
+    version: "1.1.0",
     disposition: "ready",
     profiles: [],
     multipleProfilesAllowed: false,
@@ -47,7 +48,7 @@ function fixture() {
       request: Request,
       command: PrivateProfileCommand,
     ) => Promise<PrivateProfileMutationResult>
-  >(async () => ({ version: "1.0.0", disposition: "saved" }));
+  >(async () => ({ version: "1.1.0", disposition: "saved" }));
   const service: PrivateProfileService = {
     canonicalOrigin: ORIGIN,
     loadPrivateProfiles,
@@ -97,10 +98,11 @@ describe("private profile Server Action adapter", () => {
       ["cookie", "session=opaque"],
     ]);
     expect(command).toEqual({
-      version: "1.0.0",
+      version: "1.1.0",
       operation: "create",
       value: {
         displayName: "Mira",
+        birthName: "Mira Sol Chen",
         currentTimezone: "America/Toronto",
         birthDate: "1990-01-01",
         birthTimePrecision: "exact",
@@ -116,12 +118,13 @@ describe("private profile Server Action adapter", () => {
   it("accepts exact update and explicit delete forms", async () => {
     const orderedUpdate = new FormData();
     const updateEntries: Array<[string, string]> = [
-      ["version", "1.0.0"],
+      ["version", "1.1.0"],
       ["operation", "update"],
       ["profileId", "11111111-1111-4111-8111-111111111111"],
       ["birthProfileId", "22222222-2222-4222-8222-222222222222"],
       ["revision", "2"],
       ["displayName", "Mira"],
+      ["birthName", ""],
       ["currentTimezone", "America/Toronto"],
       ["birthDate", "1990-01-01"],
       ["birthTimePrecision", "date-only"],
@@ -147,7 +150,7 @@ describe("private profile Server Action adapter", () => {
 
     const deletion = new FormData();
     const deleteEntries: Array<[string, string]> = [
-      ["version", "1.0.0"],
+      ["version", "1.1.0"],
       ["operation", "delete"],
       ["profileId", "11111111-1111-4111-8111-111111111111"],
       ["birthProfileId", "22222222-2222-4222-8222-222222222222"],
@@ -193,7 +196,7 @@ describe("private profile Server Action adapter", () => {
   it("collapses malformed results, unsafe origin, and dependency failure", async () => {
     const malformed = fixture();
     malformed.mutatePrivateProfile.mockResolvedValueOnce({
-      version: "1.0.0",
+      version: "1.1.0",
       disposition: "saved",
       ownerId: "private",
     } as never);

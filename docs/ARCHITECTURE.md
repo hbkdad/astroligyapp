@@ -537,3 +537,19 @@ Protected natal generation builds on the private-profile boundary as documented 
 accepted natal engine is invoked; ambiguous/nonexistent times are explicit terminal readiness
 states. Complete chart facts and provenance are written atomically behind owner RLS and a
 server-side `natal_chart` entitlement check.
+
+## Protected personalized Today boundary
+
+Dynamic `/account/today` selection posts only an opaque profile/birth-profile pair and current
+revision. The server repeats verified-session resolution, forced-RLS ownership, chart-revision,
+and centralized `personalized_daily_reading` plus `personal_transits` checks. It then derives a
+current transit snapshot, Moon facts, all nine Pythagorean results for the natal timezone's
+trusted local date, interpretations, configured heuristic scores, and a minimal dashboard read
+model. Browser fields never supply birth data, timezone, plan, provider, or calculated facts.
+
+The first implementation calculates on demand. It intentionally does not persist a nominal
+daily snapshot because current sky geometry changes continuously and no historical-reading
+product contract yet justifies that private derived record. The fixed-clock composition remains
+reproducible from the saved natal provenance and version trace; future caching must introduce an
+explicit time bucket and complete cache identity before changing this rule. See
+`docs/PERSONAL_TODAY_BOUNDARY.md`.

@@ -8,6 +8,7 @@ import { betterAuthSchema } from "@/db/auth-schema";
 import { LocalAccountDeletionRepository } from "@/infrastructure/auth/account";
 import { PrivateProfileRepository } from "@/infrastructure/persistence/private-profile-repository";
 import { ProtectedNatalChartRepository } from "@/infrastructure/persistence/protected-natal-chart-repository";
+import { PersonalTodayRepository } from "@/infrastructure/persistence/personal-today-repository";
 import {
   BetterAuthAccountBootstrapper,
   BetterAuthActiveBillingAccountResolver,
@@ -33,6 +34,11 @@ import {
   type ProtectedNatalReadResult,
 } from "@/server/authenticated-protected-natal-chart";
 import type { ProtectedNatalChartCommand } from "@/server/protected-natal-chart-contracts";
+import {
+  loadPersonalTodayForRequest,
+  type PersonalTodayResponse,
+} from "@/server/authenticated-personal-today";
+import type { PersonalTodayCommand } from "@/server/personal-today-contracts";
 import {
   bootstrapAccountForRequest,
   type AuthenticatedAccountBootstrapResult,
@@ -94,6 +100,10 @@ export interface ProductionBetterAuthHttpService extends BetterAuthHttpService {
     command: ProtectedNatalChartCommand,
   ): Promise<ProtectedNatalMutationResult>;
   loadProtectedNatalCharts(request: Request): Promise<ProtectedNatalReadResult>;
+  loadPersonalToday(
+    request: Request,
+    command: PersonalTodayCommand,
+  ): Promise<PersonalTodayResponse>;
   close(): Promise<void>;
 }
 
@@ -197,6 +207,11 @@ export function createBetterAuthHttpService(
       accountResolver: new BetterAuthActiveBillingAccountResolver(accountPool),
       charts: new ProtectedNatalChartRepository(accountPool),
     });
+    const personalTodayDependencies = Object.freeze({
+      sessionVerifier: new BetterAuthVerifiedSessionVerifier(auth.api),
+      accountResolver: new BetterAuthActiveBillingAccountResolver(accountPool),
+      today: new PersonalTodayRepository(accountPool),
+    });
     let closed = false;
     return Object.freeze({
       canonicalOrigin: configuration.auth.baseUrl,
@@ -253,6 +268,15 @@ export function createBetterAuthHttpService(
         return loadProtectedNatalChartsForRequest(
           request,
           protectedNatalDependencies,
+        );
+      },
+      async loadPersonalToday(request: Request, command: PersonalTodayCommand) {
+        if (closed)
+          throw new Error("Authentication HTTP service is unavailable");
+        return loadPersonalTodayForRequest(
+          request,
+          command,
+          personalTodayDependencies,
         );
       },
       async close() {

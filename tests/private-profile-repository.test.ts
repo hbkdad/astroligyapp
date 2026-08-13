@@ -38,10 +38,11 @@ describe("private profile repository transactions", () => {
 
     await expect(
       repository.mutate(OWNER, {
-        version: "1.0.0",
+        version: "1.1.0",
         operation: "create",
         value: {
           displayName: "Rollback fixture",
+          birthName: null,
           currentTimezone: "America/Toronto",
           birthDate: "1990-01-01",
           birthTimePrecision: "date-only",

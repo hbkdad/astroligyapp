@@ -60,6 +60,13 @@ import {
   ProtectedNatalConflictError,
   ProtectedNatalLockedError,
 } from "@/infrastructure/persistence/protected-natal-chart-repository";
+import {
+  PersonalTodayAuthorizationError,
+  PersonalTodayConflictError,
+  PersonalTodayLockedError,
+  PersonalTodayRepository,
+  PersonalTodayUnavailableError,
+} from "@/infrastructure/persistence/personal-today-repository";
 import { DEMO_COMPATIBILITY_REPORT } from "@/presentation/compatibility-demo";
 import {
   SUBSCRIPTION_TRANSITION_EVENT_VERSION,
@@ -2925,10 +2932,11 @@ describe("protected private profile lifecycle", () => {
 
   function createCommand(displayName: string) {
     return {
-      version: "1.0.0",
+      version: "1.1.0",
       operation: "create",
       value: {
         displayName,
+        birthName: "Mira Sol Chen",
         currentTimezone: "America/Toronto",
         birthDate: "1990-01-01",
         birthTimePrecision: "exact",
@@ -2943,9 +2951,10 @@ describe("protected private profile lifecycle", () => {
   function createForm(displayName: string) {
     const data = new FormData();
     const entries: Array<[string, string]> = [
-      ["version", "1.0.0"],
+      ["version", "1.1.0"],
       ["operation", "create"],
       ["displayName", displayName],
+      ["birthName", "Mira Sol Chen"],
       ["currentTimezone", "America/Toronto"],
       ["birthDate", "1990-01-01"],
       ["birthTimePrecision", "exact"],
@@ -2999,6 +3008,7 @@ describe("protected private profile lifecycle", () => {
       expect(listed.profiles).toHaveLength(1);
       expect(listed.profiles[0]).toMatchObject({
         displayName: "Action profile",
+        birthName: "Mira Sol Chen",
         birthTimePrecision: "exact",
         latitude: 48.4758,
         longitude: -81.3305,
@@ -3028,7 +3038,7 @@ describe("protected private profile lifecycle", () => {
       const profile = listed.profiles[0]!;
       await expect(
         repository.mutate(other, {
-          version: "1.0.0",
+          version: "1.1.0",
           operation: "update",
           profileId: profile.profileId,
           birthProfileId: profile.birthProfileId,
@@ -3073,7 +3083,7 @@ describe("protected private profile lifecycle", () => {
       expect(listed.profiles).toHaveLength(2);
       const profile = listed.profiles[0]!;
       const updated = {
-        version: "1.0.0",
+        version: "1.1.0",
         operation: "update",
         profileId: profile.profileId,
         birthProfileId: profile.birthProfileId,
@@ -3096,7 +3106,7 @@ describe("protected private profile lifecycle", () => {
       });
       await expect(
         repository.mutate(owner, {
-          version: "1.0.0",
+          version: "1.1.0",
           operation: "delete",
           profileId: current.profileId,
           birthProfileId: current.birthProfileId,
@@ -3126,11 +3136,13 @@ describe("protected private profile lifecycle", () => {
           where conname in (
             'profile_revision_check',
             'profile_current_coordinates_pair_check',
+            'birth_profile_birth_name_length_check',
             'birth_profile_time_consistency_check',
             'birth_profile_coordinate_source_check'
           ) order by conname`,
       );
       expect(constraints.rows.map((row) => row.name)).toEqual([
+        "birth_profile_birth_name_length_check",
         "birth_profile_coordinate_source_check",
         "birth_profile_time_consistency_check",
         "profile_current_coordinates_pair_check",
@@ -3158,10 +3170,11 @@ describe("protected natal chart persistence", () => {
 
   async function readyProfile(owner: AccountId, label: string) {
     await profiles.mutate(owner, {
-      version: "1.0.0",
+      version: "1.1.0",
       operation: "create",
       value: {
         displayName: label,
+        birthName: "Mira Sol Chen",
         currentTimezone: "America/Toronto",
         birthDate: "1990-01-01",
         birthTimePrecision: "exact",
@@ -3287,13 +3300,14 @@ describe("protected natal chart persistence", () => {
         },
       });
       await profiles.mutate(owner, {
-        version: "1.0.0",
+        version: "1.1.0",
         operation: "update",
         profileId: profile.profileId,
         birthProfileId: profile.birthProfileId,
         revision: profile.revision,
         value: {
           displayName: "Edited after chart",
+          birthName: "Mira Sol Chen",
           currentTimezone: "America/Toronto",
           birthDate: "1990-01-01",
           birthTimePrecision: "exact",
@@ -3316,13 +3330,14 @@ describe("protected natal chart persistence", () => {
       const profile = await readyProfile(owner, "Rollback chart");
       await grant(owner);
       await profiles.mutate(owner, {
-        version: "1.0.0",
+        version: "1.1.0",
         operation: "update",
         profileId: profile.profileId,
         birthProfileId: profile.birthProfileId,
         revision: profile.revision,
         value: {
           displayName: "Changed",
+          birthName: "Mira Sol Chen",
           currentTimezone: "America/Toronto",
           birthDate: "1990-01-01",
           birthTimePrecision: "exact",
@@ -3364,6 +3379,214 @@ describe("protected natal chart persistence", () => {
         where rc.constraint_name='birth_chart_calculation_run_id_calculation_run_id_fk'`,
     );
     expect(deletion.rows[0]!.delete_rule).toBe("CASCADE");
+  });
+});
+
+describe("protected personalized Today composition", () => {
+  let now = new Date("2026-08-14T03:59:00.000Z");
+  const profiles = new PrivateProfileRepository(pool, () => now);
+  const charts = new ProtectedNatalChartRepository(pool, () => now);
+  const today = new PersonalTodayRepository(pool, () => now);
+
+  async function account(subject: string) {
+    return bootstrapAccount(pool, activeSession(subject));
+  }
+
+  async function createProfile(
+    owner: AccountId,
+    birthName: string | null = "Mira Sol Chen",
+  ) {
+    await profiles.mutate(owner, {
+      version: "1.1.0",
+      operation: "create",
+      value: {
+        displayName: "Today profile",
+        birthName,
+        currentTimezone: "America/Toronto",
+        birthDate: "1990-01-01",
+        birthTimePrecision: "exact",
+        birthTimeLocal: "13:45",
+        birthTimezone: "America/Toronto",
+        latitude: 48.4758,
+        longitude: -81.3305,
+      },
+    });
+    return (await profiles.list(owner)).profiles[0]!;
+  }
+
+  async function grant(owner: AccountId) {
+    await pool.query(
+      `insert into subscription
+         (user_account_id, plan_key, status, external_provider,
+          external_customer_reference, external_subscription_reference,
+          period_starts_at, period_ends_at, transition_state_version,
+          last_provider_event_id, last_provider_event_occurred_at)
+       values ($1, 'personal', 'active', 'today_test', $2, $3,
+               '2026-01-01T00:00:00.000Z', '2027-01-01T00:00:00.000Z',
+               '1.0.0', $4, '2026-01-01T00:01:00.000Z')`,
+      [
+        owner,
+        `customer-${randomUUID()}`,
+        `subscription-${randomUUID()}`,
+        `event-${randomUUID()}`,
+      ],
+    );
+  }
+
+  function command(profile: Awaited<ReturnType<typeof createProfile>>) {
+    return {
+      version: "1.0.0",
+      profileId: profile.profileId,
+      birthProfileId: profile.birthProfileId,
+      revision: profile.revision,
+    } as const;
+  }
+
+  it("reauthorizes ownership and both entitlements before current calculation", async () => {
+    const owner = await account(`today-owner-${randomUUID()}`);
+    const other = await account(`today-other-${randomUUID()}`);
+    try {
+      const profile = await createProfile(owner);
+      await expect(today.load(owner, command(profile))).rejects.toBeInstanceOf(
+        PersonalTodayLockedError,
+      );
+      await grant(owner);
+      await expect(today.load(other, command(profile))).rejects.toBeInstanceOf(
+        PersonalTodayAuthorizationError,
+      );
+    } finally {
+      await pool.query("delete from user_account where id in ($1,$2)", [
+        owner,
+        other,
+      ]);
+    }
+  });
+
+  it("composes idempotently across local midnight and a DST transition", async () => {
+    const owner = await account(`today-ready-${randomUUID()}`);
+    try {
+      const profile = await createProfile(owner);
+      await grant(owner);
+      await charts.generate(owner, command(profile));
+      const before = await today.load(owner, command(profile));
+      const duplicate = await today.load(owner, command(profile));
+      expect(before).toEqual(duplicate);
+      expect(before).toMatchObject({
+        outcome: "ready",
+        model: { timezoneLabel: "America/Toronto" },
+      });
+      if (before.outcome !== "ready") throw new Error("ready fixture failed");
+      expect(before.model.dateLabel).toContain("August 13, 2026");
+
+      now = new Date("2026-08-14T04:01:00.000Z");
+      const after = await today.load(owner, command(profile));
+      expect(after).toMatchObject({ outcome: "ready" });
+      if (after.outcome !== "ready") throw new Error("ready fixture failed");
+      expect(after.model.dateLabel).toContain("August 14, 2026");
+      expect(
+        after.model.numerology.find((item) => item.key === "personal-day"),
+      ).not.toEqual(
+        before.model.numerology.find((item) => item.key === "personal-day"),
+      );
+
+      now = new Date("2026-03-08T06:59:00.000Z");
+      const beforeDst = await today.load(owner, command(profile));
+      now = new Date("2026-03-08T07:01:00.000Z");
+      const afterDst = await today.load(owner, command(profile));
+      expect(beforeDst).toMatchObject({
+        outcome: "ready",
+        model: { dateLabel: expect.stringContaining("March 8, 2026") },
+      });
+      expect(afterDst).toMatchObject({
+        outcome: "ready",
+        model: { dateLabel: expect.stringContaining("March 8, 2026") },
+      });
+      if (beforeDst.outcome !== "ready" || afterDst.outcome !== "ready")
+        throw new Error("DST fixture failed");
+      expect(
+        beforeDst.model.numerology.find((item) => item.key === "personal-day"),
+      ).toEqual(
+        afterDst.model.numerology.find((item) => item.key === "personal-day"),
+      );
+    } finally {
+      await pool.query("delete from user_account where id=$1", [owner]);
+      now = new Date("2026-08-14T03:59:00.000Z");
+    }
+  });
+
+  it("distinguishes incomplete, stale, and revision-conflict states", async () => {
+    const incompleteOwner = await account(`today-incomplete-${randomUUID()}`);
+    const staleOwner = await account(`today-stale-${randomUUID()}`);
+    try {
+      const incomplete = await createProfile(incompleteOwner, null);
+      await grant(incompleteOwner);
+      await charts.generate(incompleteOwner, command(incomplete));
+      await expect(
+        today.load(incompleteOwner, command(incomplete)),
+      ).resolves.toEqual({
+        outcome: "incomplete",
+        reason: "birth-name",
+      });
+
+      const original = await createProfile(staleOwner);
+      await grant(staleOwner);
+      await charts.generate(staleOwner, command(original));
+      await profiles.mutate(staleOwner, {
+        version: "1.1.0",
+        operation: "update",
+        profileId: original.profileId,
+        birthProfileId: original.birthProfileId,
+        revision: original.revision,
+        value: {
+          displayName: "Today profile updated",
+          birthName: "Mira Sol Chen",
+          currentTimezone: "America/Toronto",
+          birthDate: "1990-01-01",
+          birthTimePrecision: "exact",
+          birthTimeLocal: "13:45",
+          birthTimezone: "America/Toronto",
+          latitude: 48.4758,
+          longitude: -81.3305,
+        },
+      });
+      await expect(
+        today.load(staleOwner, command(original)),
+      ).rejects.toBeInstanceOf(PersonalTodayConflictError);
+      const current = (await profiles.list(staleOwner)).profiles[0]!;
+      await expect(today.load(staleOwner, command(current))).resolves.toEqual({
+        outcome: "stale",
+        reason: "natal-chart",
+      });
+    } finally {
+      await pool.query("delete from user_account where id in ($1,$2)", [
+        incompleteOwner,
+        staleOwner,
+      ]);
+    }
+  });
+
+  it("returns unavailable without partial facts when the current provider fails", async () => {
+    const owner = await account(`today-provider-${randomUUID()}`);
+    try {
+      const profile = await createProfile(owner);
+      await grant(owner);
+      await charts.generate(owner, command(profile));
+      const unavailable = new PersonalTodayRepository(pool, () => now, {
+        calculate: vi.fn().mockResolvedValue({
+          ok: false,
+          error: {
+            code: "data-unavailable",
+            message: "fixture provider failure",
+            retryable: true,
+          },
+        }),
+      });
+      await expect(
+        unavailable.load(owner, command(profile)),
+      ).rejects.toBeInstanceOf(PersonalTodayUnavailableError);
+    } finally {
+      await pool.query("delete from user_account where id=$1", [owner]);
+    }
   });
 });
 

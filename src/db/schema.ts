@@ -764,6 +764,7 @@ export const birthProfile = pgTable(
     id: uuid().defaultRandom().primaryKey().notNull(),
     profileId: uuid("profile_id").notNull(),
     birthDate: date("birth_date").notNull(),
+    birthName: text("birth_name"),
     birthTimeLocal: text("birth_time_local"),
     timezone: text().notNull(),
     timezoneResolution: jsonb("timezone_resolution").default({}).notNull(),
@@ -811,6 +812,10 @@ export const birthProfile = pgTable(
     check(
       "birth_profile_timezone_length_check",
       sql`char_length(timezone) between 1 and 128`,
+    ),
+    check(
+      "birth_profile_birth_name_length_check",
+      sql`birth_name is null or char_length(birth_name) between 1 and 160`,
     ),
     check(
       "birth_profile_time_precision_check",

@@ -4,8 +4,8 @@ Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 69 complete; saved private profiles now generate and read deterministic natal
-charts through explicit civil-time resolution, server-owned entitlement, and atomic provenance.
+Status: Goal 70 complete; saved private charts now compose a protected personalized Today
+dashboard from one trusted instant, validated current sky facts, and private numerology input.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -99,6 +99,18 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 70: add an exact opaque saved-profile Today command, repeated session/owner/RLS/
+      revision checks, and centralized `personalized_daily_reading` plus `personal_transits`
+      entitlement before any current calculation.
+- [x] Extend private profiles with an explicit optional normalized full birth name through
+      contract 1.1.0 and additive migration `0014_absurd_the_order`; never substitute display
+      name, and keep legacy rows valid with an explicit incomplete state.
+- [x] Compose the stored natal aggregate, validated topocentric transit snapshot, same-snapshot
+      lunar facts, all nine Pythagorean results for the trusted natal-local day, deterministic
+      interpretation/category boundaries, and minimal dashboard projection on demand.
+- [x] Add dynamic no-index `/account/today`, exact POST-only profile selection, private ready
+      labeling, fixed authenticate/empty/locked/incomplete/stale/conflict/unavailable states,
+      and desktop/mobile accessible presentation without private identifiers in URLs.
 - [x] Goal 69: add versioned opaque-resource chart commands and strict minimal read projections;
       load all birth, owner, entitlement, provider, and configuration input server-side.
 - [x] Resolve IANA civil minutes into explicit unique, ambiguous, or nonexistent outcomes and
@@ -607,25 +619,25 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 70 — compose a protected personalized Today dashboard from one saved chart and validated
-current astronomical facts without trusting private context or entitlement from the browser.
+Goal 71 — calculate and present a protected bounded upcoming personal timeline from one saved
+chart, making the empty Goal 70 preview useful before notification delivery is introduced.
 
 Deliverables:
 
-1. Define a strict private dashboard selection/read contract using only an opaque saved-profile
-   reference; resolve the current owner, chart, timezone, and entitlement server-side and keep
-   all private input and calculation identifiers out of URLs, analytics, logs, and client state.
-2. Compose the existing validated natal, transit, lunar, numerology-cycle, category, and
-   interpretation boundaries into a reproducible Today aggregate. Use a trusted clock and
-   explicit timezone/date boundaries; do not allow AI to calculate or alter facts.
-3. Persist or cache only where historical reproducibility or bounded performance justifies it,
-   with complete source/version identity and centralized `personalized_daily_reading`/
-   `personal_transits` entitlement. Add useful loading, locked, incomplete, unavailable, stale,
-   empty, and ready private UI states with text equivalents and restrained motion.
-4. Prove midnight/DST boundaries, two owners, stale/missing charts, entitlement denial,
-   provider failure, idempotency, exact projections, deterministic fixtures, and mobile/desktop/
-   keyboard/reduced-motion behavior. Apply astro, lunar, database, security, and UI skills; run
-   all gates without external calls, production mutation, credentials, purchases, or deployment.
+1. Define strict POST-only opaque-profile and bounded UTC-interval contracts. Resolve owner,
+   chart, natal timezone, current plan, search limits, and calculation versions server-side;
+   require `forecast` for the baseline and `full_transit_calendar` only for advanced scope.
+2. Compose the existing transit-window, lunar-event, station-event, civil-time, numerology-cycle,
+   timeline-fact, interpretation, and read-model boundaries into a deterministic upcoming
+   personal timeline. Search each provider observation once where practical and expose explicit
+   truncation/unavailable outcomes instead of partial or fabricated events.
+3. Add the protected timeline route and feed its nearest validated items into Goal 70 without
+   putting private identifiers in URLs, analytics, routine logs, or public cache keys. Persist or
+   cache only after defining a complete interval/profile/provider/config identity and invalidation.
+4. Prove DST-local boundaries, window edges, deduplication/order, two owners, stale/missing
+   charts, plan limits, provider failures, concurrency/idempotency, exact projections, and
+   mobile/desktop/keyboard/reduced-motion behavior. Apply astro, lunar, numerology, database,
+   security, and UI skills; use no production credentials, purchases, external mutation, or deploy.
 
 ## Phase queue
 
@@ -1279,6 +1291,46 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 70 protected personalized Today record
+
+- Contract and privacy: contract 1.0.0 accepts only an opaque profile ID, birth-profile ID,
+  and positive revision in one ordered POST. The adapter forwards only a bounded session cookie;
+  no owner, birth data, timezone, plan, provider, score, interpretation, or calculation ID is
+  accepted from the browser or placed in a URL, trace, analytics event, or routine log.
+- Authorization: the live verified session is resolved to the opaque internal account before an
+  identity-scoped `app_user` transaction re-reads the owned profile and latest completed natal
+  chart. The repository checks current revision, natal provenance revision, and both
+  `personalized_daily_reading` and `personal_transits` through the central entitlement policy.
+- Private dependency: private-profile contract 1.1.0 and migration
+  `0014_absurd_the_order.sql` add a nullable normalized full birth name with a 1-160 character
+  check. Existing rows remain valid; missing or unsupported birth names produce incomplete, and
+  display name is never treated as a calculation input.
+- Composition: one trusted UTC instant drives Astronomy Engine 2.1.19 topocentric transits and
+  the natal-timezone local date. Moon facts derive from the same transit snapshot. Pythagorean
+  1.0.0 produces all nine required numbers, then the existing context, interpretation,
+  configured heuristic score, daily-reading, timeline, and dashboard projections run without AI.
+- Storage decision: current sky geometry is calculated on demand. No daily row/cache was added
+  because a nominal day does not identify continuously changing facts and no historical-reading
+  requirement yet justifies a time-bucket/invalidation contract. The saved natal provenance and
+  fixed-clock/version trace retain reproducibility.
+- UI: dynamic no-index `/account/today` provides authenticate, retry, empty, pending, locked,
+  incomplete, stale, conflict, unavailable, and ready states. The ready shared dashboard is
+  labeled `Private calculated data`, points chart access to the protected profile route, and does
+  not reuse the public demo badge.
+- Verification: focused astro/transit/lunar/context/numerology/dashboard suites passed 101 tests;
+  the complete repository gate passed 83 files and 1,235 tests; disposable PostgreSQL passed 70
+  integration tests; and the optimized Next.js build includes dynamic `/account/today`.
+  Coverage passed at 90.99% statements, 89.57% branches, 98.10% functions, and 92.96% lines.
+  Desktop and 390px optimized-browser checks found zero horizontal overflow and no console
+  warnings/errors; the route carries `noindex, nofollow` and the reduced-motion CSS remains.
+- Security/dependency result: no secret, external provider call, production database mutation,
+  purchase, or deployment occurred. Production audit reports no high/critical issue; four
+  moderate development-tool advisories remain under Drizzle Kit's legacy esbuild loader and its
+  offered fix is a breaking downgrade, so it was not applied.
+- Remaining risk: the authenticated ready browser journey needs production-like auth/database
+  configuration and remains a later end-to-end/release gate. Goal 71 will replace the deliberately
+  empty timeline preview with bounded validated upcoming events.
 
 ## Goal 69 protected saved-profile natal chart record
 

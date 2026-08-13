@@ -17,7 +17,7 @@ const {
       request: Request,
       command: PrivateProfileCommand,
     ) => Promise<PrivateProfileMutationResult>
-  >(async () => ({ version: "1.0.0", disposition: "saved" }));
+  >(async () => ({ version: "1.1.0", disposition: "saved" }));
   return {
     incomingHeaders,
     mutatePrivateProfile,
@@ -43,9 +43,10 @@ import { mutatePrivateProfileAction } from "@/app/account/profiles/actions";
 function form() {
   const data = new FormData();
   const entries: Array<[string, string]> = [
-    ["version", "1.0.0"],
+    ["version", "1.1.0"],
     ["operation", "create"],
     ["displayName", "Mira"],
+    ["birthName", ""],
     ["currentTimezone", "America/Toronto"],
     ["birthDate", "1990-01-01"],
     ["birthTimePrecision", "date-only"],

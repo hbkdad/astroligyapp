@@ -5,6 +5,7 @@ export type PrivateProfileView = Readonly<{
   birthProfileId: string;
   revision: number;
   displayName: string;
+  birthName: string | null;
   currentTimezone: string;
   birthDate: string;
   birthTimePrecision: PrivateProfilePrecision;

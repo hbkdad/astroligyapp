@@ -19,10 +19,11 @@ const request = new Request(
   "https://app.example.test/internal/private-profiles",
 );
 const command = {
-  version: "1.0.0",
+  version: "1.1.0",
   operation: "create",
   value: {
     displayName: "Mira",
+    birthName: null,
     currentTimezone: "America/Toronto",
     birthDate: "1990-01-01",
     birthTimePrecision: "date-only",
@@ -71,14 +72,14 @@ describe("authenticated private profile composition", () => {
     await expect(
       loadPrivateProfilesForRequest(request, value.dependencies),
     ).resolves.toEqual({
-      version: "1.0.0",
+      version: "1.1.0",
       disposition: "ready",
       profiles: [],
       multipleProfilesAllowed: false,
     });
     await expect(
       mutatePrivateProfileForRequest(request, command, value.dependencies),
-    ).resolves.toEqual({ version: "1.0.0", disposition: "saved" });
+    ).resolves.toEqual({ version: "1.1.0", disposition: "saved" });
     expect(value.list).toHaveBeenCalledWith(OWNER);
     expect(value.mutate).toHaveBeenCalledWith(
       OWNER,
@@ -92,7 +93,7 @@ describe("authenticated private profile composition", () => {
       const value = fixture(status);
       await expect(
         mutatePrivateProfileForRequest(request, command, value.dependencies),
-      ).resolves.toEqual({ version: "1.0.0", disposition: "authenticate" });
+      ).resolves.toEqual({ version: "1.1.0", disposition: "authenticate" });
       expect(value.resolveActiveAccount).not.toHaveBeenCalled();
       expect(value.mutate).not.toHaveBeenCalled();
     },
@@ -106,7 +107,7 @@ describe("authenticated private profile composition", () => {
         { ...command, ownerId: "attacker" },
         value.dependencies,
       ),
-    ).resolves.toEqual({ version: "1.0.0", disposition: "authorize" });
+    ).resolves.toEqual({ version: "1.1.0", disposition: "authorize" });
     expect(value.verify).toHaveBeenCalledOnce();
     expect(value.mutate).not.toHaveBeenCalled();
   });
@@ -126,7 +127,7 @@ describe("authenticated private profile composition", () => {
         command,
         value.dependencies,
       );
-      expect(result).toEqual({ version: "1.0.0", disposition });
+      expect(result).toEqual({ version: "1.1.0", disposition });
       expect(JSON.stringify(result)).not.toContain("private database");
     },
   );

@@ -1,6 +1,6 @@
 # Protected private profile boundary
 
-Status: Goal 68 local implementation accepted on 2026-08-13.
+Status: Goal 68 baseline plus Goal 70 birth-name extension accepted on 2026-08-13.
 
 ## Scope
 
@@ -10,10 +10,12 @@ update, and explicit delete Server Actions. It adds no public profile route, geo
 location inference, chart calculation, provider call, analytics event, external resource,
 credential, production mutation, purchase, or deployment behavior.
 
-The versioned `1.0.0` aggregate contains only:
+The versioned `1.1.0` aggregate contains only:
 
 - opaque profile and birth-profile identifiers plus an integer revision;
 - a normalized 1-80 character display name;
+- an optional normalized 1-160 character full birth name, stored privately and never inferred
+  from the display name;
 - current and birth IANA timezones;
 - a canonical birth date from 1800 through the trusted current date;
 - date-only, approximate, or exact local-time precision, with time required only for the
@@ -61,6 +63,11 @@ enabling the route. The prior application has no profile write endpoint and rema
 with the new default/checks. If an unexpected legacy value blocks deployment, the safe recovery
 is to leave the old runtime active, correct only the identified invalid row through an approved
 private-data procedure, and rerun the forward migration; do not edit the checked-in migration.
+
+Migration `0014_absurd_the_order.sql` adds nullable `birth_profile.birth_name` plus a bounded
+length check. It is backward-compatible with existing rows. A null name keeps the profile
+usable for natal charts but produces an explicit incomplete state for calculations that need
+name numerology; unsupported characters fail rather than being approximated.
 
 ## Privacy and UI behavior
 

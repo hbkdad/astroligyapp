@@ -97,6 +97,10 @@ function SavedProfile({
           <dd>{profile.birthDate}</dd>
         </div>
         <div>
+          <dt>Full birth name</dt>
+          <dd>{profile.birthName ?? "Not provided"}</dd>
+        </div>
+        <div>
           <dt>Birth time</dt>
           <dd>
             {profile.birthTimeLocal ?? "Not provided"} ·{" "}
@@ -157,7 +161,7 @@ function ProfileMutationForm({
 
   return (
     <form action={formAction} className="profile-form" aria-busy={pending}>
-      <input type="hidden" name="version" value="1.0.0" />
+      <input type="hidden" name="version" value="1.1.0" />
       <input type="hidden" name="operation" value={operation} />
       {profile ? (
         <>
@@ -180,6 +184,21 @@ function ProfileMutationForm({
           maxLength={80}
           defaultValue={profile?.displayName}
           required
+        />
+      </Field>
+      <Field
+        label="Full birth name (optional)"
+        id={`${prefix}-birth-name`}
+        hint="Required for complete numerology. Use the full name recorded at birth; it stays private."
+      >
+        <input
+          id={`${prefix}-birth-name`}
+          name="birthName"
+          type="text"
+          autoComplete="off"
+          aria-describedby={`${prefix}-birth-name-hint`}
+          maxLength={160}
+          defaultValue={profile?.birthName ?? ""}
         />
       </Field>
       <Field
@@ -342,7 +361,7 @@ function ProfileDeleteForm({
         Type DELETE PROFILE to confirm.
       </p>
       <form action={formAction} aria-busy={pending}>
-        <input type="hidden" name="version" value="1.0.0" />
+        <input type="hidden" name="version" value="1.1.0" />
         <input type="hidden" name="operation" value="delete" />
         <input type="hidden" name="profileId" value={profile.profileId} />
         <input

@@ -17,6 +17,7 @@ interface ProfileRow {
   birth_profile_id: string;
   revision: number;
   display_name: string;
+  birth_name: string | null;
   current_timezone: string;
   birth_date: string;
   birth_time_precision: string;
@@ -99,6 +100,7 @@ async function selectProfiles(
             b.id as birth_profile_id,
             p.revision,
             p.display_name,
+            b.birth_name,
             p.current_timezone,
             b.birth_date::text,
             b.birth_time_precision,
@@ -143,10 +145,10 @@ async function create(
   if (!profileId) throw new PrivateProfileAuthorizationError();
   await client.query(
     `insert into birth_profile
-       (profile_id, birth_date, birth_time_local, timezone,
+       (profile_id, birth_date, birth_name, birth_time_local, timezone,
         timezone_resolution, latitude, longitude, coordinate_source,
         birth_time_precision, uncertainty)
-     values ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10::jsonb)`,
+     values ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10, $11::jsonb)`,
     birthParameters(profileId, value),
   );
   return Object.freeze({ outcome: "saved" as const });
@@ -181,14 +183,15 @@ async function update(
   const birth = await client.query(
     `update birth_profile
         set birth_date = $3,
-            birth_time_local = $4,
-            timezone = $5,
-            timezone_resolution = $6::jsonb,
-            latitude = $7,
-            longitude = $8,
-            coordinate_source = $9,
-            birth_time_precision = $10,
-            uncertainty = $11::jsonb,
+            birth_name = $4,
+            birth_time_local = $5,
+            timezone = $6,
+            timezone_resolution = $7::jsonb,
+            latitude = $8,
+            longitude = $9,
+            coordinate_source = $10,
+            birth_time_precision = $11,
+            uncertainty = $12::jsonb,
             updated_at = CURRENT_TIMESTAMP
       where profile_id = $1 and id = $2`,
     [command.profileId, command.birthProfileId, ...birthValues(value)],
@@ -250,6 +253,7 @@ function projectRow(row: ProfileRow): PrivateProfileView {
     birthProfileId: row.birth_profile_id,
     revision: row.revision,
     displayName: row.display_name,
+    birthName: row.birth_name,
     currentTimezone: row.current_timezone,
     birthDate: row.birth_date,
     birthTimePrecision: row.birth_time_precision,
@@ -275,6 +279,7 @@ function birthValues(
   const hasCoordinates = value.latitude !== null;
   return [
     value.birthDate,
+    value.birthName,
     value.birthTimeLocal,
     value.birthTimezone,
     JSON.stringify({ source: "user-supplied" }),

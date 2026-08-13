@@ -10,7 +10,7 @@ export type {
   PrivateProfileView,
 } from "@/presentation/private-profile-state";
 
-export const PRIVATE_PROFILE_CONTRACT_VERSION = "1.0.0";
+export const PRIVATE_PROFILE_CONTRACT_VERSION = "1.1.0";
 export const PRIVATE_PROFILE_PRECISIONS = [
   "date-only",
   "approximate",
@@ -19,6 +19,7 @@ export const PRIVATE_PROFILE_PRECISIONS = [
 
 export type PrivateProfileWrite = Readonly<{
   displayName: string;
+  birthName: string | null;
   currentTimezone: string;
   birthDate: string;
   birthTimePrecision: PrivateProfilePrecision;
@@ -58,6 +59,7 @@ export function validatePrivateProfileWrite(
     !record(value) ||
     !exactKeys(value, [
       "displayName",
+      "birthName",
       "currentTimezone",
       "birthDate",
       "birthTimePrecision",
@@ -71,6 +73,7 @@ export function validatePrivateProfileWrite(
   )
     return null;
   const displayName = normalizedName(value.displayName);
+  const birthName = optionalBirthName(value.birthName);
   const currentTimezone = timezone(value.currentTimezone);
   const birthTimezone = timezone(value.birthTimezone);
   const birthDate = date(value.birthDate, now);
@@ -80,6 +83,7 @@ export function validatePrivateProfileWrite(
   const longitude = coordinate(value.longitude, -180, 180);
   if (
     !displayName ||
+    birthName === undefined ||
     !currentTimezone ||
     !birthTimezone ||
     !birthDate ||
@@ -94,6 +98,7 @@ export function validatePrivateProfileWrite(
     return null;
   return deepFreeze({
     displayName,
+    birthName,
     currentTimezone,
     birthDate,
     birthTimePrecision: precision as PrivateProfilePrecision,
@@ -182,6 +187,7 @@ export function validatePrivateProfileView(
       "birthProfileId",
       "revision",
       "displayName",
+      "birthName",
       "currentTimezone",
       "birthDate",
       "birthTimePrecision",
@@ -198,6 +204,7 @@ export function validatePrivateProfileView(
   const write = validatePrivateProfileWrite(
     {
       displayName: value.displayName,
+      birthName: value.birthName,
       currentTimezone: value.currentTimezone,
       birthDate: value.birthDate,
       birthTimePrecision: value.birthTimePrecision,
@@ -226,6 +233,17 @@ function normalizedName(value: unknown): string | null {
     !/[\p{Cc}\p{Cf}]/u.test(normalized)
     ? normalized
     : null;
+}
+
+function optionalBirthName(value: unknown): string | null | undefined {
+  if (value === null) return null;
+  if (typeof value !== "string") return undefined;
+  const normalized = value.normalize("NFC").trim().replace(/\s+/gu, " ");
+  return normalized.length >= 1 &&
+    normalized.length <= 160 &&
+    !/[\p{Cc}\p{Cf}]/u.test(normalized)
+    ? normalized
+    : undefined;
 }
 
 function timezone(value: unknown): string | null {

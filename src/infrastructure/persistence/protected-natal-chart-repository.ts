@@ -74,7 +74,7 @@ interface SubscriptionRow {
   period_ends_at: Date | string | null;
 }
 
-interface ChartProfileRow extends BirthInputRow {
+export interface StoredNatalChartRow extends BirthInputRow {
   profile_id: string;
   birth_profile_id: string;
   display_name: string;
@@ -95,7 +95,7 @@ export class ProtectedNatalChartRepository {
     ownerId: AccountId,
   ): Promise<readonly ProtectedNatalChartProfileView[]> {
     return withIdentityTransaction(this.pool, ownerId, async ({ client }) => {
-      const rows = await client.query<ChartProfileRow>(
+      const rows = await client.query<StoredNatalChartRow>(
         `select p.id as profile_id, b.id as birth_profile_id, p.revision,
                 p.display_name, b.birth_date::text, b.birth_time_local,
                 b.birth_time_precision, b.timezone, b.latitude::text,
@@ -136,17 +136,17 @@ export class ProtectedNatalChartRepository {
 
 async function projectProfile(
   client: PoolClient,
-  row: ChartProfileRow,
+  row: StoredNatalChartRow,
   generationAllowed: boolean,
 ): Promise<ProtectedNatalChartProfileView> {
   const readiness = readinessFor(row);
   const stored = row.calculation_run_id
-    ? storedMetadata(row.resolution_metadata)
+    ? validateStoredNatalMetadata(row.resolution_metadata)
     : null;
   const chartStale = stored !== null && stored.profileRevision !== row.revision;
   const chart =
     stored && !chartStale
-      ? toNatalChartReadModel(await loadStoredChart(client, row, stored))
+      ? toNatalChartReadModel(await loadStoredNatalChart(client, row, stored))
       : null;
   return Object.freeze({
     profileId: row.profile_id,
@@ -176,10 +176,10 @@ function readinessFor(
   return result.status === "unique" ? "ready" : `${result.status}-time`;
 }
 
-async function loadStoredChart(
+export async function loadStoredNatalChart(
   client: PoolClient,
-  row: ChartProfileRow,
-  metadata: ReturnType<typeof storedMetadata>,
+  row: StoredNatalChartRow,
+  metadata: ReturnType<typeof validateStoredNatalMetadata>,
 ): Promise<NatalChart> {
   const positions = await client.query<{
     body: string;
@@ -521,7 +521,7 @@ function precision(
   throw new ProtectedNatalUnavailableError();
 }
 
-function storedMetadata(value: unknown): Readonly<{
+export function validateStoredNatalMetadata(value: unknown): Readonly<{
   input: NatalChart["input"];
   metadata: NatalChart["metadata"];
   profileRevision: number;
