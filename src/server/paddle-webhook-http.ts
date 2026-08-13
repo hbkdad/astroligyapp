@@ -1,6 +1,11 @@
 import "server-only";
 
 import {
+  GLOBAL_BROWSER_SECURITY_HEADERS,
+  PRIVATE_NO_STORE_HEADERS,
+  STRICT_API_CONTENT_SECURITY_POLICY,
+} from "@/config/http-security";
+import {
   BILLING_WEBHOOK_MAXIMUM_BYTES,
   BILLING_WEBHOOK_MAXIMUM_HEADERS,
   type BillingWebhookDisposition,
@@ -14,18 +19,10 @@ const MAXIMUM_HEADER_NAME_LENGTH = 128;
 const MAXIMUM_HEADER_VALUE_LENGTH = 8 * 1024;
 
 export const PADDLE_WEBHOOK_RESPONSE_HEADERS = Object.freeze({
-  "Cache-Control": "private, no-store, max-age=0, must-revalidate",
-  Pragma: "no-cache",
-  Expires: "0",
+  ...PRIVATE_NO_STORE_HEADERS,
+  ...GLOBAL_BROWSER_SECURITY_HEADERS,
   "Content-Type": "application/json; charset=utf-8",
-  "Referrer-Policy": "no-referrer",
-  "X-Content-Type-Options": "nosniff",
-  "X-Frame-Options": "DENY",
-  "Cross-Origin-Resource-Policy": "same-origin",
-  "Permissions-Policy":
-    "camera=(), microphone=(), geolocation=(), payment=(), browsing-topics=()",
-  "Content-Security-Policy":
-    "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+  "Content-Security-Policy": STRICT_API_CONTENT_SECURITY_POLICY,
 });
 
 type PaddleWebhookServiceProvider = () => Pick<PaddleWebhookService, "process">;

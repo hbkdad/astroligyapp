@@ -4,8 +4,8 @@ Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 75 complete; public/protected calculation reuse now has an explicit measured cache
-architecture, hardened public lunar cache integrity, and privacy-safe bounded performance metrics.
+Status: Goal 76 complete; every Next.js response now receives a conservative browser-security
+baseline while auth, webhook, and opaque-share routes retain stricter no-store and blocking CSP.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -99,6 +99,13 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 76: inventory public, protected, auth, webhook, share, health, database, cache, and
+      provider trust boundaries against installed Next.js 16.3 and current OWASP guidance.
+- [x] Centralize no-referrer, nosniff, anti-frame, same-origin resource/opener, permissions, and
+      DNS-prefetch controls globally; preserve stricter no-store/CSP policies on sensitive routes.
+- [x] Verify hostile HTTP inputs, auth/CSRF/origin/session rules, webhook signature/replay, opaque
+      shares, RLS/erasure, secret hygiene, production headers, full coverage/build, and document
+      explicit CSP, HSTS, abuse-control, dependency, TLS, proxy, and infrastructure release gates.
 - [x] Goal 75: inventory natal, public daily/lunar, Today, timeline, and demo reuse boundaries with
       explicit identity, TTL/cap, invalidation, provider-call, privacy, and promotion budgets.
 - [x] Harden public lunar entries as untrusted data with strict timestamp/provider/read-model
@@ -663,24 +670,22 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 76 — perform an application-wide security and privacy hardening pass across public, auth,
-protected, webhook, share, cache, and static-asset HTTP surfaces before release QA.
+Goal 77 — perform a complete WCAG 2.2 AA and resilient-interaction audit across every public,
+account, chart, timeline, compatibility, share, loading, empty, locked, and error surface.
 
 Deliverables:
 
-1. Inventory every reachable route/response, trust boundary, sensitive field, cookie, external
-   callback, cache policy, redirect, error surface, and existing control against the current OWASP
-   application/session/API guidance. Record prioritized findings before changing behavior.
-2. Centralize compatible HTTP hardening for content type sniffing, framing, referrers, browser
-   capabilities, transport/deployment gates, and a nonce/hash-aware Content Security Policy plan.
-   Preserve required Next.js/Auth/Paddle behavior and do not claim HSTS before production HTTPS.
-3. Verify authentication/session/CSRF/origin controls, owner/RLS enforcement, opaque shares,
-   webhook verification/replay, cache privacy, secret/log hygiene, dependency advisories, and
-   account erasure. Add provider-neutral abuse-control boundaries only where the actual route risk
-   and deployment model are known; do not invent an in-memory production rate limiter.
-4. Apply security-audit and database-migration when applicable; run hostile-input, two-owner,
-   HTTP-header, browser, disposable-database, full coverage/build, and dependency gates. Document
-   residual production controls requiring real domains, TLS, credentials, or managed infrastructure.
+1. Build a route/state/interaction inventory and run automated semantic/accessibility checks over
+   optimized HTML plus real Chromium at 390px and desktop. Include headings, landmarks, names,
+   descriptions, table/chart alternatives, status announcements, errors, and page language/title.
+2. Verify complete keyboard order and operation, visible focus, skip links, dialogs/disclosures,
+   forms, destructive confirmations, filters, horizontal regions, and SVG-to-table relationships.
+   Test 200% and 400% text, narrow reflow, zoom, reduced motion, forced colors, and no-color meaning.
+3. Measure contrast, target size, overflow, layout shift, reduced-motion behavior, and critical
+   loading/error/empty/locked/unavailable states. Fix systemic issues through shared primitives and
+   tokens without replacing validated calculations, privacy boundaries, or accessible native HTML.
+4. Apply ui-quality and real-browser verification, run full tests/coverage/build, document the
+   WCAG evidence matrix and residual screen-reader/production-auth gates, then queue release QA.
 
 ## Phase queue
 
@@ -3096,6 +3101,43 @@ tests/lunar-phase.test.ts tests/public-daily-readings.test.ts`;
 - Scope: no inferred-speed fallback, interpretation, category, score, timeline
   composition/UI, persistence, entitlement, notification, production provider
   call, or deployment was added.
+
+## Goal 76 security and privacy hardening record
+
+- Inventory/threat model: the reviewed matrix covers public calculation/content, account Server
+  Actions, Better Auth HTTP, Paddle webhook, opaque compatibility shares, health, PostgreSQL,
+  process caches, and external adapters. It records sensitive assets, trust transitions, existing
+  controls, findings, and production gates. Current installed Next.js 16.3 headers/CSP/data-security
+  guides and OWASP HTTP header, CSP, CSRF, REST, and TLS guidance were reviewed on 2026-08-13.
+- Closed finding: ordinary pages/assets/errors lacked the consistent browser baseline already used
+  on sensitive routes. One central immutable policy now applies `no-referrer`, `nosniff`, frame
+  denial, same-origin resource/opener isolation, disabled camera/microphone/geolocation/payment/
+  browsing-topics, and disabled DNS prefetch to every Next.js path. Auth, webhook, and share
+  boundaries compose the same constants plus private no-store and their blocking CSP variants.
+- Deferred deliberately: global nonce CSP would force the measured static/ISR pages dynamic under
+  Next.js 16.3, so strict nonce versus build-hash policy remains a report-only production-host
+  evaluation; no weak `unsafe-inline` policy was added. HSTS waits for verified production TLS,
+  redirects, subdomains, and rollback. Process-memory auth limits and share concurrency are not
+  misrepresented as multi-instance protection; shared edge control waits for the real proxy model.
+- Auth/webhook/share review: exact paths/methods/content/body/header shapes, same-origin/fetch-site,
+  live session/owner/entitlement/RLS checks, cookie attributes, generic errors, signed Paddle raw
+  bytes/five-second timestamp, durable replay/state transitions, opaque 256-bit share tokens,
+  revocation/expiry, no-store, no-index, and privacy-minimized projections remain covered. No CORS,
+  untrusted forwarding, stale cache, browser-owned identity, or public private-data key was added.
+- Browser/HTTP evidence: optimized checks across `/`, health, SVG, protected account, auth 503,
+  opaque-share 404, and framework 404 all returned the global headers. Sensitive routes remained
+  no-store/CSP protected; public and immutable cache policies were preserved. `X-Powered-By` and
+  premature HSTS were absent. The missing-auth 503 was expected without local database auth config.
+- Commands/evidence: 78 focused HTTP/auth/webhook/share/health tests passed. Tracked-file secret
+  patterns found none and only redacted `.env.example` is tracked. Drizzle schema validation and
+  all 71 disposable PostgreSQL tests passed. `npm run check` passed 101 files, 1,292 tests, and the
+  optimized build. Coverage passed at 90.03% statements, 87.71% branches, 96.55% functions, and
+  92.18% lines; `git diff --check` passed. Four moderate development-only Drizzle Kit/esbuild
+  findings remain because npm offers a breaking forced downgrade.
+- Scope/residual risk: no schema, migration, production data, host, CSP-report service, WAF/shared
+  rate limit, HSTS/preload, cloud IAM, DNS/TLS, credentials, deployment, penetration test, or
+  production mutation occurred. Those exact controls and two-account live tests remain release
+  gates in `docs/SECURITY_PRIVACY_AUDIT.md`. No critical or high local finding remains.
 
 ## Goal 75 performance and cache architecture record
 

@@ -2,6 +2,11 @@ import "server-only";
 
 import { Pool } from "pg";
 
+import {
+  GLOBAL_BROWSER_SECURITY_HEADERS,
+  PRIVATE_NO_STORE_HEADERS,
+  STRICT_SHARE_CONTENT_SECURITY_POLICY,
+} from "@/config/http-security";
 import { renderPublicCompatibilityShareDocument } from "@/components/public-compatibility-share-document";
 import { CompatibilityReportRepository } from "@/infrastructure/persistence/compatibility-report-repository";
 import {
@@ -14,18 +19,10 @@ export const PUBLIC_SHARE_UNAVAILABLE_MESSAGE =
   "The link may be missing, expired, or no longer shared.";
 
 export const PUBLIC_SHARE_RESPONSE_HEADERS = Object.freeze({
-  "Cache-Control": "private, no-store, max-age=0, must-revalidate",
-  Pragma: "no-cache",
-  Expires: "0",
-  "Referrer-Policy": "no-referrer",
+  ...PRIVATE_NO_STORE_HEADERS,
+  ...GLOBAL_BROWSER_SECURITY_HEADERS,
   "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet",
-  "X-Content-Type-Options": "nosniff",
-  "X-Frame-Options": "DENY",
-  "Cross-Origin-Resource-Policy": "same-origin",
-  "Permissions-Policy":
-    "camera=(), microphone=(), geolocation=(), payment=(), browsing-topics=()",
-  "Content-Security-Policy":
-    "default-src 'none'; style-src 'self'; img-src 'none'; font-src 'none'; script-src 'none'; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+  "Content-Security-Policy": STRICT_SHARE_CONTENT_SECURITY_POLICY,
 });
 
 export interface PublicCompatibilityShareResolver {

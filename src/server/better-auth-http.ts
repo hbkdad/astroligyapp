@@ -1,5 +1,10 @@
 import "server-only";
 
+import {
+  GLOBAL_BROWSER_SECURITY_HEADERS,
+  PRIVATE_NO_STORE_HEADERS,
+  STRICT_API_CONTENT_SECURITY_POLICY,
+} from "@/config/http-security";
 import { loadBetterAuthConfiguration } from "@/server/better-auth-configuration";
 import { productionBetterAuthHttpService } from "@/server/better-auth-http-service";
 
@@ -18,18 +23,9 @@ const POST_PATHS = new Set([
 ]);
 
 export const BETTER_AUTH_HTTP_RESPONSE_HEADERS = Object.freeze({
-  "Cache-Control": "private, no-store, max-age=0, must-revalidate",
-  Pragma: "no-cache",
-  Expires: "0",
-  "Referrer-Policy": "no-referrer",
-  "X-Content-Type-Options": "nosniff",
-  "X-Frame-Options": "DENY",
-  "Cross-Origin-Resource-Policy": "same-origin",
-  "Cross-Origin-Opener-Policy": "same-origin",
-  "Permissions-Policy":
-    "camera=(), microphone=(), geolocation=(), payment=(), browsing-topics=()",
-  "Content-Security-Policy":
-    "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+  ...PRIVATE_NO_STORE_HEADERS,
+  ...GLOBAL_BROWSER_SECURITY_HEADERS,
+  "Content-Security-Policy": STRICT_API_CONTENT_SECURITY_POLICY,
 });
 
 export interface BetterAuthHttpService {

@@ -1,4 +1,11 @@
 import type { NextConfig } from "next";
+import {
+  GLOBAL_BROWSER_SECURITY_HEADERS,
+  PRIVATE_NO_STORE_HEADERS,
+  STRICT_API_CONTENT_SECURITY_POLICY,
+  STRICT_SHARE_CONTENT_SECURITY_POLICY,
+  nextHeaders,
+} from "./src/config/http-security";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -6,42 +13,25 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/:path*",
+        headers: nextHeaders(GLOBAL_BROWSER_SECURITY_HEADERS),
+      },
+      {
         source: "/match/:token",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "private, no-store, max-age=0, must-revalidate",
-          },
-          { key: "Referrer-Policy", value: "no-referrer" },
-          {
-            key: "X-Robots-Tag",
-            value: "noindex, nofollow, noarchive, nosnippet",
-          },
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "DENY" },
-          {
-            key: "Content-Security-Policy",
-            value:
-              "default-src 'none'; style-src 'self'; img-src 'none'; font-src 'none'; script-src 'none'; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
-          },
-        ],
+        headers: nextHeaders({
+          ...GLOBAL_BROWSER_SECURITY_HEADERS,
+          ...PRIVATE_NO_STORE_HEADERS,
+          "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet",
+          "Content-Security-Policy": STRICT_SHARE_CONTENT_SECURITY_POLICY,
+        }),
       },
       {
         source: "/api/webhooks/paddle",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "private, no-store, max-age=0, must-revalidate",
-          },
-          { key: "Referrer-Policy", value: "no-referrer" },
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "DENY" },
-          {
-            key: "Content-Security-Policy",
-            value:
-              "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
-          },
-        ],
+        headers: nextHeaders({
+          ...GLOBAL_BROWSER_SECURITY_HEADERS,
+          ...PRIVATE_NO_STORE_HEADERS,
+          "Content-Security-Policy": STRICT_API_CONTENT_SECURITY_POLICY,
+        }),
       },
     ];
   },

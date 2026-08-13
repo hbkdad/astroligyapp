@@ -478,6 +478,9 @@ The implemented cache inventory, deterministic work budgets, corruption/expiry b
 privacy-safe aggregate measurement contract, and distributed-cache promotion gates are recorded in
 `docs/PERFORMANCE_CACHE_ARCHITECTURE.md`.
 
+The cross-surface HTTP header policy, threat-boundary inventory, findings, CSP/HSTS decisions, and
+production security gates are recorded in `docs/SECURITY_PRIVACY_AUDIT.md`.
+
 ## Verification architecture
 
 - Unit: pure deterministic boundaries, reductions, scores, schemas, and failure cases.
