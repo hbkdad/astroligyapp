@@ -4,9 +4,10 @@ Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 77 complete; the optimized application now has a recorded WCAG 2.2 AA engineering
-audit, clean automated semantics across 22 public/private-state URLs, resilient narrow/text-spacing
-reflow, stable async mobile navigation, and compliant interactive chart targets.
+Status: Goal 78 complete; versioned release-candidate manifest, pinned runtime, reproducible CI gate,
+operator runbook, and explicit release decision now exist. The exact source is GO as an internal,
+non-production candidate and remains NO-GO for external staging/production until named infrastructure,
+provider, backup, observability, authenticated E2E, and assistive-technology gates are closed.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -100,6 +101,18 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 78: inventory the exact runtime/dependency/migration/route/environment/provider candidate;
+      pin Node 24.15.0 and npm 11.12.1; document the 16-migration contract, data classes, health and
+      indexing semantics, provider state, and immutable candidate-identification requirements.
+- [x] Add a single `npm run release:check` and make CI run it after `npm ci`, covering format, lint,
+      strict types, 1,292 tests, optimized build, coverage, Drizzle consistency, the PostgreSQL 18
+      legacy/latest migration and 71-test isolation suite, plus a high/critical dependency threshold.
+- [x] Add the release/operator runbook for secret and role configuration, restore rehearsal,
+      forward-fix/rollback, SES/Paddle/shared-abuse controls, deployment, observability, full smoke,
+      search launch, incidents, and ownership; remove one unused contact-database template credential.
+- [x] Verify the optimized candidate at 390px and 1440px across representative route classes,
+      fail-closed robots/sitemap, private share/webhook headers, reduced motion, and unavailable-auth
+      behavior; issue internal RC GO and external staging/production NO-GO without accepting risk.
 - [x] Goal 77: inventory every public guide/demo, account entry, protected account, and opaque-share
       surface plus its ready, loading, empty, locked, error, stale, conflict, and unavailable states.
 - [x] Run axe-core 4.13.0 over 22 optimized URLs with zero final violations; verify one main/heading,
@@ -679,24 +692,25 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 78 — assemble and execute a production-readiness release-candidate gate without deploying,
-purchasing, or selecting any unresolved managed provider.
+Goal 79 — select the deployment topology and managed infrastructure plan through current, sourced
+research and an ADR, without provisioning, purchasing, deploying, or creating live credentials.
 
 Deliverables:
 
-1. Create one versioned release manifest covering runtime/package/database versions, routes, checked-
-   in migrations, required environment variables, external dependencies, background operations,
-   data classifications, health signals, and every intentionally unselected provider.
-2. Execute the release-check workflow and a CI-equivalent clean-install/build/test/database/security/
-   privacy/SEO/accessibility/performance gate. Re-run upgrade and empty-database migrations, validate
-   generated artifacts and dependency findings, and produce deterministic evidence without touching
-   production or adding credentials.
-3. Write the operator runbook for configuration validation, migration order, rollback/forward-fix,
-   backup/restore proof, health/observability, abuse controls, provider degradation, incident response,
-   and post-deploy smoke testing. Record owners or explicit blockers for every external release gate.
-4. Issue a clear go/no-go recommendation for a non-production release candidate, enumerate the exact
-   production prerequisites that remain, and queue the first deployment-provider decision only if the
-   application itself passes. Do not deploy, purchase services, create live accounts, or weaken gates.
+1. Derive hard requirements from the release manifest: Next.js 16 Node runtime and ISR behavior,
+   Canadian/privacy-aware regional needs, PostgreSQL 18/RLS/role/migration support, TLS/proxy identity,
+   instance/shared-abuse topology, SES/Paddle ingress and feedback workers, backups/PITR, logs/metrics,
+   cost bounds, portability, rollback, and operational ownership.
+2. Compare at least three credible hosting/database topologies using current primary documentation and
+   pricing. Include cold starts, persistent Node support, cron/queue/background work, connection pooling,
+   networking/egress, Canadian regions/data residency, WAF/rate limiting, secrets, observability,
+   backups/restores, preview environments, lock-in, and the application's process-local cache limits.
+3. Record the selected or explicitly deferred topology in an ADR with threat model, cost envelope,
+   migration/deployment order, failure modes, exit strategy, and a mapping from every Goal 78 external
+   NO-GO item to the chosen control or named unresolved owner. Do not assume a provider feature exists.
+4. Produce a staging implementation checklist and exact approval boundary. Re-run `release:check` after
+   documentation/config-only changes, then queue infrastructure-as-code only if a complete topology is
+   accepted. Do not create accounts, buy services, change DNS, add secrets, or deploy in this goal.
 
 ## Phase queue
 
@@ -710,8 +724,8 @@ Deliverables:
 | 6     | Compatibility and privacy-safe sharing                   | Complete    |
 | 7     | Subscriptions, entitlements, notifications               | Complete    |
 | 8     | SEO and useful public content                            | Complete    |
-| 9     | Security, privacy, performance, accessibility, QA        | In progress |
-| 10    | Deployment and production verification                   | Pending     |
+| 9     | Security, privacy, performance, accessibility, QA        | Complete    |
+| 10    | Deployment and production verification                   | In progress |
 
 ## Decisions
 
@@ -3112,6 +3126,42 @@ tests/lunar-phase.test.ts tests/public-daily-readings.test.ts`;
 - Scope: no inferred-speed fallback, interpretation, category, score, timeline
   composition/UI, persistence, entitlement, notification, production provider
   call, or deployment was added.
+
+## Goal 78 release-candidate readiness record
+
+- Candidate/control plane: `docs/RELEASE_MANIFEST.md` identifies internal `0.1.0-rc.1`, Node 24.15.0,
+  npm 11.12.1, exact installed framework/provider/tool versions, 16 checked-in migrations, every route
+  class, server environment family, data classification, external dependency, and health limitation.
+  `.nvmrc` and `packageManager` make the operator/CI runtime explicit; the exact commit containing the
+  manifest remains the immutable source identity.
+- Gate: `npm run release:check` serially runs the full application gate, coverage, schema consistency,
+  disposable PostgreSQL upgrade/latest migration and isolation tests, then fails on any high/critical
+  production dependency advisory. CI now uses the pinned runtime and this same command after `npm ci`.
+- Clean evidence: `npm ci` installed 543 packages from the lockfile. The release command passed
+  formatting, ESLint, strict TypeScript, 101 files/1,292 tests, the 33-page optimized build, coverage
+  at 90.03% statements/87.71% branches/96.55% functions/92.18% lines, Drizzle consistency, complete
+  PostgreSQL 18 migration, and one file/71 database tests. No high/critical audit finding exists.
+  Four disclosed moderate findings remain in Drizzle Kit's deprecated development-only esbuild loader
+  chain; npm proposes a breaking forced downgrade, so no unsafe automatic dependency mutation occurred.
+- Configuration correction: `.env.example` no longer asks operators for unused
+  `AUTH_CONTACT_DATABASE_URL`; the candidate does not wire contact resolution to live provisioning and
+  should not encourage speculative credentials. All consumed database/auth/email/Paddle/indexing values
+  and their least-privilege/rotation requirements are covered by the manifest.
+- Runbook: `docs/OPERATIONS_RUNBOOK.md` specifies candidate freeze, secret validation, least-privilege
+  roles, backup/restore rehearsal, forward-fix/restore decisions, SES/Paddle/shared-abuse controls,
+  deploy checks, privacy-safe observability, desktop/mobile/auth/ownership/provider/privacy/AT smoke,
+  guarded search launch, incident actions, and explicit release/DB/security/on-call/rollback owners.
+- Optimized smoke: representative public, guide, horoscope, lunar, chart, timeline, compatibility,
+  account-entry, and protected-shell routes returned 200 at 390x844 and 1440x1000, with one `h1`, one
+  `main`, zero horizontal overflow, and reduced-motion root scrolling set to `auto`. Health returned
+  static no-store liveness. Robots denied all and sitemap was empty. Invalid share returned generic
+  private no-store/no-index 404 under script-free CSP; webhook GET returned private no-store 405.
+  Auth session calls returned expected generic 503 without configured production credentials.
+- Decision: internal non-production source RC is **GO**. External staging/production is **NO-GO**
+  because no target/owners, host/domain/TLS/proxy, managed database/restore proof, shared abuse control,
+  SES feedback worker, Paddle provisioning/reconciliation, privacy-safe observability/on-call, real
+  authenticated two-account E2E, or current NVDA/VoiceOver evidence exists. No risk was silently
+  accepted and no provider account, credential, DNS, database, deployment, or production data changed.
 
 ## Goal 77 accessibility and resilient-interaction record
 
