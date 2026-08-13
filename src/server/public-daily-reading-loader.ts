@@ -9,6 +9,7 @@ import {
   type PublicProviderExpectation,
 } from "@/application/load-public-daily-readings";
 import type { EphemerisProvider } from "@/domain/astro/contracts";
+import type { CalculationPerformanceSink } from "@/application/calculation-performance";
 import {
   ASTRONOMY_ENGINE_POSITION_DATA_VERSION,
   ASTRONOMY_ENGINE_PROVIDER_ID,
@@ -38,6 +39,8 @@ export interface PublicDailyReadingLoaderFactoryOptions {
   readonly cache?: PublicDailyCache;
   readonly clock?: PublicClock;
   readonly cacheTtlMilliseconds?: number;
+  readonly performanceSink?: CalculationPerformanceSink;
+  readonly monotonicNow?: () => number;
 }
 
 export function createPublicDailyReadingLoader(
@@ -52,6 +55,8 @@ export function createPublicDailyReadingLoader(
     undefined,
     undefined,
     options.cacheTtlMilliseconds ?? PUBLIC_CURRENT_CACHE_TTL_MILLISECONDS,
+    options.performanceSink,
+    options.monotonicNow,
   );
 }
 

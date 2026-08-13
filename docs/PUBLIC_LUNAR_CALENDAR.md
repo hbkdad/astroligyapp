@@ -37,6 +37,9 @@ provider call count. Presentation revalidates event ordering, uniqueness, interv
 search version, and provider identity before rendering.
 
 The server-only bounded memory cache uses a six-hour TTL, 40-entry cap, and in-flight coalescing.
-Its key includes date, loader/calendar/phase/search versions, sample/tolerance/iteration policy,
-and exact provider/data versions. It stores no user or private data. A distributed cache is not
-selected; production multi-instance behavior and performance remain later gates.
+Its versioned entry and key include date, TTL, loader/calendar/phase/search versions,
+sample/tolerance/iteration policy, and exact provider/data versions. Every hit revalidates entry
+shape, timestamps, provider identity, and the complete read model. Expired/corrupt entries are
+deleted and regenerated; reads/deletes fail closed, while a write failure can serve only the
+already-validated fresh result. It stores no user or private data. See
+`docs/PERFORMANCE_CACHE_ARCHITECTURE.md`; a distributed cache remains unselected.

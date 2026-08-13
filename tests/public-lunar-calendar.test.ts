@@ -1,17 +1,35 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
 import {
   PUBLIC_LUNAR_CALENDAR_DAYS,
   PublicLunarCalendarEngine,
+  type PublicLunarCalendar,
 } from "@/application/calculate-public-lunar-calendar";
+import { AggregateCalculationPerformanceSink } from "@/application/calculation-performance";
 import { AstronomyEngineProvider } from "@/infrastructure/ephemeris/astronomy-engine-provider";
-import { PublicLunarCalendarLoader } from "@/server/public-lunar-calendar-loader";
+import {
+  MemoryPublicLunarCache,
+  PUBLIC_LUNAR_CACHE_TTL_MILLISECONDS,
+  PublicLunarCalendarLoader,
+  type PublicLunarCache,
+} from "@/server/public-lunar-calendar-loader";
 import {
   publicLunarDateWindow,
   publicLunarRouteDates,
 } from "@/presentation/public-lunar-date";
+
+let currentCalendar: PublicLunarCalendar;
+
+beforeAll(async () => {
+  const result = await new PublicLunarCalendarEngine(
+    new AstronomyEngineProvider(),
+    () => new Date("2026-08-13T15:00:00.000Z"),
+  ).calculate("2026-08-13");
+  if (!result.ok) throw new Error(result.error.message);
+  currentCalendar = result.value;
+});
 
 describe("public lunar calendar", () => {
   it("composes a geocentric UTC-noon phase and only refined seven-day events", async () => {
@@ -35,6 +53,7 @@ describe("public lunar calendar", () => {
       },
     });
     expect(result.value.events.length).toBeGreaterThan(1);
+    expect(result.value.metadata.providerPositionCallCount).toBe(59);
     expect(
       result.value.events.every(({ event }) => {
         const epoch = Date.parse(event.point.instant);
@@ -78,7 +97,6 @@ describe("public lunar calendar", () => {
   });
 
   it("coalesces and caches one complete date identity", async () => {
-    const value = { date: "2026-08-13" };
     let resolve!: (result: unknown) => void;
     const calculate = vi.fn(
       () =>
@@ -92,7 +110,8 @@ describe("public lunar calendar", () => {
     );
     const first = loader.load("2026-08-13");
     const second = loader.load("2026-08-13");
-    resolve({ ok: true, value });
+    await vi.waitFor(() => expect(calculate).toHaveBeenCalledOnce());
+    resolve({ ok: true, value: currentCalendar });
     await expect(Promise.all([first, second])).resolves.toMatchObject([
       { ok: true, cacheStatus: "miss" },
       { ok: true, cacheStatus: "coalesced" },
@@ -103,5 +122,147 @@ describe("public lunar calendar", () => {
     });
     expect(calculate).toHaveBeenCalledOnce();
     expect(loader.cacheKey("2026-08-13")).toContain("providerVersion=");
+  });
+
+  it("expires, rejects corrupt entries, and bounds cache storage", async () => {
+    let now = new Date("2026-08-13T12:00:00.000Z");
+    const calculate = vi.fn(async () => ({
+      ok: true as const,
+      value: currentCalendar,
+    }));
+    const cache = new MemoryPublicLunarCache(2);
+    const loader = new PublicLunarCalendarLoader(
+      { calculate },
+      () => now,
+      cache,
+    );
+    await expect(loader.load("2026-08-13")).resolves.toMatchObject({
+      ok: true,
+      cacheStatus: "miss",
+    });
+    const key = loader.cacheKey("2026-08-13");
+    await cache.set(key, { privateMarker: "must-not-escape" });
+    const regenerated = await loader.load("2026-08-13");
+    expect(regenerated).toMatchObject({
+      ok: true,
+      cacheStatus: "invalid-regenerated",
+    });
+    expect(JSON.stringify(regenerated)).not.toContain("must-not-escape");
+    now = new Date(
+      Date.parse("2026-08-13T12:00:00.000Z") +
+        PUBLIC_LUNAR_CACHE_TTL_MILLISECONDS +
+        1,
+    );
+    await expect(loader.load("2026-08-13")).resolves.toMatchObject({
+      ok: true,
+      cacheStatus: "expired-regenerated",
+    });
+    expect(calculate).toHaveBeenCalledTimes(3);
+    await cache.set("one", {});
+    await cache.set("two", {});
+    await cache.set("three", {});
+    expect(cache.size).toBe(2);
+    expect(await cache.get("one")).toBeNull();
+  });
+
+  it("maps cache failures generically and does not let write failures hide fresh data", async () => {
+    const calculate = vi.fn(async () => ({
+      ok: true as const,
+      value: currentCalendar,
+    }));
+    const failing = (
+      operation: "get" | "set" | "delete",
+    ): PublicLunarCache => ({
+      async get() {
+        if (operation === "get") throw new Error("private read detail");
+        return operation === "delete" ? { corrupt: true } : null;
+      },
+      async set() {
+        if (operation === "set") throw new Error("private write detail");
+      },
+      async delete() {
+        if (operation === "delete") throw new Error("private delete detail");
+      },
+    });
+    const clock = () => new Date("2026-08-13T12:00:00.000Z");
+    await expect(
+      new PublicLunarCalendarLoader({ calculate }, clock, failing("get")).load(
+        "2026-08-13",
+      ),
+    ).resolves.toEqual({ ok: false, reason: "cache-unavailable" });
+    await expect(
+      new PublicLunarCalendarLoader(
+        { calculate },
+        clock,
+        failing("delete"),
+      ).load("2026-08-13"),
+    ).resolves.toEqual({ ok: false, reason: "cache-unavailable" });
+    await expect(
+      new PublicLunarCalendarLoader({ calculate }, clock, failing("set")).load(
+        "2026-08-13",
+      ),
+    ).resolves.toMatchObject({ ok: true, cacheStatus: "write-skipped" });
+  });
+
+  it("fails closed for invalid clocks, cache configuration, and cache dates", async () => {
+    const calculate = vi.fn();
+    const loader = new PublicLunarCalendarLoader(
+      { calculate },
+      () => new Date(Number.NaN),
+    );
+    await expect(loader.load("2026-08-13")).resolves.toEqual({
+      ok: false,
+      reason: "invalid-clock",
+    });
+    expect(calculate).not.toHaveBeenCalled();
+    expect(() => loader.cacheKey("2026-02-29")).toThrow(
+      "Invalid public lunar cache date",
+    );
+    expect(() => new MemoryPublicLunarCache(0)).toThrow("between 1 and 40");
+    expect(
+      () =>
+        new PublicLunarCalendarLoader(
+          { calculate },
+          () => new Date(),
+          new MemoryPublicLunarCache(),
+          1,
+        ),
+    ).toThrow("between one minute and one day");
+  });
+
+  it("measures misses and hits without recording the requested date", async () => {
+    const sink = new AggregateCalculationPerformanceSink();
+    let tick = 0;
+    const loader = new PublicLunarCalendarLoader(
+      {
+        calculate: vi.fn(async () => ({
+          ok: true as const,
+          value: currentCalendar,
+        })),
+      },
+      () => new Date("2026-08-13T12:00:00.000Z"),
+      new MemoryPublicLunarCache(),
+      PUBLIC_LUNAR_CACHE_TTL_MILLISECONDS,
+      sink,
+      () => (tick += 5),
+    );
+    await loader.load("2026-08-13");
+    await loader.load("2026-08-13");
+    expect(sink.snapshot()).toEqual([
+      expect.objectContaining({
+        flow: "public-lunar",
+        outcome: "hit",
+        count: 1,
+        providerPositionCallCount: 0,
+      }),
+      expect.objectContaining({
+        flow: "public-lunar",
+        outcome: "miss",
+        count: 1,
+        providerPositionCallCount:
+          currentCalendar.metadata.providerPositionCallCount,
+      }),
+    ]);
+    expect(JSON.stringify(sink.snapshot())).not.toContain("2026-08-13");
   });
 });

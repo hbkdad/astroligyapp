@@ -474,6 +474,10 @@ tests/
 - Store derived data only when latency, auditability, or cost justifies it; retain the trace needed to reproduce it.
 - Define deletion, retention, and cascade behavior before storing private birth or relationship data.
 
+The implemented cache inventory, deterministic work budgets, corruption/expiry behavior,
+privacy-safe aggregate measurement contract, and distributed-cache promotion gates are recorded in
+`docs/PERFORMANCE_CACHE_ARCHITECTURE.md`.
+
 ## Verification architecture
 
 - Unit: pure deterministic boundaries, reductions, scores, schemas, and failure cases.

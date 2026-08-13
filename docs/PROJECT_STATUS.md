@@ -4,8 +4,8 @@ Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 74 complete; public indexing now includes a bounded, provider-backed 31-day lunar
-calendar with canonical date pages, refined seven-day events, and fail-closed unavailable states.
+Status: Goal 75 complete; public/protected calculation reuse now has an explicit measured cache
+architecture, hardened public lunar cache integrity, and privacy-safe bounded performance metrics.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -99,6 +99,13 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 75: inventory natal, public daily/lunar, Today, timeline, and demo reuse boundaries with
+      explicit identity, TTL/cap, invalidation, provider-call, privacy, and promotion budgets.
+- [x] Harden public lunar entries as untrusted data with strict timestamp/provider/read-model
+      validation, expiry/corruption regeneration, generic cache failures, and safe write bypass.
+- [x] Add fixed-label aggregate timing/provider-call measurements for public flows only; verify
+      coalescing, expiry, eviction, version drift, failures, database owner isolation, and optimized
+      cold/warm HTTP behavior without adding managed cache, telemetry, or private result caching.
 - [x] Goal 74: add strict canonical UTC date routes for today through 30 days ahead, backed by one
       shared geocentric Sun/Moon observation pass and the existing validated lunar-event search.
 - [x] Publish UTC-noon phase/sign facts plus refined primary-phase and Moon-sign boundary events
@@ -656,23 +663,24 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 75 — measure and harden cache and performance architecture across public and protected
-calculation flows without selecting managed cache, observability, hosting, or deployment services.
+Goal 76 — perform an application-wide security and privacy hardening pass across public, auth,
+protected, webhook, share, cache, and static-asset HTTP surfaces before release QA.
 
 Deliverables:
 
-1. Inventory provider calls, calculation composition, cache keys, TTLs, entry caps, invalidation,
-   request coalescing, and expected cardinality for natal, sky/lunar, horoscope, lunar-calendar,
-   Today, and timeline flows. Record measurable latency, provider-call, and memory budgets.
-2. Add only measured, bounded, provider-neutral cache improvements. Every key must include all
-   calculation/provider/config versions and public/private scope; never share private results
-   across owners or place birth/profile/account data in public cache keys, logs, or metrics.
-3. Add deterministic concurrency, eviction, expiry, provider-failure, and stale-version tests plus
-   privacy-safe timing/call-count instrumentation suitable for local and later production checks.
-   Do not hide provider errors behind stale or partial data.
-4. Run proportional calculation, security, performance, accessibility, browser, coverage, and
-   production-build gates. Document measured before/after evidence and remaining multi-instance
-   limits without selecting or purchasing a managed cache, observability, or deployment service.
+1. Inventory every reachable route/response, trust boundary, sensitive field, cookie, external
+   callback, cache policy, redirect, error surface, and existing control against the current OWASP
+   application/session/API guidance. Record prioritized findings before changing behavior.
+2. Centralize compatible HTTP hardening for content type sniffing, framing, referrers, browser
+   capabilities, transport/deployment gates, and a nonce/hash-aware Content Security Policy plan.
+   Preserve required Next.js/Auth/Paddle behavior and do not claim HSTS before production HTTPS.
+3. Verify authentication/session/CSRF/origin controls, owner/RLS enforcement, opaque shares,
+   webhook verification/replay, cache privacy, secret/log hygiene, dependency advisories, and
+   account erasure. Add provider-neutral abuse-control boundaries only where the actual route risk
+   and deployment model are known; do not invent an in-memory production rate limiter.
+4. Apply security-audit and database-migration when applicable; run hostile-input, two-owner,
+   HTTP-header, browser, disposable-database, full coverage/build, and dependency gates. Document
+   residual production controls requiring real domains, TLS, credentials, or managed infrastructure.
 
 ## Phase queue
 
@@ -3088,6 +3096,42 @@ tests/lunar-phase.test.ts tests/public-daily-readings.test.ts`;
 - Scope: no inferred-speed fallback, interpretation, category, score, timeline
   composition/UI, persistence, entitlement, notification, production provider
   call, or deployment was added.
+
+## Goal 75 performance and cache architecture record
+
+- Inventory/decision: owner-scoped PostgreSQL natal reuse, global process-local public daily/lunar
+  caches, and request-local-only private Today/timeline calculation are retained as distinct trust
+  boundaries. The new architecture record defines complete identity, TTL/cap, invalidation,
+  concurrency, provider-call, privacy, failure, and managed-cache promotion gates. No latency/cost
+  evidence justifies a distributed cache or a new private-result cache.
+- Lunar hardening: loader 1.1.0 treats cache entries as untrusted and rechecks exact fields,
+  timestamps, TTL, provider/data identity, date, engine/search versions, events, and read-model
+  integrity. Six-hour expiry, corrupt entries, and version drift delete then regenerate; read/delete
+  failures are generic and fail closed; a write failure may serve only a complete validated fresh
+  result. In-flight coalescing and the 40-entry oldest-key eviction cap remain process-local.
+- Measurement/privacy: calculation performance contract 1.0.0 accepts only two fixed public flows,
+  ten fixed outcomes, non-negative duration, and optional provider-call count. Its aggregate map is
+  bounded to 20 cells and contains no date, instant, URL, cache key, account, owner, profile, chart,
+  birth, location, name, or provider error. Sink validation/outage cannot affect calculations;
+  protected traces remain private and no endpoint/exporter was added.
+- Measured budgets: one public-daily miss makes one provider request and a hit makes zero. The real
+  `2000-01-01` public lunar fixture makes exactly 59 underlying position calls; its test completed
+  in 15 ms locally. An optimized two-request lunar HTTP smoke measured 215.75 ms cold and 49.35 ms
+  warm with complete events; both horoscope requests reported Next cache hits. These are local
+  reference observations, not production SLOs.
+- Security/database verification: 56 focused public-cache, memoization, natal, Today, timeline,
+  authentication, and authorization tests passed. Drizzle schema validation and the disposable
+  PostgreSQL suite passed all 71 integration tests, including owner-scoped natal cache identity,
+  advisory-lock replay, RLS isolation, migration compatibility, and erasure cascades. No migration
+  or production data change was required.
+- Full evidence: `npm run check` passed formatting, lint, strict types, 100 files and 1,289 tests,
+  plus the optimized production build. Coverage passed at 90.03% statements, 87.71% branches,
+  96.55% functions, and 92.18% lines. Direct optimized HTTP returned 200 for health, lunar, and
+  horoscope checks. `git diff --check` passed. The audit retains four moderate Drizzle Kit
+  development-loader findings; npm offers only a breaking forced downgrade.
+- Scope: no managed cache, external telemetry, metrics route, stale fallback, private cross-request
+  cache, schema/migration, host, deployment, production traffic, credentials, or service purchase
+  was added. Runtime memory/percentile budgets remain a production-host measurement gate.
 
 ## Goal 74 public lunar calendar record
 

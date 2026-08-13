@@ -23,6 +23,10 @@ import {
   PublicDailyReadingEngine,
   type PublicDailyReadings,
 } from "./compose-public-daily-readings";
+import {
+  recordCalculationPerformance,
+  type CalculationPerformanceSink,
+} from "./calculation-performance";
 
 export const PUBLIC_DAILY_LOADER_VERSION = "1.0.0";
 export const PUBLIC_DAILY_CACHE_ENTRY_VERSION = "1.0.0";
@@ -102,6 +106,8 @@ export class PublicDailyReadingLoader {
     private readonly library: InterpretationLibrary = PUBLIC_INTERPRETATION_LIBRARY,
     aspectDefinitions: readonly AspectDefinition[] = DEFAULT_ASPECT_DEFINITIONS,
     private readonly cacheTtlMilliseconds = 15 * 60_000,
+    private readonly performanceSink?: CalculationPerformanceSink,
+    private readonly monotonicNow: () => number = () => performance.now(),
   ) {
     validateProviderExpectation(provider, providerExpectation);
     validateAspectDefinitions(aspectDefinitions);
@@ -117,6 +123,22 @@ export class PublicDailyReadingLoader {
   }
 
   async loadCurrent(): Promise<PublicDailyLoadResult> {
+    const startedAt = safeMonotonicNow(this.monotonicNow);
+    const result = await this.loadCurrentUnmeasured();
+    recordCalculationPerformance(this.performanceSink, {
+      flow: "public-daily",
+      outcome: result.ok
+        ? result.value.metadata.cacheStatus
+        : result.error.code,
+      durationMilliseconds: elapsedMilliseconds(
+        startedAt,
+        safeMonotonicNow(this.monotonicNow),
+      ),
+    });
+    return result;
+  }
+
+  private async loadCurrentUnmeasured(): Promise<PublicDailyLoadResult> {
     const now = this.clock.now();
     if (!(now instanceof Date) || !Number.isFinite(now.getTime()))
       return loadFailure("invalid-clock", false);
@@ -243,6 +265,19 @@ export class PublicDailyReadingLoader {
       metadata.dataVersion === this.providerExpectation.dataVersion
     );
   }
+}
+
+function safeMonotonicNow(clock: () => number): number {
+  try {
+    const value = clock();
+    return Number.isFinite(value) ? value : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function elapsedMilliseconds(start: number, end: number): number {
+  return end >= start ? end - start : 0;
 }
 
 export class MemoryPublicDailyCache implements PublicDailyCache {

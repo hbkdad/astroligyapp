@@ -18,6 +18,7 @@ import {
 import { ZODIAC_SIGNS } from "@/domain/astro/zodiac";
 import { DeterministicInterpretationLibrary } from "@/domain/interpretation/library";
 import { PUBLIC_INTERPRETATION_LIBRARY } from "@/domain/interpretation/public-library";
+import { AggregateCalculationPerformanceSink } from "@/application/calculation-performance";
 
 const EXPECTATION: PublicProviderExpectation = {
   id: "public-loader-fixture",
@@ -127,6 +128,39 @@ describe("public daily reading loader", () => {
     expect(provider.lastRequest).not.toHaveProperty("observer");
     expect(Object.isFrozen(first.value)).toBe(true);
     expect(Object.isFrozen(first.value.models)).toBe(true);
+  });
+
+  it("records aggregate miss/hit timing without cache keys or request data", async () => {
+    const sink = new AggregateCalculationPerformanceSink();
+    let tick = 0;
+    const loader = new PublicDailyReadingLoader(
+      new LoaderFixtureProvider(),
+      EXPECTATION,
+      new MemoryPublicDailyCache(),
+      new MutableClock("2026-08-10T04:30:00Z"),
+      undefined,
+      undefined,
+      900_000,
+      sink,
+      () => (tick += 5),
+    );
+    await loader.loadCurrent();
+    await loader.loadCurrent();
+    expect(sink.snapshot()).toEqual([
+      expect.objectContaining({
+        flow: "public-daily",
+        outcome: "hit",
+        count: 1,
+        totalDurationMilliseconds: 5,
+      }),
+      expect.objectContaining({
+        flow: "public-daily",
+        outcome: "miss",
+        count: 1,
+        totalDurationMilliseconds: 5,
+      }),
+    ]);
+    expect(JSON.stringify(sink.snapshot())).not.toContain("2026-08-10");
   });
 
   it("coalesces concurrent cache misses into one provider calculation", async () => {
