@@ -1,0 +1,75 @@
+name: astroligyapp-runtime-test
+
+x-app: &app
+  image: astroligyapp:goal80
+  restart: "no"
+  read_only: true
+  tmpfs:
+    - /tmp:size=16m,mode=1777
+  depends_on:
+    valkey:
+      condition: service_healthy
+    postgres:
+      condition: service_healthy
+  environment: &app-environment
+    NEXT_DEPLOYMENT_ID: ${NEXT_DEPLOYMENT_ID:?required}
+    NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: ${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:?required}
+    NEXT_SHARED_CACHE_ENABLED: "true"
+    NEXT_SHARED_CACHE_URL: redis://valkey:6379
+    NEXT_SHARED_CACHE_PREFIX: goal80-runtime-v1
+    NEXT_SHARED_CACHE_ALLOW_INSECURE_LOCAL: "true"
+    APP_TASK_MAX_COUNT: "2"
+    DATABASE_MAX_CONNECTIONS: "100"
+    DATABASE_RESERVED_CONNECTIONS: "20"
+    DATABASE_URL: postgresql://cosmic:cosmic_local_only@postgres:5432/cosmic
+    PUBLIC_SITE_INDEXING_ENABLED: "false"
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
+services:
+  postgres:
+    image: postgres:18-alpine@sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15
+    restart: "no"
+    environment:
+      POSTGRES_DB: cosmic
+      POSTGRES_USER: cosmic
+      POSTGRES_PASSWORD: cosmic_local_only
+    tmpfs:
+      - /var/lib/postgresql:size=256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cosmic -d cosmic"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    security_opt:
+      - no-new-privileges:true
+
+  valkey:
+    image: valkey/valkey:8.1.9-alpine@sha256:a038175878d66b9d274fbf8be73c0305e93798b83917647f167e18cef3c71eec
+    user: "999:1000"
+    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    restart: "no"
+    read_only: true
+    tmpfs:
+      - /data:size=32m,mode=0700,uid=999,gid=1000
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 2s
+      timeout: 1s
+      retries: 15
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  app-one:
+    <<: *app
+    ports:
+      - "127.0.0.1:3101:3000"
+
+  app-two:
+    <<: *app
+    ports:
+      - "127.0.0.1:3102:3000"

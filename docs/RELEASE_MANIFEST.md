@@ -17,7 +17,7 @@ part of the candidate.
 | Application          | `personal-cosmic-calendar` 0.1.0 | Private package; no registry publication                              |
 | Node.js              | 24.15.0 from `.nvmrc`            | CI and release operators use the pinned version                       |
 | npm                  | 11.12.1 from `packageManager`    | Install only with `npm ci` for a candidate                            |
-| Next.js / React      | 16.3.0 / 19.2.8                  | Optimized Node server; AWS container topology selected, not built     |
+| Next.js / React      | 16.3.0 / 19.2.8                  | Standalone OCI image and two-instance local runtime verified          |
 | TypeScript / Vitest  | 5.9.3 / 4.1.10                   | Strict compilation and deterministic test gate                        |
 | PostgreSQL           | 18 test baseline                 | RDS PostgreSQL 18 selected; instance/backup resources not provisioned |
 | Drizzle ORM / Kit    | 0.45.2 / 0.31.10                 | Checked-in forward migrations; no schema push                         |
@@ -25,11 +25,12 @@ part of the candidate.
 | Authentication       | Better Auth 1.6.27               | PostgreSQL sessions and verified email/password only                  |
 | Billing ingress      | Paddle SDK 3.10.0                | Signed webhook adapter only; no live account or checkout              |
 | Authentication email | AWS SES v2 SDK 3.1108.0          | Adapter selected; infrastructure and credentials absent               |
+| Shared cache client  | Redis 6.2.1                      | Valkey protocol boundary; no managed cache provisioned                |
 
-The build output is `.next/`. ADR 0010 selects AWS Canada Central and a production topology, but no
-container image, standalone bundle, SBOM, signed artifact, AWS account/resource, or deployment
-command exists. These remain implementation and approval gates, not implications of a successful
-local build.
+The local build produces `.next/` and a standalone OCI image from the digest-pinned Dockerfile. The
+image, two-instance disposable topology, and vulnerability/secret scan are locally verified, but no
+registry artifact, signature, AWS account/resource, or deployment command exists. Remote SBOM/
+provenance attachment and immutable ECR digest promotion remain implementation and approval gates.
 
 ## Included database contract
 

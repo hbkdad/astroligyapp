@@ -11,12 +11,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "start:standalone": "node scripts/validate-runtime-config.mjs && node .next/standalone/server.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:database": "node scripts/test-database.mjs",
+    "test:runtime": "node scripts/test-runtime-container.mjs",
+    "scan:runtime": "node scripts/scan-runtime-image.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "db:generate": "drizzle-kit generate",
@@ -33,8 +36,10 @@
     "drizzle-orm": "^0.45.2",
     "next": "16.3.0",
     "pg": "^8.23.0",
+    "redis": "6.2.1",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "redis": "^6.2.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.3",

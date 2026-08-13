@@ -517,6 +517,11 @@ production security gates are recorded in `docs/SECURITY_PRIVACY_AUDIT.md`.
   encryption, deployment skew protection, bounded database pools, rollback, and cache-outage
   behavior. RDS Proxy remains deferred until transaction-local role/RLS tests prove it safe. No live
   resources exist. See ADR 0010 and `docs/STAGING_IMPLEMENTATION_CHECKLIST.md`.
+- Runtime artifact: a digest-pinned Node 24.15.0 multi-stage image builds standalone output with an
+  ephemeral Server Actions build secret, starts as non-root, validates deployment/cache/connection
+  budgets, and uses the singular Next.js cache handler for shared ISR/tag state in Valkey. Build-time
+  filesystem caching preserves packaged pre-rendered pages; runtime writes are external, validated,
+  bounded, and digest-keyed. See `docs/RUNTIME_DEPLOYMENT_CONTRACT.md`.
 - Persistence: PostgreSQL 18 contract, Drizzle ORM/Kit, `pg`, checked-in SQL
   migrations, forced row-level security, and real disposable PostgreSQL tests.
   See ADR 0003.

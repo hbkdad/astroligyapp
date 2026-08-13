@@ -4,11 +4,10 @@ Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 79 complete; ADR 0010 selects an AWS Canada Central container topology and maps every
-external release blocker to a control and unresolved owner. No cloud account, resource, purchase, DNS,
-secret, or deployment was created. The exact source remains GO as an internal, non-production candidate
-and NO-GO for external staging/production until the documented implementation and verification gates
-are closed.
+Status: Goal 80 complete; the digest-pinned, non-root standalone image, strict deployment/cache/
+connection configuration, provider-neutral Valkey cache boundary, and disposable two-instance runtime
+gate are locally verified. No cloud account, resource, purchase, DNS, live secret, or deployment was
+created. The exact source remains GO as an internal candidate and NO-GO for external staging/production.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -103,6 +102,17 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 80: add the digest-pinned Node 24.15.0 multi-stage standalone image, BuildKit-only Server
+      Actions build secret, non-root exec-form runtime, health check, minimized runtime packages,
+      `.dockerignore`, and strict startup validation for deployment, cache, TLS/local exceptions, and
+      the 32-connections-per-task database capacity budget.
+- [x] Add the singular Next.js 16 cache-handler boundary for current ISR/path-tag consumers: framework
+      filesystem cache only for build/packaged fallback, external runtime writes through Redis 6.2.1,
+      digest-only keys, versioned V8 payloads, size/TTL/config bounds, shared invalidation timestamps,
+      corruption deletion, fixed diagnostics, and explicit Valkey-outage degradation.
+- [x] Add repeatable two-task PostgreSQL 18/Valkey 8.1.9 container verification covering pre-rendered
+      routes, deployment skew markers, security/private headers, forwarded-host spoofing, non-root/
+      read-only state, shared reads/invalidation, cache loss, SIGTERM, cleanup, and a pinned Trivy gate.
 - [x] Goal 79: derive the Next.js runtime, Canadian-region, PostgreSQL 18/RLS, proxy, shared-abuse,
       provider-worker, recovery, observability, cost, portability, rollback, and ownership requirements;
       compare AWS, Azure, and Vercel/Supabase using current primary documentation and pricing.
@@ -703,23 +713,23 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 80 — build and verify the portable production-container and multi-instance runtime contract locally,
-without provisioning cloud infrastructure or using live credentials.
+Goal 81 — select the infrastructure-as-code and policy toolchain, then implement a credential-free AWS
+Canada planning baseline for ADR 0010 without creating or changing any cloud resource.
 
 Deliverables:
 
-1. Read the installed Next.js 16 self-hosting and cache-handler guidance, then add a pinned multi-stage
-   standalone production image, non-root runtime, health check, signal-safe startup, `.dockerignore`, and
-   a local optimized-image smoke path without embedding secrets or private build data.
-2. Define and validate immutable deployment ID, stable Server Actions encryption, trusted proxy/runtime,
-   database-pool budget, and shared-cache configuration. Implement the smallest provider-neutral cache
-   boundary required for multi-instance ISR/tag coordination, with explicit unavailable/corruption behavior.
-3. Add a disposable local topology using PostgreSQL 18 and Valkey that can exercise at least two
-   application instances. Prove cross-instance cache/tag behavior, version skew/rollback expectations,
-   secure proxy headers, readiness, graceful shutdown, bounded connection use, and cache outage behavior.
-4. Invoke `security-audit` and `release-check`; run the full release gate plus container vulnerability/
-   secret/config checks available locally; document exact evidence and remaining risks. Queue reviewed IaC
-   only after the local runtime contract passes. Do not create cloud resources, accounts, DNS, or secrets.
+1. Compare current OpenTofu and Terraform licensing, state/locking, AWS provider support, CI policy,
+   testing, upgrade, and operator workflows using primary sources. Record the selection and exact pinned
+   versions in an ADR; do not initialize a remote backend, log in, or supply cloud credentials.
+2. Add minimal environment/account/provider/state contracts and dependency-ordered modules for network,
+   edge/WAF, ECR, ECS, RDS, Valkey, secrets references, SES/SNS/SQS worker support, logs/alarms, and
+   backups. Defaults must be non-production, indexing-disabled, encrypted, private, bounded, and tagged.
+3. Add offline format/validate/lint/security/policy and deterministic plan-contract tests that reject
+   public data stores/tasks, wildcard IAM, static CI keys, secret values in state, unbounded retention or
+   autoscaling, missing deletion protection/backup policy, and region/account/environment mismatches.
+4. Produce a redacted variable template, state/bootstrap runbook, calculator-input inventory, and exact
+   apply approval boundary. Run `security-audit`, `release-check`, and the full local gates. Do not run
+   init/plan/apply against AWS, create state infrastructure, create accounts, or change DNS/secrets.
 
 ## Phase queue
 
@@ -763,6 +773,14 @@ Deliverables:
   a stable Server Actions encryption key, immutable deployment identity, and a database connection
   budget. RDS Proxy is not selected until transaction-local role and RLS behavior passes the real
   migration/isolation suite.
+- The production artifact is a digest-pinned Node 24.15.0 standalone OCI image with an ephemeral
+  BuildKit Server Actions secret, non-root direct Node runtime, and strict deployment/cache/database
+  capacity validation. The runtime image contains no npm/Corepack/Yarn. See
+  `docs/RUNTIME_DEPLOYMENT_CONTRACT.md`.
+- The singular Next.js cache handler owns current ISR/server/path-tag behavior through Valkey. It
+  delegates only build and packaged read fallback to the exact pinned framework filesystem handler;
+  runtime writes and invalidation are external. The plural streaming cache API remains unconfigured
+  because no `use cache` directive exists.
 - Longitudes normalize to `[0, 360)`. Zodiac and aspect calculations use
   provider-neutral degrees with no interpretation text or product weights.
 
@@ -3143,6 +3161,37 @@ tests/lunar-phase.test.ts tests/public-daily-readings.test.ts`;
 - Scope: no inferred-speed fallback, interpretation, category, score, timeline
   composition/UI, persistence, entitlement, notification, production provider
   call, or deployment was added.
+
+## Goal 80 portable runtime and shared-cache record
+
+- Artifact: `Dockerfile` pins Node 24.15.0 by tag and digest, uses `npm ci`, Next standalone output,
+  a non-secret immutable deployment ID, and a BuildKit-only Server Actions key. Runtime is direct Node
+  as non-root with health check; source/tests/docs/Git/env/output and npm/Corepack/Yarn are excluded.
+- Startup/capacity: validation rejects absent/malformed deployment identity and AES key, disabled
+  shared cache, non-TLS remote cache, unbounded timeouts/TTLs/prefixes, and a task/pool combination that
+  exceeds the declared database maximum after reserved migration/operator headroom. The current fixed
+  maximum is 32 PostgreSQL connections per application task.
+- Cache: exact Redis 6.2.1 supports Valkey through the stable singular Next handler. SHA-256 keys,
+  versioned V8 serialization, 10 MiB maximum, bounded TTL, corrupt-entry deletion, shared tag timestamps,
+  and fixed optional diagnostics keep cache mechanics separate from private data and database truth.
+  Build-time filesystem delegation preserves generated pages; runtime writes never modify the image.
+- Runtime gate: `npm run test:runtime` built the image and passed two healthy read-only/non-root app
+  tasks with disposable PostgreSQL 18 and pinned Valkey 8.1.9. Both served the generated horoscope,
+  exposed the same deployment marker/assets, retained security headers, ignored forwarded-host spoofing,
+  kept invalid shares private, shared and invalidated a cache entry across processes, served packaged
+  content through Valkey loss, stopped on SIGTERM before escalation, and removed disposable resources.
+- Security findings: pinned Trivy 0.73.0 first found five fixable GnuTLS OS findings (two critical,
+  three high) and eight high/critical packages bundled only with runtime npm. The image now installs
+  exact fixed GnuTLS `3.7.9-2+deb12u7` and removes unused package managers. The final vulnerability/
+  secret scan passed with zero fixable high/critical OS or Node findings and no detected image secret.
+- Release gate: `npm run release:check` passed formatting, ESLint, strict TypeScript, 103 files/1,303
+  tests, the 33-page standalone-enabled optimized build, 90.03% statement/87.71% branch/96.55%
+  function/92.18% line coverage, Drizzle consistency, the PostgreSQL 18 legacy/latest migration path,
+  71 database tests, and the high/critical production dependency threshold. The four unchanged
+  moderate development-only Drizzle Kit/esbuild advisories do not ship in the minimized runtime image.
+- Scope/release: no cloud, registry, credentials, external DNS, live database/cache, provider, or
+  production data changed. Cloud TLS/proxy source restriction, RDS/Valkey failure, old/new rollout,
+  ECR signature/SBOM promotion, live pool load, readiness, alarms, and restore proof remain NO-GO gates.
 
 ## Goal 79 deployment-topology decision record
 
