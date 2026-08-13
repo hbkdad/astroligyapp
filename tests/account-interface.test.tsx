@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -557,7 +557,7 @@ describe("account entry and recovery journeys", () => {
       await user.click(
         screen.getByRole("button", { name: "Permanently delete account" }),
       );
-      expect(onDeleted).toHaveBeenCalledWith(status);
+      await waitFor(() => expect(onDeleted).toHaveBeenCalledWith(status));
     },
   );
 });

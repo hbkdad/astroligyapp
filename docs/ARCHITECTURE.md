@@ -584,3 +584,9 @@ HTTPS and exposes only reviewed reference guides plus the 12 strict sign routes.
 page shares the same canonical, robots, sitemap, visible-breadcrumb, and sanitized JSON-LD
 contracts. Demo, private, account, API, and opaque-share surfaces are excluded; dynamic date or
 number expansion requires standalone validated utility first. See `docs/SEO.md`.
+
+The public lunar-date extension admits only the current UTC date through 30 days ahead. A shared
+geocentric Sun/Moon observation pass supplies UTC-noon geometry and brackets candidate crossings;
+the existing lunar search refines event times. A bounded server-only cache keys the complete
+date/provider/engine/search policy and coalesces concurrent loads. Unsupported dates 404 and
+provider failures remain no-index without partial facts. See `docs/PUBLIC_LUNAR_CALENDAR.md`.

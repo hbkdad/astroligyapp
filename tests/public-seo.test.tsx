@@ -45,9 +45,12 @@ describe.sequential("public SEO boundary", () => {
       host: "https://cosmic.example.test",
     });
     const urls = sitemap().map(({ url }) => url);
-    expect(urls).toHaveLength(15);
+    expect(urls).toHaveLength(46);
     expect(urls).toContain("https://cosmic.example.test/astrology");
     expect(urls).toContain("https://cosmic.example.test/horoscope/pisces");
+    expect(
+      urls.filter((url) => /\/moon-phase\/\d{4}-\d{2}-\d{2}$/.test(url)),
+    ).toHaveLength(31);
     expect(urls.some((url) => /account|match|chart|timeline/.test(url))).toBe(
       false,
     );

@@ -41,6 +41,14 @@
   border-radius: 1rem;
 }
 
+.date-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
 * {
   box-sizing: border-box;
 }

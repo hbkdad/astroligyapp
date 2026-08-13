@@ -7,8 +7,10 @@ export const metadata = publicMetadata({
   description:
     "Understand phase angle, approximate illumination, waxing and waning, and the limits of mean-cycle Moon age.",
 });
+export const revalidate = 86_400;
 
 export default function MoonPhaseReferencePage() {
+  const today = new Date().toISOString().slice(0, 10);
   return (
     <PublicReferencePage
       eyebrow="Moon reference"
@@ -38,6 +40,12 @@ export default function MoonPhaseReferencePage() {
         },
       ]}
       related={[
+        {
+          label: "Today's Moon calendar",
+          href: `/moon-phase/${today}`,
+          description:
+            "View today's UTC noon geometry and the next seven days of refined lunar events.",
+        },
         {
           label: "Astrology calculations",
           href: "/astrology",

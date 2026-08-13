@@ -11,11 +11,13 @@ rendered canonicals, Search Console ownership, and sitemap submission before cha
 
 - `/astrology`: deterministic astrology geometry and provenance reference.
 - `/moon-phase`: phase-angle, illumination, and mean-age limitations.
+- `/moon-phase/YYYY-MM-DD`: the current UTC date plus 30 days, each backed by a complete UTC-noon
+  provider result and refined seven-day event interval.
 - `/numerology/life-path`: one transparent date-reduction example and privacy boundary.
 - `/horoscope/{sign}`: exactly 12 canonical lowercase tropical-sign variants. Invalid signs are
   build-excluded and return 404.
 
-The sitemap contains only those 15 URLs. Home, Moon, numerology, chart, timeline, compatibility,
+The sitemap contains only those 46 URLs. Home, Moon, numerology, chart, timeline, compatibility,
 account, API, and opaque share routes are not included. Local/demo/personal surfaces remain
 page-level `noindex`; account and share pages keep their stricter existing directives.
 
@@ -44,9 +46,10 @@ claimed. JSON-LD escapes `<` before insertion. Validate deployed samples with Go
 Results Test and the Schema Markup Validator.
 
 The three guides have distinct intent and explanatory content grounded in the existing validated
-engines. Parameterized date and number pages are intentionally absent until each variant has
-validated, maintainable, standalone utility; generating them now would create thin pages. No AI
-copy or private inputs are used.
+engines. Lunar date pages are limited to a moving 31-day calendar and contain provider-backed
+daily geometry plus refined events; invalid, unavailable, and outside-window variants are absent
+or no-index. Parameterized number pages remain intentionally absent until each variant has
+validated, maintainable, standalone utility. No AI copy or private inputs are used.
 
 Sources retrieved 2026-08-13:
 

@@ -4,8 +4,8 @@ Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 73 complete; public indexing now has a fail-closed canonical/robots/sitemap contract,
-three useful reference guides, and exactly twelve gated daily sign routes without thin expansion.
+Status: Goal 74 complete; public indexing now includes a bounded, provider-backed 31-day lunar
+calendar with canonical date pages, refined seven-day events, and fail-closed unavailable states.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -99,6 +99,12 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 74: add strict canonical UTC date routes for today through 30 days ahead, backed by one
+      shared geocentric Sun/Moon observation pass and the existing validated lunar-event search.
+- [x] Publish UTC-noon phase/sign facts plus refined primary-phase and Moon-sign boundary events
+      with full provider/search trace, visible approximation labels, and no location or private data.
+- [x] Add bounded server-only caching, daily calendar/sitemap refresh, adjacent-date navigation,
+      canonicals, breadcrumbs, no-index provider failures, and mobile/desktop browser verification.
 - [x] Goal 73: add one server-owned public-origin/indexing release gate that aligns absolute
       self-canonicals, page robots, robots.txt, and a 15-URL sitemap; disabled defaults deny all
       crawling and emit no sitemap entries, while enablement requires an explicit HTTPS origin.
@@ -650,23 +656,23 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 74 — add a useful, validated public lunar calendar and canonical date pages over existing
-lunar event-search facts without turning unsupported dates into thin or misleading pages.
+Goal 75 — measure and harden cache and performance architecture across public and protected
+calculation flows without selecting managed cache, observability, hosting, or deployment services.
 
 Deliverables:
 
-1. Define a strict canonical `YYYY-MM-DD` public route contract and bounded calendar scope using
-   the selected UTC/geocentric provider boundary. Reject malformed/out-of-range dates with 404;
-   no private location, natal chart, or timezone input may enter the URL or calculation.
-2. Compose useful daily Moon facts and nearby validated primary-phase/sign-ingress events with
-   complete provider/search/version trace. Label illumination and mean age as approximations and
-   never derive event times from mean-cycle age.
-3. Add indexable date pages only where the visible content is complete and provider-backed;
-   unavailable/error/unsupported variants must be no-index or absent. Integrate canonicals,
-   breadcrumbs, internal calendar links, and the reviewed sitemap without unbounded URL growth.
-4. Apply lunar-validation, astro-validation, SEO-audit, and UI-quality; verify UTC date boundaries,
-   leap dates, invalid dates, cache identity, rendered HTML, mobile/desktop, and production-host
-   release gates. Do not select hosting, analytics, or mutate production.
+1. Inventory provider calls, calculation composition, cache keys, TTLs, entry caps, invalidation,
+   request coalescing, and expected cardinality for natal, sky/lunar, horoscope, lunar-calendar,
+   Today, and timeline flows. Record measurable latency, provider-call, and memory budgets.
+2. Add only measured, bounded, provider-neutral cache improvements. Every key must include all
+   calculation/provider/config versions and public/private scope; never share private results
+   across owners or place birth/profile/account data in public cache keys, logs, or metrics.
+3. Add deterministic concurrency, eviction, expiry, provider-failure, and stale-version tests plus
+   privacy-safe timing/call-count instrumentation suitable for local and later production checks.
+   Do not hide provider errors behind stale or partial data.
+4. Run proportional calculation, security, performance, accessibility, browser, coverage, and
+   production-build gates. Document measured before/after evidence and remaining multi-instance
+   limits without selecting or purchasing a managed cache, observability, or deployment service.
 
 ## Phase queue
 
@@ -679,8 +685,8 @@ Deliverables:
 | 5     | Timelines, daily/public readings, retention content      | Complete    |
 | 6     | Compatibility and privacy-safe sharing                   | Complete    |
 | 7     | Subscriptions, entitlements, notifications               | Complete    |
-| 8     | SEO and useful public content                            | In progress |
-| 9     | Security, privacy, performance, accessibility, QA        | Pending     |
+| 8     | SEO and useful public content                            | Complete    |
+| 9     | Security, privacy, performance, accessibility, QA        | In progress |
 | 10    | Deployment and production verification                   | Pending     |
 
 ## Decisions
@@ -3082,6 +3088,41 @@ tests/lunar-phase.test.ts tests/public-daily-readings.test.ts`;
 - Scope: no inferred-speed fallback, interpretation, category, score, timeline
   composition/UI, persistence, entitlement, notification, production provider
   call, or deployment was added.
+
+## Goal 74 public lunar calendar record
+
+- Route/calculation boundary: only canonical Gregorian UTC dates from the current UTC day through
+  30 days ahead are admitted; malformed, impossible, past, and farther-future dates fail before
+  provider dispatch. One request-local memoized pass samples geocentric tropical Sun/Moon facts
+  every 12 hours across pre-roll, the seven-day visible interval, and post-roll. UTC-noon phase,
+  Moon sign, approximate illumination, estimated mean-cycle age, and trend come from one complete
+  provider result; mean-cycle age never supplies an event instant.
+- Event validation: candidate primary-phase and Moon-sign crossings are refined through lunar
+  event search 1.0.0 to 60-second brackets with a 24-iteration cap. Output and presentation both
+  enforce event identity, chronology, exact interval membership, search/provider versions, and
+  complete provenance. The real Astronomy Engine 2.1.19 adapter produced the expected bounded
+  event sequence; existing USNO/JPL lunar fixture and ephemeris regression suites remained green.
+- Cache/SEO/privacy: the server-only cache has a six-hour TTL, 40-entry cap, in-flight coalescing,
+  and a key containing route, provider/data, calculation, phase, search, sample, tolerance, and
+  iteration versions. It stores no user data. The moving 31-date sitemap refreshes daily; valid
+  pages use absolute self-canonicals and matching visible/JSON-LD breadcrumbs. Unsupported dates
+  return 404, and provider failures render no partial schedule and emit no-index metadata.
+- UI/browser: optimized direct HTTP checks returned 200 and `index, follow` for a valid date, 404
+  for impossible/out-of-window dates, 46 sitemap URLs, sanitized breadcrumb data, and no private
+  identifiers. Desktop 1440x1000 and mobile 390x844 views, wrapping date navigation, keyboard
+  skip-link focus, and visible approximation/tradition limitations were inspected. The sole
+  console error was the expected local Better Auth session 503 without auth database config.
+- Commands/evidence: focused lunar, ephemeris, SEO, route, read-model, and UI suites; explicit
+  enabled-origin production build; direct optimized HTTP and Playwright checks; `npm run check`;
+  `npm run test:coverage`; `npm audit --omit=dev`; and `git diff --check`. The full gate passed 99
+  files and 1,282 tests plus the optimized build. Coverage passed at 89.96% statements, 87.61%
+  branches, 96.50% functions, and 92.10% lines. A timing-sensitive pre-existing account deletion
+  assertion was corrected to await its async callback and passed twice in isolation plus both full
+  suites. The audit retains four moderate Drizzle Kit development-loader findings whose offered
+  fix is breaking.
+- Scope: no local visibility, rise/set, arbitrary date generation, private input, AI copy,
+  analytics, Search Console mutation, production provider call, host selection, deployment, or
+  production indexing change occurred. Multi-instance caching remains a Goal 75 measurement gate.
 
 ## Goal 73 public SEO architecture record
 
