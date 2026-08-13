@@ -67,6 +67,11 @@ import {
   PersonalTodayRepository,
   PersonalTodayUnavailableError,
 } from "@/infrastructure/persistence/personal-today-repository";
+import {
+  PersonalTimelineAuthorizationError,
+  PersonalTimelineLockedError,
+  PersonalTimelineRepository,
+} from "@/infrastructure/persistence/personal-timeline-repository";
 import { DEMO_COMPATIBILITY_REPORT } from "@/presentation/compatibility-demo";
 import {
   SUBSCRIPTION_TRANSITION_EVENT_VERSION,
@@ -3387,6 +3392,7 @@ describe("protected personalized Today composition", () => {
   const profiles = new PrivateProfileRepository(pool, () => now);
   const charts = new ProtectedNatalChartRepository(pool, () => now);
   const today = new PersonalTodayRepository(pool, () => now);
+  const timelines = new PersonalTimelineRepository(pool, () => now);
 
   async function account(subject: string) {
     return bootstrapAccount(pool, activeSession(subject));
@@ -3450,10 +3456,16 @@ describe("protected personalized Today composition", () => {
       await expect(today.load(owner, command(profile))).rejects.toBeInstanceOf(
         PersonalTodayLockedError,
       );
+      await expect(
+        timelines.load(owner, command(profile)),
+      ).rejects.toBeInstanceOf(PersonalTimelineLockedError);
       await grant(owner);
       await expect(today.load(other, command(profile))).rejects.toBeInstanceOf(
         PersonalTodayAuthorizationError,
       );
+      await expect(
+        timelines.load(other, command(profile)),
+      ).rejects.toBeInstanceOf(PersonalTimelineAuthorizationError);
     } finally {
       await pool.query("delete from user_account where id in ($1,$2)", [
         owner,
@@ -3468,6 +3480,17 @@ describe("protected personalized Today composition", () => {
       const profile = await createProfile(owner);
       await grant(owner);
       await charts.generate(owner, command(profile));
+      const upcoming = await timelines.load(owner, command(profile));
+      const repeatedUpcoming = await timelines.load(owner, command(profile));
+      expect(upcoming).toEqual(repeatedUpcoming);
+      expect(upcoming).toMatchObject({
+        outcome: "ready",
+        scope: "forecast",
+        model: { items: expect.any(Array) },
+      });
+      if (upcoming.outcome !== "ready")
+        throw new Error("timeline fixture failed");
+      expect(upcoming.model.items.length).toBeGreaterThan(0);
       const before = await today.load(owner, command(profile));
       const duplicate = await today.load(owner, command(profile));
       expect(before).toEqual(duplicate);

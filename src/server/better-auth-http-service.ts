@@ -9,6 +9,7 @@ import { LocalAccountDeletionRepository } from "@/infrastructure/auth/account";
 import { PrivateProfileRepository } from "@/infrastructure/persistence/private-profile-repository";
 import { ProtectedNatalChartRepository } from "@/infrastructure/persistence/protected-natal-chart-repository";
 import { PersonalTodayRepository } from "@/infrastructure/persistence/personal-today-repository";
+import { PersonalTimelineRepository } from "@/infrastructure/persistence/personal-timeline-repository";
 import {
   BetterAuthAccountBootstrapper,
   BetterAuthActiveBillingAccountResolver,
@@ -39,6 +40,11 @@ import {
   type PersonalTodayResponse,
 } from "@/server/authenticated-personal-today";
 import type { PersonalTodayCommand } from "@/server/personal-today-contracts";
+import {
+  loadPersonalTimelineForRequest,
+  type PersonalTimelineResponse,
+} from "@/server/authenticated-personal-timeline";
+import type { PersonalTimelineCommand } from "@/server/personal-timeline-contracts";
 import {
   bootstrapAccountForRequest,
   type AuthenticatedAccountBootstrapResult,
@@ -104,6 +110,10 @@ export interface ProductionBetterAuthHttpService extends BetterAuthHttpService {
     request: Request,
     command: PersonalTodayCommand,
   ): Promise<PersonalTodayResponse>;
+  loadPersonalTimeline(
+    request: Request,
+    command: PersonalTimelineCommand,
+  ): Promise<PersonalTimelineResponse>;
   close(): Promise<void>;
 }
 
@@ -212,6 +222,11 @@ export function createBetterAuthHttpService(
       accountResolver: new BetterAuthActiveBillingAccountResolver(accountPool),
       today: new PersonalTodayRepository(accountPool),
     });
+    const personalTimelineDependencies = Object.freeze({
+      sessionVerifier: new BetterAuthVerifiedSessionVerifier(auth.api),
+      accountResolver: new BetterAuthActiveBillingAccountResolver(accountPool),
+      timelines: new PersonalTimelineRepository(accountPool),
+    });
     let closed = false;
     return Object.freeze({
       canonicalOrigin: configuration.auth.baseUrl,
@@ -277,6 +292,18 @@ export function createBetterAuthHttpService(
           request,
           command,
           personalTodayDependencies,
+        );
+      },
+      async loadPersonalTimeline(
+        request: Request,
+        command: PersonalTimelineCommand,
+      ) {
+        if (closed)
+          throw new Error("Authentication HTTP service is unavailable");
+        return loadPersonalTimelineForRequest(
+          request,
+          command,
+          personalTimelineDependencies,
         );
       },
       async close() {

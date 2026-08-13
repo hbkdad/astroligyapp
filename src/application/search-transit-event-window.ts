@@ -27,7 +27,7 @@ import {
   type NatalTransitTarget,
 } from "./calculate-transit-snapshot";
 
-export const TRANSIT_EVENT_SEARCH_VERSION = "1.0.0";
+export const TRANSIT_EVENT_SEARCH_VERSION = "1.1.0";
 export const TRANSIT_EVENT_MAX_INTERVAL_DAYS = 366;
 export const TRANSIT_EVENT_MAX_INITIAL_SAMPLES = 2_048;
 
@@ -317,7 +317,7 @@ export class TransitEventWindowSearch {
       value: deepFreeze({
         input: structuredClone(input),
         event: {
-          id: `transit:${input.transitingBody}:${natalTarget.id}:${input.aspectType}`,
+          id: `transit:${input.transitingBody}:${natalTarget.id}:${input.aspectType}:${peak.value.instant}`,
           transitingBody: input.transitingBody,
           natalTarget: structuredClone(natalTarget),
           aspect: { ...validated.aspect },

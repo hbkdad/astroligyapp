@@ -152,7 +152,7 @@ describe("TransitEventWindowSearch", () => {
       secondsFromDay(result.value.event.end.instant, 9.5),
     ).toBeLessThanOrEqual(1);
     expect(result.value.event).toMatchObject({
-      id: "transit:sun:natal:body:sun:conjunction",
+      id: `transit:sun:natal:body:sun:conjunction:${result.value.event.peak.instant}`,
       transitingBody: "sun",
       natalTarget: { id: "natal:body:sun", longitudeDegrees: 100 },
       aspect: {

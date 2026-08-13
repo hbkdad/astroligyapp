@@ -4,6 +4,10 @@ import {
   type TimelineFact,
   type TimelineFacts,
 } from "@/application/compose-timeline-facts";
+import {
+  interpretTimelineFacts,
+  TIMELINE_INTERPRETATION_PROJECTION_VERSION,
+} from "@/application/interpret-timeline-facts";
 
 export const TIMELINE_READ_MODEL_VERSION = "1.0.0";
 
@@ -52,13 +56,29 @@ export interface TimelineReadModelItem {
   readonly occurrenceLabel: string;
   readonly sourceReference: string;
   readonly sourceVersion: string;
+  readonly traditionReflection?: string;
 }
 
 export function toTimelineReadModel(
   timeline: TimelineFacts,
 ): TimelineReadModel {
   validateTimeline(timeline);
-  const items = timeline.facts.map(toItem);
+  const interpretations = interpretTimelineFacts(timeline);
+  const reflectionByFact = new Map(
+    interpretations.items.flatMap((item) =>
+      item.status === "rendered"
+        ? [
+            [
+              item.fact.provenance.sourceFactId,
+              item.interpretation.text,
+            ] as const,
+          ]
+        : [],
+    ),
+  );
+  const items = timeline.facts.map((fact) =>
+    toItem(fact, reflectionByFact.get(fact.id)),
+  );
   const filters = TIMELINE_FILTERS.map((key) => ({
     key,
     label: FILTER_LABELS[key],
@@ -99,11 +119,26 @@ export function toTimelineReadModel(
             },
           ]
         : []),
+      {
+        label: "Timeline interpretation projection",
+        value: TIMELINE_INTERPRETATION_PROJECTION_VERSION,
+      },
+      {
+        label: "Interpretation library",
+        value: interpretations.libraryVersion,
+      },
+      {
+        label: "Facts without deterministic interpretation",
+        value: String(interpretations.unsupportedFactIds.length),
+      },
     ],
   });
 }
 
-function toItem(fact: TimelineFact): TimelineReadModelItem {
+function toItem(
+  fact: TimelineFact,
+  traditionReflection?: string,
+): TimelineReadModelItem {
   const common = {
     id: fact.id,
     type: fact.type,
@@ -113,6 +148,7 @@ function toItem(fact: TimelineFact): TimelineReadModelItem {
     occurrenceLabel: formatOccurrence(fact),
     sourceReference: fact.id,
     sourceVersion: fact.sourceVersion,
+    ...(traditionReflection ? { traditionReflection } : {}),
   };
   if (fact.type === "personal-transit") {
     const event = fact.source.event;

@@ -4,8 +4,8 @@ Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 70 complete; saved private charts now compose a protected personalized Today
-dashboard from one trusted instant, validated current sky facts, and private numerology input.
+Status: Goal 71 complete; saved private charts now compose a protected, bounded upcoming
+personal timeline and feed its nearest validated events into the private Today dashboard.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -99,6 +99,15 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 71: add a request-local personal timeline engine with one shared 12-hour observation
+      pass, validated transit/lunar/station refiners, local-midnight numerology boundaries,
+      deterministic ordering, explicit boundary omissions, and plan/event truncation trace.
+- [x] Keep browser input to one exact opaque saved-profile selection; resolve owner, chart,
+      birth date/timezone, trusted interval, provider/config versions, and `forecast` or
+      `full_transit_calendar` entitlement scope under the repeated server/RLS boundary.
+- [x] Add dynamic no-index `/account/timeline`, tradition-framed supported reflections with
+      explicit unsupported station/ingress behavior, mobile-accessible filters/table, and real
+      upcoming items in the Goal 70 dashboard preview without persistence or public cache keys.
 - [x] Goal 70: add an exact opaque saved-profile Today command, repeated session/owner/RLS/
       revision checks, and centralized `personalized_daily_reading` plus `personal_transits`
       entitlement before any current calculation.
@@ -619,25 +628,23 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 71 — calculate and present a protected bounded upcoming personal timeline from one saved
-chart, making the empty Goal 70 preview useful before notification delivery is introduced.
+Goal 72 — add protected notification preferences and idempotent due-event materialization over
+Goal 71 timeline facts, without selecting or invoking a live delivery provider.
 
 Deliverables:
 
-1. Define strict POST-only opaque-profile and bounded UTC-interval contracts. Resolve owner,
-   chart, natal timezone, current plan, search limits, and calculation versions server-side;
-   require `forecast` for the baseline and `full_transit_calendar` only for advanced scope.
-2. Compose the existing transit-window, lunar-event, station-event, civil-time, numerology-cycle,
-   timeline-fact, interpretation, and read-model boundaries into a deterministic upcoming
-   personal timeline. Search each provider observation once where practical and expose explicit
-   truncation/unavailable outcomes instead of partial or fabricated events.
-3. Add the protected timeline route and feed its nearest validated items into Goal 70 without
-   putting private identifiers in URLs, analytics, routine logs, or public cache keys. Persist or
-   cache only after defining a complete interval/profile/provider/config identity and invalidation.
-4. Prove DST-local boundaries, window edges, deduplication/order, two owners, stale/missing
-   charts, plan limits, provider failures, concurrency/idempotency, exact projections, and
-   mobile/desktop/keyboard/reduced-motion behavior. Apply astro, lunar, numerology, database,
-   security, and UI skills; use no production credentials, purchases, external mutation, or deploy.
+1. Define exact versioned preference contracts for enabled event families, delivery channel,
+   natal-local quiet hours, lead time, and consent state. Keep contact destination, owner, plan,
+   chart, timezone, and event facts server-owned; require centralized `alerts` entitlement.
+2. Extend the normalized preference/delivery model only through a checked-in forward migration
+   if the existing schema cannot represent the contract. Preserve default deny, two-owner RLS,
+   revision safety, account erasure, and explicit channel/provider unavailability.
+3. Materialize due notification candidates only from validated Goal 71 fact IDs plus complete
+   profile/interval/provider/config/preference identity. Prove deterministic lead-time/quiet-hour
+   handling, deduplication, concurrency, retry state, stale-event invalidation, and no spam.
+4. Add a protected accessible preference surface and delivery-history projection, but do not send
+   email/push/SMS, purchase infrastructure, or mutate production. Apply database, security, astro,
+   lunar, numerology, and UI skills and record the later provider/release gates explicitly.
 
 ## Phase queue
 
@@ -1292,6 +1299,51 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
 
+## Goal 71 protected upcoming personal timeline record
+
+- Contract/privacy: contract `1.0.0` accepts only an opaque profile ID, birth-profile ID, and
+  positive revision through an ordered authenticated POST. The browser cannot choose owner,
+  birth input, timezone, interval, scope, plan, provider, versions, limits, or event families;
+  private IDs remain absent from URLs, public caches, analytics, and routine logs.
+- Authorization/scope: a live verified session resolves the opaque internal owner before one
+  `app_user` transaction re-reads the RLS-owned profile, latest completed natal chart, current
+  revision/provenance, and persisted subscriptions. The central policy requires `forecast` for
+  the 14-day baseline and grants the 45-day `full-transit-calendar` scope only when the advanced
+  entitlement is currently valid. Missing, cross-owner, stale, conflicting, locked, and provider
+  states fail explicitly.
+- Deterministic engine: engine `1.0.0` makes one all-body observation every 12 hours through a
+  request-local memoized `EphemerisProvider`, detects candidate brackets, then delegates exact
+  entry/peak/exit, phase/ingress, and station refinement to the existing validated searches at a
+  60-second tolerance. It composes natal-local day/month/year midnight boundaries through the
+  civil-time resolver and records provider calls, boundary omissions, event caps, plan truncation,
+  policy versions, and half-open effective interval. Transit search `1.1.0` includes the refined
+  peak instant in IDs so repeated equal body/target/aspect windows remain distinct.
+- Interpretation/presentation: timeline interpretation projection `1.0.0` uses only the existing
+  deterministic library `1.1.0` for supported transit, primary-phase, and numerology facts.
+  Moon ingresses and stations remain factual with an explicit unsupported-interpretation message.
+  Dynamic no-index `/account/timeline` labels private 14-day versus advanced scope, preserves
+  chronological cards plus the complete table/trace, and Goal 70 now receives nearest upcoming
+  facts instead of a deliberately empty preview.
+- Storage/migration decision: timeline calculations remain on demand and request-local. No schema,
+  migration, cache, or production data was changed because a safe stored identity must include
+  profile/chart revision, complete interval, provider/data/calculation versions, policy limits,
+  interpretation configuration, and invalidation semantics; Goal 72 will define notification
+  materialization identity separately.
+- Verification: `npm run check` passed 90 files and 1,246 tests plus the optimized Next.js build;
+  `npm run db:check` passed and disposable PostgreSQL passed all 70 integration/RLS tests.
+  Coverage passed at 90.70% statements, 88.80% branches, 97.97% functions, and 92.75% lines.
+  Real Astronomy Engine acceptance covers ordering, 14-day capping, and immutable trace; focused
+  contracts cover strict over-post rejection, session-first authorization, request-local cache,
+  interpretation support, and private interface projection.
+- UI/accessibility: optimized browser checks at 1440x1000 and 390x844 found zero page overflow,
+  no console warnings/errors, 48.5px filter targets, keyboard-operable semantic filter buttons,
+  a horizontally contained table region, synchronized visible results, a text equivalent for
+  every fact, and the existing reduced-motion rule. The fully authenticated ready journey still
+  requires production-like auth/database configuration and remains a release gate.
+- Security/dependency result: no credential, live provider, purchase, production mutation, or
+  deployment occurred. `npm audit --omit=dev` reports no high/critical issue; four moderate
+  Drizzle Kit development-loader advisories remain because the offered fix is a breaking downgrade.
+
 ## Goal 70 protected personalized Today record
 
 - Contract and privacy: contract 1.0.0 accepts only an opaque profile ID, birth-profile ID,
@@ -1329,8 +1381,8 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   moderate development-tool advisories remain under Drizzle Kit's legacy esbuild loader and its
   offered fix is a breaking downgrade, so it was not applied.
 - Remaining risk: the authenticated ready browser journey needs production-like auth/database
-  configuration and remains a later end-to-end/release gate. Goal 71 will replace the deliberately
-  empty timeline preview with bounded validated upcoming events.
+  configuration and remains a later end-to-end/release gate. Goal 71 now supplies the bounded
+  upcoming preview; live notification delivery remains outside this goal.
 
 ## Goal 69 protected saved-profile natal chart record
 

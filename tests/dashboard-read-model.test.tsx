@@ -52,7 +52,9 @@ describe("dashboard presentation boundary", () => {
       occurrenceKind: "instant",
     });
     expect(DEMO_DASHBOARD.nextEvent).toMatchObject({
-      id: "transit:venus:natal:body:mars:conjunction",
+      id: expect.stringMatching(
+        /^transit:venus:natal:body:mars:conjunction:2000-01-01T/,
+      ),
       occurrenceKind: "window",
     });
   });

@@ -147,6 +147,17 @@ tests/
   timezone, and enforces stable identity and chronological/type/ID ordering.
   Interpretation, scoring, UI, persistence, entitlements, and notifications stay
   downstream.
+- `PersonalTimelineEngine`: request-scoped orchestration over one shared coarse
+  all-body observation pass plus the existing validated transit, lunar, and station
+  refiners. The server supplies a half-open UTC interval, authoritative saved birth
+  date/timezone, and entitlement-derived scope. Forecast is capped at 14 days and
+  advanced calendar at 45 days; omissions and truncation are explicit. Request-local
+  memoization avoids repeated provider observations without persisting private input.
+- Protected personal timeline: `/account/timeline` accepts only an exact opaque
+  profile/birth-profile/revision POST. Live session resolution, identity-scoped RLS,
+  chart revision/provenance, and centralized `forecast`/`full_transit_calendar`
+  decisions run before calculation. The same aggregate supplies Goal 70's nearest
+  events. No private identifier enters URLs, routine logs, analytics, or public cache.
 - `derivePersonalLunarSnapshot`: provider-free derivation from a validated
   transit snapshot. It combines current Sun/Moon phase geometry and Moon zodiac
   placement with the existing Moon-to-natal planet/ASC/MC aspects, while
@@ -196,7 +207,9 @@ tests/
   client filters only visibility while preserving item order; the ordered cards
   and synchronized table are equivalent representations. The `/timeline` route
   uses explicitly labeled local calculated demo data and performs no calculation
-  in React.
+  in React. Supported transit, primary-phase, and numerology facts pass through the
+  existing versioned deterministic interpretation library; station and ingress facts
+  expose an explicit unsupported message instead of invented prose.
 - Moon presentation: `toMoonReadModel` accepts one validated personal-lunar
   snapshot plus Goal 23 lunar facts, rechecks lunar ranges, Moon-only personal
   aspects, chronology, identity, and source versions, then produces immutable

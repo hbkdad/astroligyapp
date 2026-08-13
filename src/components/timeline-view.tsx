@@ -9,15 +9,23 @@ import {
   type TimelineState,
 } from "@/presentation/timeline-read-model";
 
-export function TimelineView({ state }: { state: TimelineState }) {
+export function TimelineView({
+  state,
+  badge = "Local calculated demo",
+}: {
+  state: TimelineState;
+  badge?: string;
+}) {
   if (state.status !== "ready") return <TimelineStatus state={state} />;
-  return <ReadyTimeline model={state.model} />;
+  return <ReadyTimeline model={state.model} badge={badge} />;
 }
 
 function ReadyTimeline({
   model,
+  badge,
 }: {
   model: Extract<TimelineState, { status: "ready" }>["model"];
+  badge: string;
 }) {
   const [filter, setFilter] = useState<TimelineFilter>("all");
   const visibleItems =
@@ -49,7 +57,7 @@ function ReadyTimeline({
           <a href="#event-table">Table</a>
           <a href="#timeline-trace">Trace</a>
         </nav>
-        <HeaderUtilities badge="Local calculated demo" />
+        <HeaderUtilities badge={badge} />
       </header>
 
       <main id="timeline-content" className="timeline-shell" tabIndex={-1}>
@@ -117,6 +125,17 @@ function ReadyTimeline({
                       <time dateTime={item.dateTime}>{item.dateLabel}</time>
                     </div>
                     <p>{item.detail}</p>
+                    {item.traditionReflection ? (
+                      <p className="interpretation-copy">
+                        <strong>Tradition reflection:</strong>{" "}
+                        {item.traditionReflection}
+                      </p>
+                    ) : (
+                      <p className="occurrence-detail">
+                        No deterministic interpretation is available for this
+                        fact.
+                      </p>
+                    )}
                     <p className="occurrence-detail">{item.occurrenceLabel}</p>
                     <code>{item.sourceReference}</code>
                   </article>

@@ -5,7 +5,7 @@ import type { Pool, PoolClient } from "pg";
 import { buildNumerologyContext } from "@/application/build-numerology-context";
 import { composeDailyReading } from "@/application/compose-daily-reading";
 import { composePersonalContext } from "@/application/compose-personal-context";
-import { composeTimelineFacts } from "@/application/compose-timeline-facts";
+import { PersonalTimelineEngine } from "@/application/calculate-personal-timeline";
 import { TransitSnapshotEngine } from "@/application/calculate-transit-snapshot";
 import { derivePersonalLunarSnapshot } from "@/application/derive-personal-lunar-snapshot";
 import type { AccountId } from "@/infrastructure/auth/account";
@@ -60,6 +60,10 @@ export class PersonalTodayRepository {
       TransitSnapshotEngine,
       "calculate"
     > = new TransitSnapshotEngine(new AstronomyEngineProvider()),
+    private readonly timeline: Pick<
+      PersonalTimelineEngine,
+      "calculate"
+    > = new PersonalTimelineEngine(new AstronomyEngineProvider()),
   ) {}
 
   async load(
@@ -69,7 +73,13 @@ export class PersonalTodayRepository {
     const command = validatePersonalTodayCommand(commandValue);
     if (!command) throw new PersonalTodayAuthorizationError();
     return withIdentityTransaction(this.pool, ownerId, async ({ client }) =>
-      loadInTransaction(client, command, this.now, this.transits),
+      loadInTransaction(
+        client,
+        command,
+        this.now,
+        this.transits,
+        this.timeline,
+      ),
     );
   }
 }
@@ -79,6 +89,7 @@ async function loadInTransaction(
   command: PersonalTodayCommand,
   now: () => Date,
   transits: Pick<TransitSnapshotEngine, "calculate">,
+  timelineEngine: Pick<PersonalTimelineEngine, "calculate">,
 ): Promise<PersonalTodayResult> {
   const selected = await client.query<TodayRow>(
     `select p.id as profile_id, b.id as birth_profile_id, p.revision,
@@ -103,7 +114,8 @@ async function loadInTransaction(
   const row = selected.rows[0];
   if (!row) throw new PersonalTodayAuthorizationError();
   if (row.revision !== command.revision) throw new PersonalTodayConflictError();
-  if (!(await allowsToday(client, now))) throw new PersonalTodayLockedError();
+  const timelineScope = await allowedTimelineScope(client, now);
+  if (!timelineScope) throw new PersonalTodayLockedError();
   if (!row.birth_name)
     return Object.freeze({ outcome: "incomplete", reason: "birth-name" });
   if (!row.calculation_run_id)
@@ -141,31 +153,33 @@ async function loadInTransaction(
     numerology,
   );
   const reading = composeDailyReading(context);
-  const timeline = toTimelineReadModel(
-    composeTimelineFacts({
-      interval: {
-        startInstant: instant,
-        endInstant: new Date(Date.parse(instant) + 86_400_000).toISOString(),
-      },
-      transitEvents: [],
-      lunarEvents: [],
-      stationEvents: [],
-    }),
-  );
+  const timelineResult = await timelineEngine.calculate(natal, {
+    startInstant: instant,
+    endInstant: new Date(
+      Date.parse(instant) +
+        (timelineScope === "forecast" ? 14 : 45) * 86_400_000,
+    ).toISOString(),
+    birthDate: row.birth_date,
+    scope: timelineScope,
+  });
+  if (!timelineResult.ok) throw new PersonalTodayUnavailableError();
+  const timeline = toTimelineReadModel(timelineResult.value.timeline);
   return Object.freeze({
     outcome: "ready",
     model: toDashboardReadModel(sourceFromDailyReading(reading, timeline)),
   });
 }
 
-async function allowsToday(client: PoolClient, now: () => Date) {
+async function allowedTimelineScope(client: PoolClient, now: () => Date) {
   const rows = await client.query<SubscriptionRow>(
     `select transition_state_version, plan_key, status,
             period_starts_at, period_ends_at
        from subscription order by updated_at desc`,
   );
   const policy = createEntitlementPolicy();
-  return rows.rows.some((row) => {
+  let forecast = false;
+  let fullCalendar = false;
+  for (const row of rows.rows) {
     const state = {
       version: row.transition_state_version,
       planKey: row.plan_key,
@@ -173,11 +187,16 @@ async function allowsToday(client: PoolClient, now: () => Date) {
       periodStartsAt: instantValue(row.period_starts_at),
       periodEndsAt: instantValue(row.period_ends_at),
     };
-    return (
+    const base =
       policy.check(state, "personalized_daily_reading", { now }).allowed &&
-      policy.check(state, "personal_transits", { now }).allowed
-    );
-  });
+      policy.check(state, "personal_transits", { now }).allowed;
+    if (!base) continue;
+    forecast ||= policy.check(state, "forecast", { now }).allowed;
+    fullCalendar ||= policy.check(state, "full_transit_calendar", {
+      now,
+    }).allowed;
+  }
+  return fullCalendar ? "full-transit-calendar" : forecast ? "forecast" : null;
 }
 
 function trustedInstant(now: () => Date) {

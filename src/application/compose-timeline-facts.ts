@@ -264,7 +264,7 @@ function validateTransitSource(
   assertInsideInterval(end, interval, "Transit end");
   if (
     source.event.id !==
-      `transit:${source.event.transitingBody}:${source.event.natalTarget.id}:${source.event.aspect.type}` ||
+      `transit:${source.event.transitingBody}:${source.event.natalTarget.id}:${source.event.aspect.type}:${source.event.peak.instant}` ||
     source.input.transitingBody !== source.event.transitingBody ||
     source.input.natalTargetId !== source.event.natalTarget.id ||
     source.input.aspectType !== source.event.aspect.type

@@ -45,6 +45,7 @@ export function AccountNavigation() {
     return (
       <div className="account-navigation" aria-live="polite">
         <Link href="/account/today">My Today</Link>
+        <Link href="/account/timeline">My Timeline</Link>
         <Link href="/account">{firstName(state.user.name)}</Link>
         <button type="button" onClick={handleSignOut} disabled={signingOut}>
           {signingOut ? "Signing out…" : "Sign out"}

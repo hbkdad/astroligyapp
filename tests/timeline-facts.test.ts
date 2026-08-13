@@ -17,6 +17,7 @@ import {
   type StationEventSearchOutput,
 } from "@/application/search-station-events";
 import {
+  TRANSIT_EVENT_SEARCH_VERSION,
   TransitEventWindowSearch,
   type TransitEventWindow,
 } from "@/application/search-transit-event-window";
@@ -87,7 +88,7 @@ describe("composeTimelineFacts", () => {
       facts: [],
       metadata: {
         sourceVersions: {
-          transitEventSearch: "1.0.0",
+          transitEventSearch: TRANSIT_EVENT_SEARCH_VERSION,
           lunarEventSearch: "1.0.0",
           stationEventSearch: "1.0.0",
         },

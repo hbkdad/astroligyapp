@@ -52,7 +52,7 @@ describe("timeline presentation boundary", () => {
       categoryLabel: "Personal transit",
       title: "Venus Conjunction natal Mars",
       occurrenceKind: "window",
-      sourceVersion: "1.0.0",
+      sourceVersion: "1.1.0",
     });
     expect(
       model.items.find((item) => item.filter === "transits")!.occurrenceLabel,
