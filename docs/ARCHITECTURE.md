@@ -575,3 +575,12 @@ entitlement checks before storing versioned consent or materializing validated G
 Contact destination, owner, plan, natal timezone, calculation identity, and facts are never
 browser-controlled. Candidates remain inert in `pending-provider`; no general delivery provider
 or production worker is selected. See `docs/NOTIFICATION_BOUNDARY.md`.
+
+## Public SEO boundary
+
+Canonical origin and indexing permission are server-owned release configuration. Disabled is the
+default and produces a complete robots crawl deny plus an empty sitemap. Enabled mode requires
+HTTPS and exposes only reviewed reference guides plus the 12 strict sign routes. Every included
+page shares the same canonical, robots, sitemap, visible-breadcrumb, and sanitized JSON-LD
+contracts. Demo, private, account, API, and opaque-share surfaces are excluded; dynamic date or
+number expansion requires standalone validated utility first. See `docs/SEO.md`.

@@ -12,6 +12,35 @@
   --mint: #8bcbb8;
 }
 
+.public-breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.public-breadcrumb li + li::before {
+  margin-right: 0.5rem;
+  color: var(--muted);
+  content: "/";
+}
+
+.reference-link-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.reference-link-grid li {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+}
+
 * {
   box-sizing: border-box;
 }

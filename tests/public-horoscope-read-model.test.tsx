@@ -156,7 +156,7 @@ describe("public horoscope presentation boundary", () => {
     ).toContain("No deterministic interpretation is available");
   });
 
-  it("publishes exactly twelve static, no-index route variants", async () => {
+  it("publishes exactly twelve gated static route variants", async () => {
     expect(dynamicParams).toBe(false);
     expect(revalidate).toBe(900);
     expect(generateStaticParams()).toEqual(
@@ -167,8 +167,9 @@ describe("public horoscope presentation boundary", () => {
     });
     expect(metadata).toMatchObject({
       title: "Aries Daily Sky Reflection",
-      description: expect.stringContaining("current UTC preview"),
+      description: expect.stringContaining("current UTC Aries sign-target"),
       robots: { index: false, follow: false, noarchive: true },
+      alternates: { canonical: "http://localhost:3000/horoscope/aries" },
     });
     expect(isPublicHoroscopeSign("aries")).toBe(true);
     expect(isPublicHoroscopeSign("ophiuchus")).toBe(false);

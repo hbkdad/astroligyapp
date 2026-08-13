@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { HeaderUtilities } from "@/components/header-utilities";
 import type { PublicHoroscopeViewState } from "@/presentation/public-horoscope-read-model";
+import { loadPublicSiteConfiguration } from "@/config/public-site";
 
 export function PublicHoroscopeView({
   state,
@@ -12,6 +13,7 @@ export function PublicHoroscopeView({
 }) {
   if (state.status !== "ready") return <PublicHoroscopeStatus state={state} />;
   const { model } = state;
+  const indexingEnabled = loadPublicSiteConfiguration().indexingEnabled;
   return (
     <>
       <a className="skip-link" href="#horoscope-content">
@@ -40,7 +42,9 @@ export function PublicHoroscopeView({
         <HeaderUtilities
           badge={
             deliveryMode === "current-preview"
-              ? "No-index current preview"
+              ? indexingEnabled
+                ? "Current UTC reading"
+                : "No-index current preview"
               : "No-index local demo"
           }
         />
@@ -77,9 +81,10 @@ export function PublicHoroscopeView({
           {deliveryMode === "current-preview" ? (
             <>
               <strong>Current UTC preview.</strong> This page is regenerated on
-              a bounded schedule from the selected local ephemeris adapter. It
-              remains intentionally excluded from search indexing while delivery
-              is verified.
+              a bounded schedule from the selected local ephemeris adapter. It{" "}
+              {indexingEnabled
+                ? "is eligible for indexing under the configured public release gate."
+                : "remains intentionally excluded from search indexing while delivery is verified."}
             </>
           ) : (
             <>

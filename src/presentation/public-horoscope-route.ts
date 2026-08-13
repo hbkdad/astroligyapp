@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import type { PublicDailyLoadResult } from "@/application/load-public-daily-readings";
+import { publicMetadata } from "@/presentation/public-seo";
 import { ZODIAC_SIGNS, type ZodiacSign } from "@/domain/astro/zodiac";
 import {
   isPublicHoroscopeSign,
@@ -15,12 +16,12 @@ export function publicHoroscopeMetadata(sign: string): Metadata {
   const label = isPublicHoroscopeSign(sign)
     ? sign.charAt(0).toUpperCase() + sign.slice(1)
     : "Public";
-  return {
+  return publicMetadata({
+    path: `/horoscope/${sign}`,
     title: `${label} Daily Sky Reflection`,
-    description:
-      "A no-index current UTC preview separating shared-sky facts from general astrology-tradition reflections.",
-    robots: { index: false, follow: false, noarchive: true },
-  };
+    description: `A current UTC ${label} sign-target reading that separates validated shared-sky facts from general astrology-tradition reflections.`,
+    eligible: isPublicHoroscopeSign(sign),
+  });
 }
 
 export async function loadPublicHoroscopeViewState(

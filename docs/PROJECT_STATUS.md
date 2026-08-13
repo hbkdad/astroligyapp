@@ -4,8 +4,8 @@ Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 72 complete; protected alert preferences now materialize inert, private,
-idempotent candidates from validated personal-timeline facts without invoking a delivery provider.
+Status: Goal 73 complete; public indexing now has a fail-closed canonical/robots/sitemap contract,
+three useful reference guides, and exactly twelve gated daily sign routes without thin expansion.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -99,6 +99,15 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 73: add one server-owned public-origin/indexing release gate that aligns absolute
+      self-canonicals, page robots, robots.txt, and a 15-URL sitemap; disabled defaults deny all
+      crawling and emit no sitemap entries, while enablement requires an explicit HTTPS origin.
+- [x] Add useful standalone astrology-calculation, Moon-phase-geometry, and Life Path arithmetic
+      guides with semantic visible breadcrumbs, matching sanitized `BreadcrumbList` JSON-LD,
+      internal links, explicit limits, tradition framing, and no AI-generated copy.
+- [x] Keep home/Moon/numerology/chart/timeline/compatibility/account/share demos and private flows
+      out of the sitemap and page-level no-index. Gate exactly 12 lowercase sign pages, retain 404
+      for invalid signs, and defer date/number page multiplication until unique utility exists.
 - [x] Goal 72: add exact versioned email preference commands for seven Goal 71 event families,
       explicit consent, server-owned natal timezone, lead time, quiet hours, and optimistic
       revisions behind live session/owner/RLS/profile/chart and centralized `alerts` checks.
@@ -641,23 +650,23 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 73 — establish the public SEO architecture over the existing useful horoscope, Moon,
-numerology, astrology-reference, and timeline content without generating thin pages.
+Goal 74 — add a useful, validated public lunar calendar and canonical date pages over existing
+lunar event-search facts without turning unsupported dates into thin or misleading pages.
 
 Deliverables:
 
-1. Inventory current public routes and define one canonical, indexability, metadata, breadcrumb,
-   structured-data, internal-link, sitemap, and robots contract. Keep every account/share/private
-   route excluded and never place private identifiers or calculation inputs in public URLs.
-2. Build only pages backed by existing validated deterministic facts or genuinely useful static
-   reference content. Add date/sign/number route validation, explicit not-found behavior, source/
-   version trace where applicable, and no AI-generated or templated doorway-page expansion.
-3. Implement XML sitemap and robots behavior with stable canonical URLs, semantic headings,
-   accessible breadcrumbs, and supported schema.org types. Do not claim scientific prediction,
-   guaranteed outcomes, or unsupported freshness.
-4. Apply the SEO and UI-quality skills; test metadata/routes/sitemap/robots, inspect representative
-   desktop/mobile pages, and record caching, content-maintenance, analytics, and production-host
-   verification as later gates. Do not select hosting, analytics, or mutate production.
+1. Define a strict canonical `YYYY-MM-DD` public route contract and bounded calendar scope using
+   the selected UTC/geocentric provider boundary. Reject malformed/out-of-range dates with 404;
+   no private location, natal chart, or timezone input may enter the URL or calculation.
+2. Compose useful daily Moon facts and nearby validated primary-phase/sign-ingress events with
+   complete provider/search/version trace. Label illumination and mean age as approximations and
+   never derive event times from mean-cycle age.
+3. Add indexable date pages only where the visible content is complete and provider-backed;
+   unavailable/error/unsupported variants must be no-index or absent. Integrate canonicals,
+   breadcrumbs, internal calendar links, and the reviewed sitemap without unbounded URL growth.
+4. Apply lunar-validation, astro-validation, SEO-audit, and UI-quality; verify UTC date boundaries,
+   leap dates, invalid dates, cache identity, rendered HTML, mobile/desktop, and production-host
+   release gates. Do not select hosting, analytics, or mutate production.
 
 ## Phase queue
 
@@ -3073,6 +3082,45 @@ tests/lunar-phase.test.ts tests/public-daily-readings.test.ts`;
 - Scope: no inferred-speed fallback, interpretation, category, score, timeline
   composition/UI, persistence, entitlement, notification, production provider
   call, or deployment was added.
+
+## Goal 73 public SEO architecture record
+
+- Inventory: the root dashboard, Moon, numerology, chart, timeline, and compatibility surfaces
+  contain explicit local/demo or personal content and remain no-index. Account and opaque share
+  routes retain stricter private directives. Exactly three new standalone reference guides and
+  the existing 12 strict lowercase sign routes qualify for the reviewed sitemap; invalid signs
+  return 404. Date and number multiplication was rejected until Goal 74 can provide distinct,
+  validated utility.
+- Technical contract: `PUBLIC_SITE_INDEXING_ENABLED=false` is fail-closed with a complete crawl
+  deny and empty sitemap. Enabled mode requires an explicit HTTPS `PUBLIC_SITE_ORIGIN`. One config
+  supplies absolute self-canonicals, metadata, robots, host, sitemap, and breadcrumb JSON-LD.
+  Enabled production-mode inspection returned 200, `index, follow`, the configured canonical,
+  matching `BreadcrumbList`, 15 sitemap URLs, no private/demo URLs, and 404 for Ophiuchus.
+- Structured data/content: only visible Home-to-page breadcrumbs receive sanitized
+  `BreadcrumbList`; no FAQ, review, event, or predictive schema is claimed. Astrology, Moon phase,
+  and Life Path guides have distinct search intent, engine-grounded explanations, internal links,
+  limitations, and tradition framing. No AI copy, private input, profile/account/calculation ID,
+  analytics, or user-generated content enters HTML, URLs, metadata, sitemap, or JSON-LD.
+- Current source review: Next.js 16.3 local metadata/robots/sitemap/JSON-LD guides plus Google
+  Search canonicalization, robots-meta, breadcrumb, and structured-data policies were reviewed on
+  2026-08-13. Canonicals and sitemap stack consistently; robots allows crawlers to see page-level
+  no-index when enabled; structured data mirrors visible content and escapes `<`.
+- UI review: optimized desktop 1440x1000 and mobile 390x844 full-page screenshots show semantic
+  hierarchy, wrapping navigation, visible breadcrumbs, readable cards/links, no horizontal
+  overflow, and keyboard-first skip-link focus. Essential copy and JSON-LD are server-rendered.
+  The sole console error is the expected 503 from unconfigured local Better Auth session display;
+  configured production browser/auth verification remains a release gate.
+- Commands: focused SEO/horoscope tests and enabled/disabled configuration tests; `npm run check`
+  passed 97 files, 1,276 tests, and both fail-closed plus explicit-enabled production builds.
+  Coverage passed at 89.94% statements, 87.68% branches, 96.68% functions, and 92.05% lines.
+  One combined run hit the pre-existing timing-sensitive account-deletion JSDOM assertion; the
+  immediately following full coverage suite and clean application rerun both passed all tests.
+  Playwright CLI and direct HTTP inspection covered metadata, robots, sitemap, JSON-LD, privacy,
+  status codes, desktop, mobile, and keyboard behavior. The dependency audit retains the same
+  four moderate Drizzle Kit development-loader findings; npm offers only a breaking forced fix.
+- Scope: no date/number doorway pages, analytics, Search Console mutation, sitemap submission,
+  host selection, deployment, external content generation, production provider call, or
+  production indexing change occurred.
 
 ## Goal 72 notification boundary record
 

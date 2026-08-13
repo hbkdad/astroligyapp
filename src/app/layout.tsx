@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import "./globals.css";
+import { loadPublicSiteConfiguration } from "@/config/public-site";
+
+const publicSite = loadPublicSiteConfiguration();
 
 export const metadata: Metadata = {
   title: {
@@ -10,6 +13,7 @@ export const metadata: Metadata = {
   },
   description:
     "A deterministic astrology, lunar, and numerology intelligence platform in development.",
+  metadataBase: new URL(publicSite.origin),
   referrer: "no-referrer",
 };
 
