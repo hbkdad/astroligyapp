@@ -1,0 +1,9 @@
+variable "name" { type = string }
+variable "subnet_ids" { type = list(string) }
+variable "database_security_group_id" { type = string }
+variable "cache_security_group_id" { type = string }
+variable "database_instance_class" { type = string }
+variable "database_max_connections" { type = number }
+variable "backup_retention_days" { type = number }
+variable "production" { type = bool }
+variable "tags" { type = map(string) }

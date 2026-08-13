@@ -4,10 +4,11 @@ Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 80 complete; the digest-pinned, non-root standalone image, strict deployment/cache/
-connection configuration, provider-neutral Valkey cache boundary, and disposable two-instance runtime
-gate are locally verified. No cloud account, resource, purchase, DNS, live secret, or deployment was
-created. The exact source remains GO as an internal candidate and NO-GO for external staging/production.
+Status: Goal 81 complete; OpenTofu 1.12.5 and AWS provider 6.59.0 are selected for the credential-free
+AWS Canada planning baseline, with dependency-ordered modules, encrypted state/plan contracts, mocked
+plan tests, policy/security gates, redacted templates, and a state/cost/apply runbook. No cloud account,
+resource, backend, credential, purchase, DNS, live secret, plan, apply, or deployment was created or
+changed. The exact source remains GO as an internal candidate and NO-GO for external staging/production.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -102,6 +103,34 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 81: accept ADR 0011 selecting MPL-2.0 OpenTofu 1.12.5, exact AWS provider 6.59.0,
+      native enforced state/plan encryption, S3 lockfiles, and digest-pinned TFLint 0.64.0,
+      Conftest 0.69.0, and Trivy 0.73.0 without initializing a backend or contacting AWS.
+- [x] Add explicit staging/production account, Canada Central, AZ, immutable image, origin certificate,
+      runtime-secret ARN/KMS, capacity, retention, and tag contracts plus network, ECR, RDS PostgreSQL
+      18.4, Valkey, SES/SNS/SQS, private ECS, CloudFront/WAF, alarms, and locked-backup modules.
+- [x] Default to staging and indexing disabled; keep application tasks, RDS, and Valkey private; enforce
+      encrypted stores, read-only non-root tasks, exact secret/KMS references, bounded scaling/retention,
+      database deletion/final-snapshot guards, daily backups, and no notification endpoints in state.
+- [x] Add a disposable credential-free gate: format, backend-disabled locked init, validate, five mocked
+      plan contracts, clean TFLint, 304 passing Rego checks, eight expected unsafe-fixture rejections,
+      zero unsuppressed high/critical Trivy findings, and a deterministic 38-file contract validator.
+- [x] Add redacted environment/backend templates and an infrastructure runbook covering isolated state
+      bootstrap, encryption-key recovery, calculator inputs, dependency order, evidence retention, and
+      the separate saved-plan/apply/production approval boundaries.
+- [x] Apply the security-audit workflow: no critical/high issue remains in the credential-free baseline.
+      AWS-managed SNS/SQS keys are an explicit launch tradeoff; the public ALB accepts only CloudFront’s
+      managed origin prefix over TLS; required provider/API internet egress is TCP 443 through NAT. These
+      contextual Trivy exceptions are source-local and documented. No secret value or static AWS CI key
+      is present. Live IAM, state recovery, account isolation, delivery, and network behavior remain
+      external staging gates.
+- [x] Apply the release-check workflow: `npm run release:check` passed in 289.8 seconds with 103 files /
+      1,303 application tests, 71 PostgreSQL migration/RLS tests, 90.03% statements, 87.71% branches,
+      96.55% functions, 92.18% lines, optimized build, dependency high/critical threshold, and the IaC
+      gate. Four existing moderate development-only esbuild findings remain below the declared gate;
+      the proposed automatic fix is breaking. Decision: internal candidate GO, external staging and
+      production NO-GO until account-specific cost, owner, state, credential, DNS, restore, and live
+      verification approvals are complete.
 - [x] Goal 80: add the digest-pinned Node 24.15.0 multi-stage standalone image, BuildKit-only Server
       Actions build secret, non-root exec-form runtime, health check, minimized runtime packages,
       `.dockerignore`, and strict startup validation for deployment, cache, TLS/local exceptions, and
@@ -713,23 +742,23 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 81 — select the infrastructure-as-code and policy toolchain, then implement a credential-free AWS
-Canada planning baseline for ADR 0010 without creating or changing any cloud resource.
+Goal 82 — produce a credential-free, reproducible release-artifact and provenance baseline for the
+Goal 80 container without pushing an image or contacting AWS.
 
 Deliverables:
 
-1. Compare current OpenTofu and Terraform licensing, state/locking, AWS provider support, CI policy,
-   testing, upgrade, and operator workflows using primary sources. Record the selection and exact pinned
-   versions in an ADR; do not initialize a remote backend, log in, or supply cloud credentials.
-2. Add minimal environment/account/provider/state contracts and dependency-ordered modules for network,
-   edge/WAF, ECR, ECS, RDS, Valkey, secrets references, SES/SNS/SQS worker support, logs/alarms, and
-   backups. Defaults must be non-production, indexing-disabled, encrypted, private, bounded, and tagged.
-3. Add offline format/validate/lint/security/policy and deterministic plan-contract tests that reject
-   public data stores/tasks, wildcard IAM, static CI keys, secret values in state, unbounded retention or
-   autoscaling, missing deletion protection/backup policy, and region/account/environment mismatches.
-4. Produce a redacted variable template, state/bootstrap runbook, calculator-input inventory, and exact
-   apply approval boundary. Run `security-audit`, `release-check`, and the full local gates. Do not run
-   init/plan/apply against AWS, create state infrastructure, create accounts, or change DNS/secrets.
+1. Compare current OCI provenance/SBOM and secret-scanning options using primary sources; select and pin
+   the minimum toolchain and record its formats, trust boundary, update path, and verification limits.
+2. Build the Goal 80 image reproducibly from the exact Git tree, generate CycloneDX or SPDX SBOM and
+   build metadata, verify the non-root/read-only/runtime contracts, and bind all evidence to the image
+   digest and source commit without embedding source secrets or private data.
+3. Add deterministic tamper/rejection tests plus local and CI gates for mutable tags, mismatched source/
+   image/SBOM identity, leaked credentials, missing licenses, critical/high image vulnerabilities, and
+   unreviewed build inputs. Keep generated scan/evidence files out of Git unless explicitly designed as
+   stable redacted manifests.
+4. Document the ECR push/sign/attestation and promotion approval boundary, keyless/OIDC prerequisites,
+   retention, rollback, and verification commands. Run `security-audit`, `release-check`, and full local
+   gates. Do not log in to AWS, push/sign an image, create a registry resource, or mutate CI credentials.
 
 ## Phase queue
 

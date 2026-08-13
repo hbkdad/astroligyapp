@@ -46,8 +46,9 @@ changes. The following require a separate explicit user approval after a reviewe
 - [ ] Add privacy-safe structured logging/metrics interfaces and redaction tests before an exporter.
 - [ ] Add a worker entry point for authenticated SES feedback queue messages, bounded batches,
       visibility-timeout/idempotency behavior, DLQ/reconciliation, shutdown, and health/lag signals.
-- [ ] Add IaC modules and policy tests for accounts/providers, network, edge/WAF, ECR, ECS, RDS roles,
-      Valkey, secrets references, SES/SNS/SQS, logs/alarms, backups, and GitHub OIDC.
+- [x] Add credential-free IaC modules and policy tests for accounts/providers, network, edge/WAF, ECR,
+      ECS, RDS, Valkey, secrets references, SES/SNS/SQS, logs/alarms, and backups. GitHub OIDC remains
+      deferred until an exact AWS account/role and plan-only CI trust policy receive separate approval.
 - [ ] Add image SBOM, secret scan, ECR scan gate, IaC lint/plan/policy tests, and artifact digest output to
       CI without granting deployment permission to pull requests.
 

@@ -1,0 +1,11 @@
+output "cluster_arn" { value = aws_ecs_cluster.this.arn }
+output "cluster_name" { value = aws_ecs_cluster.this.name }
+output "service_name" { value = aws_ecs_service.application.name }
+output "load_balancer_arn" { value = aws_lb.application.arn }
+output "load_balancer_arn_suffix" { value = aws_lb.application.arn_suffix }
+output "load_balancer_dns_name" { value = aws_lb.application.dns_name }
+output "tasks_assign_public_ip" { value = aws_ecs_service.application.network_configuration[0].assign_public_ip }
+output "readonly_root_filesystem" { value = nonsensitive(jsondecode(aws_ecs_task_definition.application.container_definitions)[0].readonlyRootFilesystem) }
+output "load_balancer_zone_id" { value = aws_lb.application.zone_id }
+output "target_group_arn" { value = aws_lb_target_group.application.arn }
+output "application_log_group_name" { value = aws_cloudwatch_log_group.application.name }
