@@ -6,6 +6,7 @@ import { Pool } from "pg";
 
 import { betterAuthSchema } from "@/db/auth-schema";
 import { LocalAccountDeletionRepository } from "@/infrastructure/auth/account";
+import { PrivateProfileRepository } from "@/infrastructure/persistence/private-profile-repository";
 import {
   BetterAuthAccountBootstrapper,
   BetterAuthActiveBillingAccountResolver,
@@ -17,6 +18,13 @@ import {
   deleteAccountForRequest,
   type AuthenticatedAccountDeletionResult,
 } from "@/server/authenticated-account-deletion";
+import {
+  loadPrivateProfilesForRequest,
+  mutatePrivateProfileForRequest,
+  type PrivateProfileMutationResult,
+  type PrivateProfileReadResult,
+} from "@/server/authenticated-private-profiles";
+import type { PrivateProfileCommand } from "@/server/private-profile-contracts";
 import {
   bootstrapAccountForRequest,
   type AuthenticatedAccountBootstrapResult,
@@ -68,6 +76,11 @@ export interface ProductionBetterAuthHttpService extends BetterAuthHttpService {
     request: Request,
   ): Promise<AuthenticatedAccountBootstrapResult>;
   deleteAccount(request: Request): Promise<AuthenticatedAccountDeletionResult>;
+  loadPrivateProfiles(request: Request): Promise<PrivateProfileReadResult>;
+  mutatePrivateProfile(
+    request: Request,
+    command: PrivateProfileCommand,
+  ): Promise<PrivateProfileMutationResult>;
   close(): Promise<void>;
 }
 
@@ -161,6 +174,11 @@ export function createBetterAuthHttpService(
       ),
       eraser: new LocalAccountDeletionRepository(accountPool),
     });
+    const privateProfileDependencies = Object.freeze({
+      sessionVerifier: new BetterAuthVerifiedSessionVerifier(auth.api),
+      accountResolver: new BetterAuthActiveBillingAccountResolver(accountPool),
+      profiles: new PrivateProfileRepository(accountPool),
+    });
     let closed = false;
     return Object.freeze({
       canonicalOrigin: configuration.auth.baseUrl,
@@ -178,6 +196,26 @@ export function createBetterAuthHttpService(
         if (closed)
           throw new Error("Authentication HTTP service is unavailable");
         return deleteAccountForRequest(request, deletionDependencies);
+      },
+      async loadPrivateProfiles(request: Request) {
+        if (closed)
+          throw new Error("Authentication HTTP service is unavailable");
+        return loadPrivateProfilesForRequest(
+          request,
+          privateProfileDependencies,
+        );
+      },
+      async mutatePrivateProfile(
+        request: Request,
+        command: PrivateProfileCommand,
+      ) {
+        if (closed)
+          throw new Error("Authentication HTTP service is unavailable");
+        return mutatePrivateProfileForRequest(
+          request,
+          command,
+          privateProfileDependencies,
+        );
       },
       async close() {
         if (closed) return;

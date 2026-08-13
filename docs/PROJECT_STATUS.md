@@ -4,8 +4,8 @@ Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 67 complete; reauthenticated account deletion is exposed only through a strict
-first-party Server Action and accessible danger zone with fixed identity-free states.
+Status: Goal 68 complete; private display and birth profiles now have a live-session,
+identity-scoped read/create/update/delete boundary and accessible private UI.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -99,6 +99,15 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 68: define strict versioned private profile contracts for normalized display name,
+      current/birth IANA timezones, canonical birth date, explicit date-only/approximate/exact
+      time precision, optional paired user-supplied coordinates, resource IDs, and revisions.
+- [x] Add migration `0012_secret_sentinels`, positive lost-update revisions, storage checks,
+      identity-scoped aggregate persistence, advisory-locked one-profile baseline enforcement,
+      and centrally evaluated server-owned `multiple_profiles` entitlement.
+- [x] Add dynamic no-index `/account/profiles` read and exact create/update/delete Server
+      Actions with cookie-only request projection, repeated live authorization, minimal private
+      DTOs, fixed safe outcomes, hard-delete cascades, and responsive accessible UI.
 - [x] Goal 67: expose the accepted Goal 63 workflow through an exact ordered-intent Server
       Action that ignores prior state, reconstructs trusted request metadata, forwards only a
       bounded cookie, and returns fixed deleted/authenticate/authorize/retry/reconcile states.
@@ -592,25 +601,26 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 68 — add the first protected profile read/create/update/delete composition for private
-display and birth data, using live server authorization and identity-scoped transactions.
+Goal 69 — generate and read a protected deterministic natal chart from one saved private
+profile, with explicit civil-time resolution, server-owned entitlement, and complete provenance.
 
 Deliverables:
 
-1. Define strict versioned private profile read/mutation contracts for bounded display name,
-   birth date, optional exact local time, IANA timezone, optional coordinates, time precision,
-   and explicit deletion. Do not select or call a geocoder or infer missing birth data.
-2. Implement identity-scoped repositories and Server Component/Server Action compositions that
-   derive ownership only from a fresh verified session/internal account and enforce the current
-   profile entitlement limit server-side. Never accept owner/account/subject/entitlement state.
-3. Add an accessible private profile UI with clear precision/location privacy controls, safe
-   validation feedback, no raw birth data in URLs/analytics/logs, and no chart calculation until
-   the saved profile passes its own later deterministic composition.
-4. Prove two-owner isolation, create/update/delete/concurrency/rollback, timezone/date/time and
-   coordinate boundaries, entitlement enforcement, hostile fields, fixed safe projections,
-   browser keyboard/mobile behavior, and disposable PostgreSQL behavior. Apply database,
-   security, and UI skills; update records; run every gate. Do not add geocoding, provider,
-   billing, production, purchase, or deployment changes.
+1. Define a strict saved-profile chart command and read DTO. Accept only opaque owned
+   profile/birth-profile IDs and current revision; load every birth input server-side. Require
+   explicit time and coordinate readiness, and never infer an unknown time or location.
+2. Implement deterministic IANA civil-time-to-UTC resolution with explicit unique, ambiguous,
+   and nonexistent outcomes, then compose the accepted Astronomy Engine/Whole Sign natal
+   engine. Require the central `natal_chart` entitlement inside the authorized transaction.
+3. Persist calculation run, chart, positions, cusps, and aspects with complete engine/provider/
+   strategy/config/input provenance and transactional rollback/idempotency. Add a protected
+   chart read/generate UI with uncertainty, source, loading, locked, unavailable, and success
+   states; never put birth inputs or private IDs in URLs or logs.
+4. Prove DST folds/gaps, date/timezone/coordinate boundaries, stale revisions, two owners,
+   entitlement denial, concurrent duplicate generation, rollback, cache identity, exact stored
+   provenance, fixed projections, and mobile/desktop/keyboard behavior. Apply astro, database,
+   security, and UI skills; run every gate and avoid geocoding, external provider calls,
+   production mutation, credentials, purchases, or deployment.
 
 ## Phase queue
 
@@ -1264,6 +1274,48 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   webhook route, provider SDK, checkout, price, production database credential,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
+
+## Goal 68 protected private profile record
+
+- Contracts/privacy: versioned strict commands and frozen minimal read DTOs cover normalized
+  display name, current and birth IANA timezones, canonical birth date, explicit date-only/
+  approximate/exact precision, optional paired user-supplied birth coordinates, opaque resource
+  IDs, and positive revisions. Provider, owner, subject, entitlement, inferred location, and
+  calculation fields are rejected; profile data stays out of URLs and routine logs.
+- Migration: `0012_secret_sentinels` adds a positive revision and bounded consistency checks for
+  display names, timezones, coordinate pairs, birth-time precision, coordinate provenance, and
+  coordinate bounds. The additive upgrade preserved representative legacy rows and passed the
+  disposable PostgreSQL migration test. Apply before the new route during a controlled window
+  and monitor validation locks; if deployment fails, disable new writers and ship a reviewed
+  forward fix rather than dropping accepted profile data.
+- Authorization/persistence: reads and mutations require a recent live Better Auth session,
+  independently resolve the active internal owner, then execute as `app_user` inside forced RLS.
+  The browser cannot submit owner/account/subject or plan state. Profile and birth writes are
+  atomic, owner-scoped, and return only the validated projection.
+- Entitlement/concurrency: create takes an owner advisory lock and evaluates the centralized
+  `multiple_profiles` entitlement from server subscription rows. Baseline accounts retain one
+  profile; entitled accounts may create more. Updates lock both rows and require the current
+  revision, so stale edits conflict without partial writes. Delete requires the exact confirmation
+  phrase and relies on the reviewed cascade inside the transaction.
+- UI/accessibility: `/account/profiles` is dynamic and noindex, with private list, empty, limit,
+  create, edit, conflict, retry, and destructive-delete states. Labels, hints, alerts, pending
+  suppression, focus restoration, 48-pixel controls, wrapping long names, mobile stacking,
+  keyboard flow, and reduced-motion behavior were reviewed at desktop, 390-pixel mobile, and
+  200% zoom without horizontal overflow.
+- Adversarial result: strict boundary, Unicode/date/time/timezone/coordinate validation,
+  duplicate/reordered/file/extra form fields, live-session and owner failure, two-owner isolation,
+  free-plan concurrent create, advanced entitlement, stale revision, rollback after either insert,
+  database constraints, index use, action projection, and UI failure states passed. No critical/
+  high security finding remains.
+- Verification result: 73 unit files and 1,185 tests passed. Coverage was 91.80% statements,
+  90.62% branches, 98.55% functions, and 93.72% lines; the private profile component reached
+  94.28% statements/92% branches/100% functions/96.66% lines and its strict contract reached
+  95.08% statements/93.39% branches/100% functions/96.55% lines. The PostgreSQL suite passed
+  all 62 integration tests. Formatting, lint, strict TypeScript, Drizzle metadata, optimized
+  build, production audit, secret/privacy scan, and the application gate passed.
+- Scope/residual risk: no geocoder, timezone inference, ephemeris provider, chart calculation,
+  interpretation, external service, production database mutation, purchase, or deployment was
+  added. Saved-profile chart generation remains Goal 69.
 
 ## Goal 67 first-party account deletion record
 

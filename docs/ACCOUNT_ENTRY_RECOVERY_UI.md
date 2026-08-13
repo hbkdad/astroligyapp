@@ -1,6 +1,6 @@
 # Account entry and recovery UI
 
-Status: Goals 65-67 local implementation accepted on 2026-08-13.
+Status: Goals 65-68 local implementation accepted on 2026-08-13.
 
 ## Scope
 
@@ -20,6 +20,7 @@ The routes are:
 | `/account/forgot-password` | `POST /api/auth/request-password-reset`               |
 | `/account/verify-email`    | `POST /api/auth/send-verification-email`              |
 | `/account/reset-password`  | `POST /api/auth/reset-password` after link navigation |
+| `/account/profiles`        | Private server read and create/update/delete Actions  |
 
 The `/account` page also exposes one Next.js Server Action, not a public Better Auth route.
 Its form has no named fields. The action ignores React's client-supplied prior state, copies
@@ -33,6 +34,10 @@ action ignores prior view state, reconstructs canonical origin/fetch metadata, f
 the bounded cookie, and returns only deleted/authenticate/authorize/retry/reconcile. A terminal
 deleted or reconcile result replaces the session presentation; no browser state authorizes the
 operation.
+
+After server account readiness succeeds, the overview links to `/account/profiles`. The profile
+route still performs its own live session, active-account, row-ownership, and entitlement checks;
+the link and browser session projection grant no access. See `PRIVATE_PROFILE_BOUNDARY.md`.
 
 All pages are no-indexed and inherit `no-referrer`. Browser requests use same-origin
 credentials, no-store caching, explicit JSON only where the Goal 64 endpoint requires it,
@@ -106,5 +111,5 @@ error, and success text have at least 7.91:1 contrast against the raised dark su
 Live configured browser journeys still require production-like PostgreSQL roles, trusted
 proxy rewriting, shared abuse limiting, log/trace redaction for capability URLs, SES/SNS/SQS
 resources and credentials, real delivery/recovery tests, monitoring, and deployment review.
-MFA/passkey scope remains a later release-hardening decision. Protected profile CRUD is the
-next application boundary; activation readiness and browser session state must not authorize it.
+MFA/passkey scope remains a later release-hardening decision. Protected chart generation is the
+next application boundary; profile UI state must not authorize calculation or provider work.

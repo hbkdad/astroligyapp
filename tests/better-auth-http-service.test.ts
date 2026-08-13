@@ -122,5 +122,18 @@ describe("Better Auth HTTP process service", () => {
         new Request(`${ORIGIN}/internal/account-deletion`, { method: "POST" }),
       ),
     ).rejects.toThrow("Authentication HTTP service is unavailable");
+    await expect(
+      service.loadPrivateProfiles(
+        new Request(`${ORIGIN}/internal/private-profiles`),
+      ),
+    ).rejects.toThrow("Authentication HTTP service is unavailable");
+    await expect(
+      service.mutatePrivateProfile(
+        new Request(`${ORIGIN}/internal/private-profile-mutation`, {
+          method: "POST",
+        }),
+        {} as never,
+      ),
+    ).rejects.toThrow("Authentication HTTP service is unavailable");
   });
 });

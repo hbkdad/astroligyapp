@@ -46,6 +46,14 @@ import {
   SubscriptionRepository,
 } from "@/infrastructure/persistence/subscription-repository";
 import { withIdentityTransaction } from "@/infrastructure/persistence/identity-transaction";
+import {
+  PrivateProfileAuthorizationError,
+  PrivateProfileConflictError,
+  PrivateProfileLimitError,
+  PrivateProfileRepository,
+} from "@/infrastructure/persistence/private-profile-repository";
+import { mutatePrivateProfileForRequest } from "@/server/authenticated-private-profiles";
+import { mutatePrivateProfileFromForm } from "@/server/private-profile-action";
 import { DEMO_COMPATIBILITY_REPORT } from "@/presentation/compatibility-demo";
 import {
   SUBSCRIPTION_TRANSITION_EVENT_VERSION,
@@ -2902,6 +2910,234 @@ describe("authentication email feedback and suppression ledger", () => {
          values (1, 'hmac-sha256:1:${"0".repeat(64)}', 'transient-bounce')`,
       ),
     ).rejects.toMatchObject({ code: "23514" });
+  });
+});
+
+describe("protected private profile lifecycle", () => {
+  const profileNow = new Date("2026-08-13T12:00:00.000Z");
+  const repository = new PrivateProfileRepository(pool, () => profileNow);
+
+  function createCommand(displayName: string) {
+    return {
+      version: "1.0.0",
+      operation: "create",
+      value: {
+        displayName,
+        currentTimezone: "America/Toronto",
+        birthDate: "1990-01-01",
+        birthTimePrecision: "exact",
+        birthTimeLocal: "13:45",
+        birthTimezone: "America/Toronto",
+        latitude: 48.4758,
+        longitude: -81.3305,
+      },
+    } as const;
+  }
+
+  function createForm(displayName: string) {
+    const data = new FormData();
+    const entries: Array<[string, string]> = [
+      ["version", "1.0.0"],
+      ["operation", "create"],
+      ["displayName", displayName],
+      ["currentTimezone", "America/Toronto"],
+      ["birthDate", "1990-01-01"],
+      ["birthTimePrecision", "exact"],
+      ["birthTimeLocal", "13:45"],
+      ["birthTimezone", "America/Toronto"],
+      ["latitude", "48.475800"],
+      ["longitude", "-81.330500"],
+    ];
+    for (const [key, value] of entries) data.append(key, value);
+    return data;
+  }
+
+  async function account(subject: string) {
+    const result = await pool.query<{ id: string }>(
+      `insert into user_account (identity_provider_subject)
+       values ($1) returning id`,
+      [subject],
+    );
+    return result.rows[0]!.id as AccountId;
+  }
+
+  it("composes cookie-only action input through live identity-scoped persistence", async () => {
+    const owner = await account(`profile-action-${randomUUID()}`);
+    try {
+      const active: ActiveSession = {
+        status: "active",
+        subject: `profile-action-subject-${randomUUID()}`,
+        sessionId: `profile-action-session-${randomUUID()}`,
+        authenticatedAt: profileNow,
+        expiresAt: new Date("2026-08-13T13:00:00.000Z"),
+      };
+      const dependencies = {
+        sessionVerifier: { verify: vi.fn(async () => active) },
+        accountResolver: { resolveActiveAccount: vi.fn(async () => owner) },
+        profiles: repository,
+        now: () => profileNow,
+      };
+      await expect(
+        mutatePrivateProfileFromForm(
+          new Headers({ cookie: "session=opaque", "x-owner-id": owner }),
+          createForm("Action profile"),
+          () => ({
+            canonicalOrigin: "https://app.example.test",
+            loadPrivateProfiles: vi.fn(),
+            mutatePrivateProfile: (request, command) =>
+              mutatePrivateProfileForRequest(request, command, dependencies),
+          }),
+        ),
+      ).resolves.toEqual({ status: "saved" });
+      const listed = await repository.list(owner);
+      expect(listed.profiles).toHaveLength(1);
+      expect(listed.profiles[0]).toMatchObject({
+        displayName: "Action profile",
+        birthTimePrecision: "exact",
+        latitude: 48.4758,
+        longitude: -81.3305,
+      });
+    } finally {
+      await pool.query("delete from user_account where id = $1", [owner]);
+    }
+  });
+
+  it("enforces free concurrency limits and two-owner object authorization", async () => {
+    const owner = await account(`profile-limit-${randomUUID()}`);
+    const other = await account(`profile-other-${randomUUID()}`);
+    try {
+      const results = await Promise.allSettled([
+        repository.mutate(owner, createCommand("First concurrent")),
+        repository.mutate(owner, createCommand("Second concurrent")),
+      ]);
+      expect(
+        results.filter((result) => result.status === "fulfilled"),
+      ).toHaveLength(1);
+      const rejection = results.find((result) => result.status === "rejected");
+      expect(rejection).toMatchObject({
+        reason: new PrivateProfileLimitError(),
+      });
+      const listed = await repository.list(owner);
+      expect(listed.profiles).toHaveLength(1);
+      const profile = listed.profiles[0]!;
+      await expect(
+        repository.mutate(other, {
+          version: "1.0.0",
+          operation: "update",
+          profileId: profile.profileId,
+          birthProfileId: profile.birthProfileId,
+          revision: profile.revision,
+          value: createCommand("Hostile update").value,
+        }),
+      ).rejects.toEqual(new PrivateProfileAuthorizationError());
+      expect((await repository.list(other)).profiles).toHaveLength(0);
+    } finally {
+      await pool.query("delete from user_account where id in ($1, $2)", [
+        owner,
+        other,
+      ]);
+    }
+  });
+
+  it("evaluates multiple-profile entitlement server-side and protects revisions", async () => {
+    const owner = await account(`profile-advanced-${randomUUID()}`);
+    try {
+      await repository.mutate(owner, createCommand("Primary"));
+      await pool.query(
+        `insert into subscription
+           (user_account_id, plan_key, status, external_provider,
+            external_customer_reference, external_subscription_reference,
+            period_starts_at, period_ends_at, transition_state_version,
+            last_provider_event_id, last_provider_event_occurred_at)
+         values ($1, 'advanced', 'active', 'profile_test', $2, $3,
+                 '2026-08-01T00:00:00.000Z', '2026-09-01T00:00:00.000Z',
+                 '1.0.0', $4, '2026-08-01T00:01:00.000Z')`,
+        [
+          owner,
+          `customer-${randomUUID()}`,
+          `subscription-${randomUUID()}`,
+          `event-${randomUUID()}`,
+        ],
+      );
+      await expect(
+        repository.mutate(owner, createCommand("Secondary")),
+      ).resolves.toEqual({ outcome: "saved" });
+      let listed = await repository.list(owner);
+      expect(listed.multipleProfilesAllowed).toBe(true);
+      expect(listed.profiles).toHaveLength(2);
+      const profile = listed.profiles[0]!;
+      const updated = {
+        version: "1.0.0",
+        operation: "update",
+        profileId: profile.profileId,
+        birthProfileId: profile.birthProfileId,
+        revision: profile.revision,
+        value: createCommand("Updated primary").value,
+      } as const;
+      await expect(repository.mutate(owner, updated)).resolves.toEqual({
+        outcome: "saved",
+      });
+      await expect(repository.mutate(owner, updated)).rejects.toEqual(
+        new PrivateProfileConflictError(),
+      );
+      listed = await repository.list(owner);
+      const current = listed.profiles.find(
+        (entry) => entry.profileId === profile.profileId,
+      )!;
+      expect(current).toMatchObject({
+        displayName: "Updated primary",
+        revision: 2,
+      });
+      await expect(
+        repository.mutate(owner, {
+          version: "1.0.0",
+          operation: "delete",
+          profileId: current.profileId,
+          birthProfileId: current.birthProfileId,
+          revision: current.revision,
+        }),
+      ).resolves.toEqual({ outcome: "deleted" });
+      expect((await repository.list(owner)).profiles).toHaveLength(1);
+    } finally {
+      await pool.query("delete from user_account where id = $1", [owner]);
+    }
+  });
+
+  it("enforces new storage constraints and retains the owner index plan", async () => {
+    const owner = await account(`profile-constraint-${randomUUID()}`);
+    try {
+      await expect(
+        pool.query(
+          `insert into profile
+             (owner_user_id, display_name, current_timezone,
+              current_latitude, current_longitude)
+           values ($1, '', 'America/Toronto', 48.4, null)`,
+          [owner],
+        ),
+      ).rejects.toMatchObject({ code: "23514" });
+      const constraints = await pool.query<{ name: string }>(
+        `select conname as name from pg_constraint
+          where conname in (
+            'profile_revision_check',
+            'profile_current_coordinates_pair_check',
+            'birth_profile_time_consistency_check',
+            'birth_profile_coordinate_source_check'
+          ) order by conname`,
+      );
+      expect(constraints.rows.map((row) => row.name)).toEqual([
+        "birth_profile_coordinate_source_check",
+        "birth_profile_time_consistency_check",
+        "profile_current_coordinates_pair_check",
+        "profile_revision_check",
+      ]);
+      const plan = await pool.query(
+        `explain (format json) select id from profile where owner_user_id = $1`,
+        [owner],
+      );
+      expect(JSON.stringify(plan.rows)).toContain("profile_owner_idx");
+    } finally {
+      await pool.query("delete from user_account where id = $1", [owner]);
+    }
   });
 });
 

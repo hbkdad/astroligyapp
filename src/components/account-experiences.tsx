@@ -222,6 +222,7 @@ export function AccountActivation({
         >
           <strong>Private account ready</strong>
           <p>Your server-verified account boundary is active.</p>
+          <Link href="/account/profiles">Manage private profiles</Link>
         </div>
       ) : state.status === "authenticate" ? (
         <div

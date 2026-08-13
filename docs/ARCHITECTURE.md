@@ -444,6 +444,14 @@ tests/
   deleted/authenticate/authorize/retry/reconcile states reach React. The UI clears the password
   after each attempt and replaces session presentation only after confirmed local deletion,
   including the reconciliation-required terminal outcome.
+- Protected private profiles: dynamic `/account/profiles` reads and mutations copy only the
+  bounded session cookie into a server-only composition, re-verify the live session, resolve the
+  internal owner, and use forced-RLS `app_user` transactions. The repository evaluates
+  `multiple_profiles` through the central entitlement policy inside the same advisory-locked
+  create transaction. Integer revisions protect update/delete from lost writes. Only minimal
+  private DTOs and fixed action states cross into React; owner/account/subject/plan state,
+  database rows, resolution metadata, and provider references remain server-only. See
+  `PRIVATE_PROFILE_BOUNDARY.md`.
 
 ## Data and cache principles
 

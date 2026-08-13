@@ -33,9 +33,12 @@ Do not store passwords when using an external identity provider.
 - `display_name`
 - `current_timezone`, optional current coordinates
 - product preferences and notification defaults
-- timestamps and deletion state
+- integer mutation revision, timestamps, and deletion state
 
 Private. Names and current location must not enter public routes or routine analytics.
+Goal 68 constrains display/timezone lengths, coordinate pairing, and positive revisions. The
+first protected UI hard-deletes a selected profile so its existing cascades remove private
+birth/derived/share data; account erasure retains its broader tombstone workflow.
 
 ### `birth_profile`
 
@@ -47,6 +50,10 @@ Private. Names and current location must not enter public routes or routine anal
 - timestamps
 
 Private and sensitive. Preserve whether time/location is user-supplied, resolved, approximate, or absent.
+Goal 68 fixes the accepted precision vocabulary to `date-only`, `approximate`, and `exact`,
+requires local time only for approximate/exact input, and requires coordinates and their source
+as a consistent pair. The initial UI records timezones and any coordinates as user supplied and
+does not geocode or infer missing values.
 
 ## Deterministic calculations
 

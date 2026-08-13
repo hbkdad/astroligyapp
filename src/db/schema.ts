@@ -93,6 +93,7 @@ export const profile = pgTable(
     currentLatitude: numeric("current_latitude", { precision: 9, scale: 6 }),
     currentLongitude: numeric("current_longitude", { precision: 9, scale: 6 }),
     preferences: jsonb().default({}).notNull(),
+    revision: integer().default(1).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
       .defaultNow()
       .notNull(),
@@ -133,6 +134,19 @@ export const profile = pgTable(
       "profile_current_longitude_check",
       sql`(current_longitude IS NULL) OR ((current_longitude >= ('-180'::integer)::numeric) AND (current_longitude <= (180)::numeric))`,
     ),
+    check(
+      "profile_display_name_length_check",
+      sql`char_length(display_name) between 1 and 80`,
+    ),
+    check(
+      "profile_current_timezone_length_check",
+      sql`char_length(current_timezone) between 1 and 128`,
+    ),
+    check(
+      "profile_current_coordinates_pair_check",
+      sql`(current_latitude is null) = (current_longitude is null)`,
+    ),
+    check("profile_revision_check", sql`revision >= 1`),
   ],
 );
 
@@ -792,6 +806,26 @@ export const birthProfile = pgTable(
     check(
       "birth_profile_longitude_check",
       sql`(longitude IS NULL) OR ((longitude >= ('-180'::integer)::numeric) AND (longitude <= (180)::numeric))`,
+    ),
+    check(
+      "birth_profile_timezone_length_check",
+      sql`char_length(timezone) between 1 and 128`,
+    ),
+    check(
+      "birth_profile_time_precision_check",
+      sql`birth_time_precision in ('date-only', 'approximate', 'exact')`,
+    ),
+    check(
+      "birth_profile_time_consistency_check",
+      sql`(birth_time_precision = 'date-only' and birth_time_local is null) or (birth_time_precision in ('approximate', 'exact') and birth_time_local ~ '^(?:[01][0-9]|2[0-3]):[0-5][0-9]$')`,
+    ),
+    check(
+      "birth_profile_coordinates_pair_check",
+      sql`(latitude is null) = (longitude is null)`,
+    ),
+    check(
+      "birth_profile_coordinate_source_check",
+      sql`(latitude is null and coordinate_source is null) or (latitude is not null and char_length(coordinate_source) between 1 and 64)`,
     ),
   ],
 );

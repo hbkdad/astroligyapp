@@ -1567,6 +1567,160 @@ tbody tr:target {
   display: block;
   margin-bottom: 0.35rem;
 }
+.private-profiles {
+  display: grid;
+  gap: 1.25rem;
+}
+.profile-privacy-note,
+.profile-empty,
+.coordinate-fields > p,
+.profile-delete > p,
+.profile-limit p {
+  color: var(--muted);
+}
+.profile-list {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+.saved-profile {
+  padding: 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: rgb(4 17 14 / 40%);
+}
+.saved-profile h3 {
+  margin-bottom: 0.85rem;
+  font-size: 1.3rem;
+}
+.profile-summary {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0 0 1rem;
+}
+.profile-summary div {
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--line);
+}
+.profile-summary dt {
+  color: var(--mint);
+  font-size: 0.77rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.profile-summary dd {
+  margin: 0.2rem 0 0;
+  overflow-wrap: anywhere;
+}
+.saved-profile details {
+  margin-top: 1rem;
+}
+.saved-profile summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--mint);
+  cursor: pointer;
+  font-weight: 700;
+}
+.profile-form,
+.profile-delete form {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+.profile-field {
+  display: grid;
+  gap: 0.35rem;
+}
+.profile-field label,
+.coordinate-fields legend {
+  font-weight: 700;
+}
+.profile-field input,
+.profile-field select {
+  min-height: 48px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
+  background: rgb(4 17 14 / 74%);
+  color: var(--foreground);
+  padding: 0.7rem 0.8rem;
+  font: inherit;
+}
+.field-hint {
+  color: var(--muted);
+  line-height: 1.45;
+}
+.coordinate-fields {
+  display: grid;
+  gap: 0.8rem;
+  margin: 0.25rem 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+}
+.profile-form > button,
+.profile-delete form > button {
+  min-height: 48px;
+  border: 1px solid var(--mint);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--mint);
+  padding: 0.7rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.profile-form > button:hover {
+  background: rgb(139 203 184 / 12%);
+}
+.profile-delete {
+  padding-top: 0.5rem;
+  border-top: 1px solid rgb(242 119 119 / 38%);
+}
+.profile-delete summary {
+  color: #ffb5b5;
+}
+.profile-delete form > button {
+  border-color: rgb(242 119 119 / 72%);
+  color: #ffd6d6;
+}
+.profile-form > button:disabled,
+.profile-delete form > button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+.profile-feedback,
+.profile-limit {
+  padding: 0.8rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: rgb(255 255 255 / 3%);
+}
+.profile-feedback.saved,
+.profile-feedback.deleted {
+  border-color: var(--mint);
+}
+.profile-feedback.authorize,
+.profile-feedback.conflict,
+.profile-feedback.retry,
+.profile-feedback.authenticate,
+.profile-feedback.limit {
+  border-color: #f27777;
+}
+@media (min-width: 48rem) {
+  .private-profiles {
+    grid-template-columns: minmax(0, 1.1fr) minmax(19rem, 0.9fr);
+    align-items: start;
+  }
+  .coordinate-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .coordinate-fields legend,
+  .coordinate-fields > p {
+    grid-column: 1 / -1;
+  }
+}
 .account-claims-note {
   margin: 1.5rem 0 0;
 }

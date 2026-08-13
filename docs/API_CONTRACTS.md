@@ -507,6 +507,31 @@ exact typed phrase and current-password semantics, disables pending resubmission
 password after an attempt, focuses fixed failure feedback, and leaves the account presentation
 only after a confirmed local-deletion result.
 
+## Protected private profile boundary
+
+The dynamic `/account/profiles` Server Component calls `loadPrivateProfilesFromHeaders`, which
+copies only a bounded cookie into `loadPrivateProfilesForRequest`. That composition requires a
+recent live email-verified session, independently resolves the active internal account, and
+loads only identity-scoped rows. It returns `authenticate`, `retry`, or a minimal ready DTO with
+profile/birth-profile resource identifiers, revision, display name, current timezone, birth
+date/time precision/local time/timezone, optional coordinates, and the server-owned
+multiple-profile capability. It never returns identity subjects, sessions, owner account UUID,
+subscription rows, provider references, preferences, uncertainty/resolution JSON, timestamps,
+or database errors.
+
+`mutatePrivateProfileAction` ignores React prior state and accepts exact ordered forms:
+
+- create: version, operation, display name, current timezone, birth date, precision, optional
+  local time, birth timezone, and optional coordinate pair;
+- update: the create fields plus opaque profile/birth-profile IDs and positive revision;
+- delete: version, operation, the two resource IDs, revision, and exact `DELETE PROFILE` intent.
+
+Framework `$ACTION_` fields are removed. Duplicate, reordered, missing, file, owner, account,
+subject, plan, entitlement, redirect, or extra fields fail before service construction. The
+core validates the typed command again after live authorization. Results are only saved,
+deleted, authenticate, authorize, limit, conflict, or retry. Successful writes revalidate only
+the private route; raw birth data never enters a URL or public cache.
+
 Signup/signin, verification resend, forgot-password, and reset-password forms send only the
 fixed Goal 64 fields and same-origin callback paths recorded in
 `ACCOUNT_ENTRY_RECOVERY_UI.md`. Passwords are never stored in component state or browser
