@@ -59,7 +59,7 @@ export function NatalChartView({ state }: { state: NatalChartViewState }) {
             <svg
               className="chart-wheel"
               viewBox="0 0 600 600"
-              role="img"
+              role="group"
               aria-labelledby="chart-wheel-title chart-wheel-description"
             >
               <title id="chart-wheel-title">
@@ -146,7 +146,18 @@ export function NatalChartView({ state }: { state: NatalChartViewState }) {
                   href={`#placement-${placement.body}`}
                   aria-label={`${placement.accessibleLabel}. Jump to details.`}
                 >
-                  <circle cx={placement.x} cy={placement.y} r="15" />
+                  <circle
+                    className="planet-hit-target"
+                    cx={placement.x}
+                    cy={placement.y}
+                    r="23"
+                  />
+                  <circle
+                    className="planet-marker"
+                    cx={placement.x}
+                    cy={placement.y}
+                    r="15"
+                  />
                   <text x={placement.x} y={placement.y}>
                     {placement.glyph}
                   </text>

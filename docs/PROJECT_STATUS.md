@@ -4,8 +4,9 @@ Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 76 complete; every Next.js response now receives a conservative browser-security
-baseline while auth, webhook, and opaque-share routes retain stricter no-store and blocking CSP.
+Status: Goal 77 complete; the optimized application now has a recorded WCAG 2.2 AA engineering
+audit, clean automated semantics across 22 public/private-state URLs, resilient narrow/text-spacing
+reflow, stable async mobile navigation, and compliant interactive chart targets.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -99,6 +100,14 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 77: inventory every public guide/demo, account entry, protected account, and opaque-share
+      surface plus its ready, loading, empty, locked, error, stale, conflict, and unavailable states.
+- [x] Run axe-core 4.13.0 over 22 optimized URLs with zero final violations; verify one main/heading,
+      language, IDs/tab order, keyboard skip/filter/chart operation, 390px and 320px reflow, text
+      spacing, target size, reduced motion, forced colors, local scroll regions, and layout shift.
+- [x] Correct interactive SVG semantics and target geometry, duplicate compatibility landmarks,
+      shared narrow-screen min-content/wrapping failures, and async mobile account-navigation CLS;
+      record evidence and residual assistive-technology/production-auth gates in the audit document.
 - [x] Goal 76: inventory public, protected, auth, webhook, share, health, database, cache, and
       provider trust boundaries against installed Next.js 16.3 and current OWASP guidance.
 - [x] Centralize no-referrer, nosniff, anti-frame, same-origin resource/opener, permissions, and
@@ -670,22 +679,24 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 77 — perform a complete WCAG 2.2 AA and resilient-interaction audit across every public,
-account, chart, timeline, compatibility, share, loading, empty, locked, and error surface.
+Goal 78 — assemble and execute a production-readiness release-candidate gate without deploying,
+purchasing, or selecting any unresolved managed provider.
 
 Deliverables:
 
-1. Build a route/state/interaction inventory and run automated semantic/accessibility checks over
-   optimized HTML plus real Chromium at 390px and desktop. Include headings, landmarks, names,
-   descriptions, table/chart alternatives, status announcements, errors, and page language/title.
-2. Verify complete keyboard order and operation, visible focus, skip links, dialogs/disclosures,
-   forms, destructive confirmations, filters, horizontal regions, and SVG-to-table relationships.
-   Test 200% and 400% text, narrow reflow, zoom, reduced motion, forced colors, and no-color meaning.
-3. Measure contrast, target size, overflow, layout shift, reduced-motion behavior, and critical
-   loading/error/empty/locked/unavailable states. Fix systemic issues through shared primitives and
-   tokens without replacing validated calculations, privacy boundaries, or accessible native HTML.
-4. Apply ui-quality and real-browser verification, run full tests/coverage/build, document the
-   WCAG evidence matrix and residual screen-reader/production-auth gates, then queue release QA.
+1. Create one versioned release manifest covering runtime/package/database versions, routes, checked-
+   in migrations, required environment variables, external dependencies, background operations,
+   data classifications, health signals, and every intentionally unselected provider.
+2. Execute the release-check workflow and a CI-equivalent clean-install/build/test/database/security/
+   privacy/SEO/accessibility/performance gate. Re-run upgrade and empty-database migrations, validate
+   generated artifacts and dependency findings, and produce deterministic evidence without touching
+   production or adding credentials.
+3. Write the operator runbook for configuration validation, migration order, rollback/forward-fix,
+   backup/restore proof, health/observability, abuse controls, provider degradation, incident response,
+   and post-deploy smoke testing. Record owners or explicit blockers for every external release gate.
+4. Issue a clear go/no-go recommendation for a non-production release candidate, enumerate the exact
+   production prerequisites that remain, and queue the first deployment-provider decision only if the
+   application itself passes. Do not deploy, purchase services, create live accounts, or weaken gates.
 
 ## Phase queue
 
@@ -3101,6 +3112,38 @@ tests/lunar-phase.test.ts tests/public-daily-readings.test.ts`;
 - Scope: no inferred-speed fallback, interpretation, category, score, timeline
   composition/UI, persistence, entitlement, notification, production provider
   call, or deployment was added.
+
+## Goal 77 accessibility and resilient-interaction record
+
+- Audit: `docs/ACCESSIBILITY_AUDIT.md` inventories 22 optimized URLs spanning public guides and
+  calculations, account entry, protected account shells, and an invalid opaque share. Existing
+  component/action suites cover valid authenticated and shared ready/loading/empty/locked/error/
+  stale/conflict states that cannot be reached without local database credentials.
+- Automated semantics: axe-core 4.13.0 reported zero final violations on all 22 URLs. Every route
+  also exposed `lang="en"`, one `h1`, one `main`, no duplicate IDs, and no positive `tabindex`.
+- Keyboard/structure: the skip link focuses `main`; linked SVG planets have exact accessible names,
+  visible focus, and jump to authoritative table rows; timeline filters toggle with `Space`; native
+  tables, regions, forms, fieldsets, status text, and destructive confirmations remain intact.
+- Reflow/input: the complete route matrix has zero document overflow at 390px and 320px, including a
+  32px root plus WCAG text-spacing stress. Planet links measure at least 24.60 CSS pixels on mobile;
+  buttons and labeled checkbox rows retain 44px targets; wide tables/account controls scroll locally.
+- Media/stability: reduced-motion emulation changed root scroll behavior to `auto`; forced-colors
+  inspection retained readable content, native controls, solid focus, and noncolor text alternatives.
+  A buffered layout-shift probe exposed async mobile header wrapping; the shared fix reduced the
+  optimized `/timeline` rerun to CLS `0` with no document overflow.
+- Corrections: the chart SVG is now a named interactive group rather than an image containing links;
+  transparent marker geometry enlarges hit areas; repeated compatibility landmarks are neutral
+  containers; shared min-content/wrapping rules protect headings, grids, event panels, and signals.
+- Verification: `npm run check` passed Prettier, ESLint, strict TypeScript, 101 test files/1,292 tests,
+  and the 33-page optimized build. `npm run test:coverage` passed at 90.03% statements, 87.71%
+  branches, 96.55% functions, and 92.18% lines. `npm run db:check` and the disposable PostgreSQL 18
+  upgrade/latest migration suite passed with 71 database tests. `npm audit --omit=dev` still reports
+  four known moderate legacy-esbuild findings through `drizzle-kit`; its proposed forced fix is a
+  breaking downgrade and remains a release dependency-tooling gate rather than an automatic change.
+- Scope/residual: no production provider, credential, data, deployment, or live user was touched.
+  Current-version NVDA/VoiceOver testing, real browser zoom UI, and authenticated non-production
+  browser flows remain explicit release gates; automated checks are evidence, not accessibility
+  certification.
 
 ## Goal 76 security and privacy hardening record
 

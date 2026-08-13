@@ -34,7 +34,7 @@ function renderReadyShare(
         factor.reflectionStatus === "unsupported"
           ? "<small>Tradition reflection unavailable.</small>"
           : "";
-      return `<li><header><div><p>${escapeHtml(factor.categoryLabel)}</p><h3>${escapeHtml(factor.toneLabel)} factor</h3></div><strong>${escapeHtml(factor.impactText)}</strong></header><div class="share-copy-grid"><section aria-label="Calculated fact"><p class="section-kicker">Calculated fact</p><p>${escapeHtml(factor.factText)}</p>${factFallback}</section><section aria-label="Tradition-framed reflection"><p class="section-kicker">Tradition-framed reflection</p><p>${escapeHtml(factor.reflectionText)}</p>${reflectionFallback}</section></div></li>`;
+      return `<li><header><div><p>${escapeHtml(factor.categoryLabel)}</p><h3>${escapeHtml(factor.toneLabel)} factor</h3></div><strong>${escapeHtml(factor.impactText)}</strong></header><div class="share-copy-grid"><div><p class="section-kicker">Calculated fact</p><p>${escapeHtml(factor.factText)}</p>${factFallback}</div><div><p class="section-kicker">Tradition-framed reflection</p><p>${escapeHtml(factor.reflectionText)}</p>${reflectionFallback}</div></div></li>`;
     })
     .join("");
 

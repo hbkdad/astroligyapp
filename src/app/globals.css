@@ -666,19 +666,23 @@ footer p:first-child {
   cursor: pointer;
   outline: none;
 }
-.planet-node circle {
+.planet-node .planet-marker {
   fill: #132923;
   stroke: #769c8f;
   stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
+}
+.planet-node .planet-hit-target {
+  fill: transparent;
+  stroke: none;
 }
 .planet-node text {
   fill: var(--foreground);
   font-family: "Segoe UI Symbol", sans-serif;
   font-size: 19px;
 }
-.planet-node:hover circle,
-.planet-node:focus-visible circle {
+.planet-node:hover .planet-marker,
+.planet-node:focus-visible .planet-marker {
   fill: #2a453c;
   stroke: var(--accent);
   stroke-width: 3;
@@ -1886,6 +1890,19 @@ tbody tr:target {
 }
 
 @media (max-width: 520px) {
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  dt,
+  dd,
+  code,
+  strong,
+  .eyebrow,
+  .section-kicker {
+    overflow-wrap: anywhere;
+  }
   .site-header {
     width: min(100% - 1.25rem, 1180px);
     display: flex;
@@ -1908,6 +1925,7 @@ tbody tr:target {
     max-width: 100%;
     justify-self: auto;
     text-align: center;
+    white-space: normal;
   }
   .header-utilities {
     width: 100%;
@@ -1916,7 +1934,12 @@ tbody tr:target {
     flex-wrap: wrap;
   }
   .account-navigation {
-    flex-wrap: wrap;
+    width: 100%;
+    min-height: 44px;
+    flex: 0 0 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
   }
   .account-shell {
     width: min(100% - 1.25rem, 46rem);
@@ -1929,6 +1952,19 @@ tbody tr:target {
   .dashboard-shell {
     width: min(100% - 1.25rem, 1180px);
     padding-top: 2.5rem;
+  }
+  .hero-panel > *,
+  .dashboard-grid > *,
+  .timeline-intro > *,
+  .moon-hero > *,
+  .horoscope-hero > *,
+  .horoscope-panel > *,
+  .timeline-panel > *,
+  .moon-panel > *,
+  .numerology-intro > *,
+  .event-timeline article,
+  .event-heading > * {
+    min-width: 0;
   }
   .chart-shell {
     width: min(100% - 1.25rem, 1180px);
@@ -2006,6 +2042,11 @@ tbody tr:target {
   .sign-navigation ul {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .sign-navigation li,
+  .sign-navigation a {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
   .horoscope-copy-grid {
     grid-template-columns: 1fr;
   }
@@ -2070,10 +2111,15 @@ tbody tr:target {
     grid-template-columns: 1fr;
   }
   .signal-list li {
-    grid-template-columns: 1.5rem 1fr;
+    grid-template-columns: 1.5rem minmax(0, 1fr);
+  }
+  .signal-list li > div,
+  .signal-list strong {
+    min-width: 0;
   }
   .signal-list strong {
     grid-column: 2;
+    white-space: normal;
   }
   footer {
     width: min(100% - 1.25rem, 1180px);

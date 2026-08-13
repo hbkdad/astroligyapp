@@ -122,7 +122,7 @@ describe("natal chart presentation boundary", () => {
       <NatalChartView state={{ status: "ready", model: DEMO_NATAL_CHART }} />,
     );
     expect(html).toContain("<title>Sun Trine Jupiter, orb 4.75°</title>");
-    expect(html).toContain('role="img"');
+    expect(html).toContain('role="group"');
     expect(html).toContain("Accessible tropical natal chart wheel");
     expect(html).toContain("Complete values follow in tables");
     expect(html.match(/class="planet-node"/g)).toHaveLength(10);

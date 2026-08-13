@@ -102,17 +102,14 @@ export function CompatibilityView({
                   <strong>{item.impactText}</strong>
                 </header>
                 <div className="compatibility-copy-grid">
-                  <section aria-label="Calculated fact">
+                  <div>
                     <p className="section-kicker">Calculated fact</p>
                     <p>{item.factText}</p>
                     {item.factStatus === "unsupported" ? (
                       <small>Deterministic fallback</small>
                     ) : null}
-                  </section>
-                  <section
-                    className="compatibility-reflection"
-                    aria-label="Tradition-framed reflection"
-                  >
+                  </div>
+                  <div className="compatibility-reflection">
                     <p className="section-kicker">
                       Tradition-framed reflection
                     </p>
@@ -120,7 +117,7 @@ export function CompatibilityView({
                     {item.reflectionStatus === "unsupported" ? (
                       <small>Deterministic fallback</small>
                     ) : null}
-                  </section>
+                  </div>
                 </div>
                 <code>{item.sourceFactId}</code>
               </li>
