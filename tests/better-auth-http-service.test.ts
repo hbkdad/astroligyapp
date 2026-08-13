@@ -135,5 +135,18 @@ describe("Better Auth HTTP process service", () => {
         {} as never,
       ),
     ).rejects.toThrow("Authentication HTTP service is unavailable");
+    await expect(
+      service.loadProtectedNatalCharts(
+        new Request(`${ORIGIN}/internal/protected-natal-chart`),
+      ),
+    ).rejects.toThrow("Authentication HTTP service is unavailable");
+    await expect(
+      service.generateProtectedNatalChart(
+        new Request(`${ORIGIN}/internal/protected-natal-chart`, {
+          method: "POST",
+        }),
+        {} as never,
+      ),
+    ).rejects.toThrow("Authentication HTTP service is unavailable");
   });
 });

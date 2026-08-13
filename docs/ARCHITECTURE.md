@@ -529,3 +529,11 @@ tests/
 - Ephemeris: exact Astronomy Engine 2.1.19 for tropical positions and local
   angles, composed with Whole Sign strategy 1.0.0. No silent house-system
   fallback; exact poles fail explicitly. See ADR 0006.
+
+## Protected natal chart boundary
+
+Protected natal generation builds on the private-profile boundary as documented in
+`docs/PROTECTED_NATAL_CHART_BOUNDARY.md`. Civil time is resolved deterministically before the
+accepted natal engine is invoked; ambiguous/nonexistent times are explicit terminal readiness
+states. Complete chart facts and provenance are written atomically behind owner RLS and a
+server-side `natal_chart` entitlement check.

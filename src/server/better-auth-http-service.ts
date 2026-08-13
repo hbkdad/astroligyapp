@@ -7,6 +7,7 @@ import { Pool } from "pg";
 import { betterAuthSchema } from "@/db/auth-schema";
 import { LocalAccountDeletionRepository } from "@/infrastructure/auth/account";
 import { PrivateProfileRepository } from "@/infrastructure/persistence/private-profile-repository";
+import { ProtectedNatalChartRepository } from "@/infrastructure/persistence/protected-natal-chart-repository";
 import {
   BetterAuthAccountBootstrapper,
   BetterAuthActiveBillingAccountResolver,
@@ -25,6 +26,13 @@ import {
   type PrivateProfileReadResult,
 } from "@/server/authenticated-private-profiles";
 import type { PrivateProfileCommand } from "@/server/private-profile-contracts";
+import {
+  generateProtectedNatalChartForRequest,
+  loadProtectedNatalChartsForRequest,
+  type ProtectedNatalMutationResult,
+  type ProtectedNatalReadResult,
+} from "@/server/authenticated-protected-natal-chart";
+import type { ProtectedNatalChartCommand } from "@/server/protected-natal-chart-contracts";
 import {
   bootstrapAccountForRequest,
   type AuthenticatedAccountBootstrapResult,
@@ -81,6 +89,11 @@ export interface ProductionBetterAuthHttpService extends BetterAuthHttpService {
     request: Request,
     command: PrivateProfileCommand,
   ): Promise<PrivateProfileMutationResult>;
+  generateProtectedNatalChart(
+    request: Request,
+    command: ProtectedNatalChartCommand,
+  ): Promise<ProtectedNatalMutationResult>;
+  loadProtectedNatalCharts(request: Request): Promise<ProtectedNatalReadResult>;
   close(): Promise<void>;
 }
 
@@ -179,6 +192,11 @@ export function createBetterAuthHttpService(
       accountResolver: new BetterAuthActiveBillingAccountResolver(accountPool),
       profiles: new PrivateProfileRepository(accountPool),
     });
+    const protectedNatalDependencies = Object.freeze({
+      sessionVerifier: new BetterAuthVerifiedSessionVerifier(auth.api),
+      accountResolver: new BetterAuthActiveBillingAccountResolver(accountPool),
+      charts: new ProtectedNatalChartRepository(accountPool),
+    });
     let closed = false;
     return Object.freeze({
       canonicalOrigin: configuration.auth.baseUrl,
@@ -215,6 +233,26 @@ export function createBetterAuthHttpService(
           request,
           command,
           privateProfileDependencies,
+        );
+      },
+      async generateProtectedNatalChart(
+        request: Request,
+        command: ProtectedNatalChartCommand,
+      ) {
+        if (closed)
+          throw new Error("Authentication HTTP service is unavailable");
+        return generateProtectedNatalChartForRequest(
+          request,
+          command,
+          protectedNatalDependencies,
+        );
+      },
+      async loadProtectedNatalCharts(request: Request) {
+        if (closed)
+          throw new Error("Authentication HTTP service is unavailable");
+        return loadProtectedNatalChartsForRequest(
+          request,
+          protectedNatalDependencies,
         );
       },
       async close() {

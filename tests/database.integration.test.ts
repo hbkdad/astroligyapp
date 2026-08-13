@@ -54,6 +54,12 @@ import {
 } from "@/infrastructure/persistence/private-profile-repository";
 import { mutatePrivateProfileForRequest } from "@/server/authenticated-private-profiles";
 import { mutatePrivateProfileFromForm } from "@/server/private-profile-action";
+import {
+  ProtectedNatalAuthorizationError,
+  ProtectedNatalChartRepository,
+  ProtectedNatalConflictError,
+  ProtectedNatalLockedError,
+} from "@/infrastructure/persistence/protected-natal-chart-repository";
 import { DEMO_COMPATIBILITY_REPORT } from "@/presentation/compatibility-demo";
 import {
   SUBSCRIPTION_TRANSITION_EVENT_VERSION,
@@ -3138,6 +3144,226 @@ describe("protected private profile lifecycle", () => {
     } finally {
       await pool.query("delete from user_account where id = $1", [owner]);
     }
+  });
+});
+
+describe("protected natal chart persistence", () => {
+  const now = new Date("2026-08-13T12:00:00.000Z");
+  const profiles = new PrivateProfileRepository(pool, () => now);
+  const charts = new ProtectedNatalChartRepository(pool, () => now);
+
+  async function account(subject: string) {
+    return bootstrapAccount(pool, activeSession(subject));
+  }
+
+  async function readyProfile(owner: AccountId, label: string) {
+    await profiles.mutate(owner, {
+      version: "1.0.0",
+      operation: "create",
+      value: {
+        displayName: label,
+        currentTimezone: "America/Toronto",
+        birthDate: "1990-01-01",
+        birthTimePrecision: "exact",
+        birthTimeLocal: "13:45",
+        birthTimezone: "America/Toronto",
+        latitude: 48.4758,
+        longitude: -81.3305,
+      },
+    });
+    return (await profiles.list(owner)).profiles[0]!;
+  }
+
+  async function grant(owner: AccountId) {
+    await pool.query(
+      `insert into subscription
+         (user_account_id, plan_key, status, external_provider,
+          external_customer_reference, external_subscription_reference,
+          period_starts_at, period_ends_at, transition_state_version,
+          last_provider_event_id, last_provider_event_occurred_at)
+       values ($1, 'personal', 'active', 'natal_test', $2, $3,
+               '2026-08-01T00:00:00.000Z', '2026-09-01T00:00:00.000Z',
+               '1.0.0', $4, '2026-08-01T00:01:00.000Z')`,
+      [
+        owner,
+        `customer-${randomUUID()}`,
+        `subscription-${randomUUID()}`,
+        `event-${randomUUID()}`,
+      ],
+    );
+  }
+
+  function command(profile: Awaited<ReturnType<typeof readyProfile>>) {
+    return {
+      version: "1.0.0",
+      profileId: profile.profileId,
+      birthProfileId: profile.birthProfileId,
+      revision: profile.revision,
+    } as const;
+  }
+
+  it("enforces server-owned entitlement and cross-owner authorization", async () => {
+    const owner = await account(`natal-owner-${randomUUID()}`);
+    const other = await account(`natal-other-${randomUUID()}`);
+    try {
+      const profile = await readyProfile(owner, "Entitlement chart");
+      await expect(
+        charts.generate(owner, command(profile)),
+      ).rejects.toBeInstanceOf(ProtectedNatalLockedError);
+      await grant(owner);
+      await expect(
+        charts.generate(other, command(profile)),
+      ).rejects.toBeInstanceOf(ProtectedNatalAuthorizationError);
+    } finally {
+      await pool.query("delete from user_account where id in ($1,$2)", [
+        owner,
+        other,
+      ]);
+    }
+  });
+
+  it("persists complete facts once under concurrent duplicate generation and reconstructs the read model", async () => {
+    const owner = await account(`natal-cache-${randomUUID()}`);
+    try {
+      const profile = await readyProfile(owner, "Concurrent chart");
+      await grant(owner);
+      const results = await Promise.all([
+        charts.generate(owner, command(profile)),
+        charts.generate(owner, command(profile)),
+      ]);
+      expect(results.map((result) => result.outcome).sort()).toEqual([
+        "cached",
+        "generated",
+      ]);
+      const counts = await pool.query<{
+        runs: string;
+        charts: string;
+        positions: string;
+        cusps: string;
+      }>(
+        `select
+           (select count(*) from calculation_run where owner_user_id=$1 and kind='natal-chart')::text as runs,
+           (select count(*) from birth_chart bc join calculation_run cr on cr.id=bc.calculation_run_id where cr.owner_user_id=$1 and cr.kind='natal-chart')::text as charts,
+           (select count(*) from planet_position pp join calculation_run cr on cr.id=pp.calculation_run_id where cr.owner_user_id=$1 and cr.kind='natal-chart')::text as positions,
+           (select count(*) from house_cusp hc join birth_chart bc on bc.id=hc.birth_chart_id join calculation_run cr on cr.id=bc.calculation_run_id where cr.owner_user_id=$1 and cr.kind='natal-chart')::text as cusps`,
+        [owner],
+      );
+      expect(counts.rows[0]).toEqual({
+        runs: "1",
+        charts: "1",
+        positions: "10",
+        cusps: "12",
+      });
+      const listed = await charts.list(owner);
+      expect(listed).toHaveLength(1);
+      expect(listed[0]).toMatchObject({
+        displayName: "Concurrent chart",
+        readiness: "ready",
+      });
+      expect(listed[0]!.chart?.placements).toHaveLength(10);
+      expect(listed[0]!.chart?.houses).toHaveLength(12);
+      expect(listed[0]!.chart?.trace).toEqual(
+        expect.arrayContaining([
+          { label: "Chart engine", value: "1.0.0" },
+          { label: "Position provider", value: "astronomy-engine 2.1.19" },
+          { label: "House strategy", value: "whole-sign 1.0.0" },
+        ]),
+      );
+      const metadata = await pool.query<{
+        resolution_metadata: Record<string, unknown>;
+      }>(
+        `select bc.resolution_metadata from birth_chart bc join calculation_run cr on cr.id=bc.calculation_run_id where cr.owner_user_id=$1 and cr.kind='natal-chart'`,
+        [owner],
+      );
+      expect(metadata.rows[0]!.resolution_metadata).toMatchObject({
+        version: "1.0.0",
+        resolverVersion: "1.0.0",
+        profileRevision: 1,
+        offsetSeconds: -18000,
+        input: { timezone: "America/Toronto", coordinateOrigin: "topocentric" },
+        metadata: {
+          chartEngineVersion: "1.0.0",
+          houseStrategy: { id: "whole-sign", version: "1.0.0" },
+        },
+      });
+      await profiles.mutate(owner, {
+        version: "1.0.0",
+        operation: "update",
+        profileId: profile.profileId,
+        birthProfileId: profile.birthProfileId,
+        revision: profile.revision,
+        value: {
+          displayName: "Edited after chart",
+          currentTimezone: "America/Toronto",
+          birthDate: "1990-01-01",
+          birthTimePrecision: "exact",
+          birthTimeLocal: "13:46",
+          birthTimezone: "America/Toronto",
+          latitude: 48.4758,
+          longitude: -81.3305,
+        },
+      });
+      const stale = await charts.list(owner);
+      expect(stale[0]).toMatchObject({ chartStale: true, chart: null });
+    } finally {
+      await pool.query("delete from user_account where id=$1", [owner]);
+    }
+  });
+
+  it("rejects stale revisions and rolls every derived insert back on failure", async () => {
+    const owner = await account(`natal-rollback-${randomUUID()}`);
+    try {
+      const profile = await readyProfile(owner, "Rollback chart");
+      await grant(owner);
+      await profiles.mutate(owner, {
+        version: "1.0.0",
+        operation: "update",
+        profileId: profile.profileId,
+        birthProfileId: profile.birthProfileId,
+        revision: profile.revision,
+        value: {
+          displayName: "Changed",
+          currentTimezone: "America/Toronto",
+          birthDate: "1990-01-01",
+          birthTimePrecision: "exact",
+          birthTimeLocal: "13:45",
+          birthTimezone: "America/Toronto",
+          latitude: 48.4758,
+          longitude: -81.3305,
+        },
+      });
+      await expect(
+        charts.generate(owner, command(profile)),
+      ).rejects.toBeInstanceOf(ProtectedNatalConflictError);
+      const current = (await profiles.list(owner)).profiles[0]!;
+      await pool.query(
+        `create function fail_natal_aspect_fixture() returns trigger language plpgsql as $$ begin raise exception 'fixture failure'; end $$; create trigger fail_natal_aspect_fixture before insert on aspect for each statement execute function fail_natal_aspect_fixture()`,
+      );
+      await expect(charts.generate(owner, command(current))).rejects.toThrow();
+      const count = await pool.query<{ count: string }>(
+        "select count(*)::text as count from calculation_run where owner_user_id=$1 and kind='natal-chart'",
+        [owner],
+      );
+      expect(count.rows[0]!.count).toBe("0");
+    } finally {
+      await pool.query(
+        "drop trigger if exists fail_natal_aspect_fixture on aspect; drop function if exists fail_natal_aspect_fixture() ",
+      );
+      await pool.query("delete from user_account where id=$1", [owner]);
+    }
+  });
+
+  it("uses owner identity in the protected cache index", async () => {
+    const definition = await pool.query<{ indexdef: string }>(
+      "select indexdef from pg_indexes where indexname='calculation_run_cache_uidx'",
+    );
+    expect(definition.rows[0]!.indexdef).toContain("owner_user_id");
+    const deletion = await pool.query<{ delete_rule: string }>(
+      `select rc.delete_rule
+         from information_schema.referential_constraints rc
+        where rc.constraint_name='birth_chart_calculation_run_id_calculation_run_id_fk'`,
+    );
+    expect(deletion.rows[0]!.delete_rule).toBe("CASCADE");
   });
 });
 

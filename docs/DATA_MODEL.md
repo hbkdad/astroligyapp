@@ -254,3 +254,12 @@ Do not log names, exact birth details, coordinates, secrets, or generated privat
 - Unique webhook provider/event identifier and notification idempotency key.
 - Unique active share-token hash; revocation checked on every public access.
 - Account deletion must remove or irreversibly anonymize private profiles, calculations, reports, shares, and notification data according to documented retention rules.
+
+## Protected natal calculation provenance
+
+Protected natal runs use an owner-aware cache identity over kind, canonical input digest,
+engine, provider, provider version, configuration, and owner. `birth_chart.calculation_run_id`
+cascades on run/account erasure; the former restrictive relationship could prevent deletion
+once both account-owned aggregates existed. Civil-time resolution and full engine/provider/
+strategy/input provenance live in `birth_chart.resolution_metadata`, while normalized facts
+remain relational in `planet_position`, `house_cusp`, and `aspect`.

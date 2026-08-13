@@ -4,8 +4,8 @@ Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 68 complete; private display and birth profiles now have a live-session,
-identity-scoped read/create/update/delete boundary and accessible private UI.
+Status: Goal 69 complete; saved private profiles now generate and read deterministic natal
+charts through explicit civil-time resolution, server-owned entitlement, and atomic provenance.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -99,6 +99,12 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 69: add versioned opaque-resource chart commands and strict minimal read projections;
+      load all birth, owner, entitlement, provider, and configuration input server-side.
+- [x] Resolve IANA civil minutes into explicit unique, ambiguous, or nonexistent outcomes and
+      route only ready inputs through Astronomy Engine 2.1.19 and Whole Sign 1.0.0.
+- [x] Persist idempotent calculation/chart/position/cusp/aspect facts atomically, expose protected
+      locked/readiness/provider/conflict/cached/success UI, and preserve account erasure.
 - [x] Goal 68: define strict versioned private profile contracts for normalized display name,
       current/birth IANA timezones, canonical birth date, explicit date-only/approximate/exact
       time precision, optional paired user-supplied coordinates, resource IDs, and revisions.
@@ -601,26 +607,25 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 69 — generate and read a protected deterministic natal chart from one saved private
-profile, with explicit civil-time resolution, server-owned entitlement, and complete provenance.
+Goal 70 — compose a protected personalized Today dashboard from one saved chart and validated
+current astronomical facts without trusting private context or entitlement from the browser.
 
 Deliverables:
 
-1. Define a strict saved-profile chart command and read DTO. Accept only opaque owned
-   profile/birth-profile IDs and current revision; load every birth input server-side. Require
-   explicit time and coordinate readiness, and never infer an unknown time or location.
-2. Implement deterministic IANA civil-time-to-UTC resolution with explicit unique, ambiguous,
-   and nonexistent outcomes, then compose the accepted Astronomy Engine/Whole Sign natal
-   engine. Require the central `natal_chart` entitlement inside the authorized transaction.
-3. Persist calculation run, chart, positions, cusps, and aspects with complete engine/provider/
-   strategy/config/input provenance and transactional rollback/idempotency. Add a protected
-   chart read/generate UI with uncertainty, source, loading, locked, unavailable, and success
-   states; never put birth inputs or private IDs in URLs or logs.
-4. Prove DST folds/gaps, date/timezone/coordinate boundaries, stale revisions, two owners,
-   entitlement denial, concurrent duplicate generation, rollback, cache identity, exact stored
-   provenance, fixed projections, and mobile/desktop/keyboard behavior. Apply astro, database,
-   security, and UI skills; run every gate and avoid geocoding, external provider calls,
-   production mutation, credentials, purchases, or deployment.
+1. Define a strict private dashboard selection/read contract using only an opaque saved-profile
+   reference; resolve the current owner, chart, timezone, and entitlement server-side and keep
+   all private input and calculation identifiers out of URLs, analytics, logs, and client state.
+2. Compose the existing validated natal, transit, lunar, numerology-cycle, category, and
+   interpretation boundaries into a reproducible Today aggregate. Use a trusted clock and
+   explicit timezone/date boundaries; do not allow AI to calculate or alter facts.
+3. Persist or cache only where historical reproducibility or bounded performance justifies it,
+   with complete source/version identity and centralized `personalized_daily_reading`/
+   `personal_transits` entitlement. Add useful loading, locked, incomplete, unavailable, stale,
+   empty, and ready private UI states with text equivalents and restrained motion.
+4. Prove midnight/DST boundaries, two owners, stale/missing charts, entitlement denial,
+   provider failure, idempotency, exact projections, deterministic fixtures, and mobile/desktop/
+   keyboard/reduced-motion behavior. Apply astro, lunar, database, security, and UI skills; run
+   all gates without external calls, production mutation, credentials, purchases, or deployment.
 
 ## Phase queue
 
@@ -1275,6 +1280,54 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   notification, external call, or deployment was added. Provider reconciliation for
   legacy state and operational backup/restore remain later gates.
 
+## Goal 69 protected saved-profile natal chart record
+
+- Contracts/privacy: version `1.0.0` accepts only opaque profile/birth-profile resources and a
+  positive revision. Exact transport order and strict output projections reject owner, subject,
+  session, birth input, timezone, coordinates, plan, provider, configuration, extra, duplicate,
+  reordered, and file fields before service construction. Only a bounded cookie reaches the
+  internal HTTPS request; private inputs and calculation IDs stay out of URLs and routine logs.
+- Time resolution: civil resolver `1.0.0` validates canonical Gregorian minute input and uses
+  the installed IANA timezone database to return a unique instant/offset, every ordered fold
+  candidate, or a nonexistent gap. Toronto fold/gap, UTC, Kathmandu half-hour, historical
+  second-offset, invalid date/time, and unsupported-zone cases passed. No offset preference,
+  gap shift, location inference, or unknown-time default exists.
+- Authorization/entitlement: reads and generation repeat live Better Auth session verification,
+  resolve the active internal owner, and run as `app_user` under forced RLS. The transaction
+  locks the owned profile aggregate, checks the revision, loads all birth input server-side, and
+  evaluates persisted subscription state through centralized `natal_chart` policy. Baseline,
+  cross-owner, stale, incomplete, and invalid requests fail closed.
+- Deterministic calculation: only unique time plus paired user-supplied coordinates reach natal
+  engine `1.0.0`, Astronomy Engine `2.1.19`, tropical topocentric positions, Whole Sign `1.0.0`,
+  and configured major aspects `1.0.0`. No network provider, AI, interpretation, or fallback is
+  involved; approximate birth time remains labeled as uncertain.
+- Persistence/migration: migration `0013_powerful_nick_fury` preserves the existing cache-key
+  prefix while adding owner identity and changes chart-to-run deletion from restrict to cascade
+  so account erasure works after chart creation. The canonical SHA-256 identity plus advisory
+  lock makes concurrent exact generation one generated/one cached result. One transaction writes
+  the completed run, chart, 10 positions, 12 cusps, aspects, civil resolution, engine/provider/
+  data/house/aspect/source provenance; forced aspect failure rolls every row back.
+- Read/UI: stored relational facts are reconstructed through the validating natal read model;
+  the persisted source revision suppresses obsolete facts and requires regeneration after edits.
+  The private profile page exposes empty, locked, date-only, coordinate-missing, ambiguous,
+  nonexistent, pending, provider-unavailable, conflict, cached, and success states; existing
+  charts remain readable when new generation is locked. Tables and expandable provenance are
+  authoritative text equivalents and heuristic aspect strength is clearly labeled.
+- Browser result: desktop and 390-pixel mobile had no horizontal overflow, long names wrapped,
+  private UUIDs were absent from visible text, only the eligible profile had a generation button,
+  locked/fold states were explicit, keyboard submission focused the returned alert, reduced
+  motion forced automatic scrolling, and the console had no error. Browser artifacts remain
+  excluded under the existing untracked `output/` directory.
+- Verification result: 78 unit files and 1,212 tests passed. Coverage was 91.15% statements,
+  89.99% branches, 98.06% functions, and 93.09% lines; civil-time resolution reached 95.83%
+  statements/89.65% branches/100% functions/100% lines and strict protected-chart contracts
+  reached 89.65% statements/95.94% branches/100% functions/88.88% lines. The migration upgrade
+  and all 66 PostgreSQL integration tests passed. Formatting, lint, strict TypeScript, Drizzle
+  metadata, optimized build, production audit, privacy scan, and the application gate passed.
+- Scope/residual risk: no geocoder, external ephemeris request, AI, interpretation generation,
+  production database mutation, credentials, purchase, or deployment was added. Runtime IANA
+  data is versioned operationally with the Node deployment and should be monitored on upgrades.
+
 ## Goal 68 protected private profile record
 
 - Contracts/privacy: versioned strict commands and frozen minimal read DTOs cover normalized
@@ -1313,9 +1366,9 @@ tests/numerology.test.ts tests/personal-lunar-snapshot.test.ts`,
   95.08% statements/93.39% branches/100% functions/96.55% lines. The PostgreSQL suite passed
   all 62 integration tests. Formatting, lint, strict TypeScript, Drizzle metadata, optimized
   build, production audit, secret/privacy scan, and the application gate passed.
-- Scope/residual risk: no geocoder, timezone inference, ephemeris provider, chart calculation,
-  interpretation, external service, production database mutation, purchase, or deployment was
-  added. Saved-profile chart generation remains Goal 69.
+- Scope at that checkpoint: no geocoder, timezone inference, ephemeris provider, chart
+  calculation, interpretation, external service, production database mutation, purchase, or
+  deployment was added. Saved-profile chart generation was advanced in Goal 69.
 
 ## Goal 67 first-party account deletion record
 

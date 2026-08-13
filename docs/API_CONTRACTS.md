@@ -538,3 +538,15 @@ fixed Goal 64 fields and same-origin callback paths recorded in
 storage. The reset credential is transient, removed from the URL before interaction, sent
 once per explicit attempt, and cleared after a confirmed terminal result. Generic recovery
 copy preserves account anti-enumeration.
+
+## Protected natal chart generation
+
+The internal protected natal contract is version `1.0.0`. Its POST form accepts exactly, in
+order, `version`, `profileId`, `birthProfileId`, and positive `revision`; framework action fields
+are ignored. All birth and entitlement input is loaded server-side. Fixed mutation outcomes are
+`generated`, `cached`, `authenticate`, `authorize`, `locked`, `conflict`, `date-only`,
+`coordinates-missing`, `ambiguous-time`, `nonexistent-time`, `unavailable`, and `retry`.
+
+The cookie-only internal GET returns `ready` with strict minimal chart-profile projections, or
+`authenticate`/`retry`. No birth input, owner identity, subject, session, subscription row,
+calculation identifier, or internal error is projected.

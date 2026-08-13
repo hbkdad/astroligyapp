@@ -3,10 +3,13 @@ import { headers } from "next/headers";
 import Link from "next/link";
 
 import { mutatePrivateProfileAction } from "@/app/account/profiles/actions";
+import { generateProtectedNatalChartAction } from "@/app/account/profiles/chart-actions";
 import { PrivateProfiles } from "@/components/private-profiles";
+import { ProtectedNatalCharts } from "@/components/protected-natal-charts";
 import { AccountShell } from "@/components/account-shell";
 import { productionBetterAuthHttpService } from "@/server/better-auth-http-service";
 import { loadPrivateProfilesFromHeaders } from "@/server/private-profile-action";
+import { loadProtectedNatalChartsFromHeaders } from "@/server/protected-natal-chart-action";
 
 export const metadata: Metadata = {
   title: "Private profiles",
@@ -16,10 +19,17 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function PrivateProfilesPage() {
-  const state = await loadPrivateProfilesFromHeaders(
-    await headers(),
-    productionBetterAuthHttpService,
-  );
+  const requestHeaders = await headers();
+  const [state, chartState] = await Promise.all([
+    loadPrivateProfilesFromHeaders(
+      requestHeaders,
+      productionBetterAuthHttpService,
+    ),
+    loadProtectedNatalChartsFromHeaders(
+      requestHeaders,
+      productionBetterAuthHttpService,
+    ),
+  ]);
   return (
     <AccountShell
       eyebrow="Private birth data"
@@ -45,6 +55,12 @@ export default async function PrivateProfilesPage() {
           <Link href="/account">Return to account</Link>
         </section>
       )}
+      {state.status === "ready" && chartState.status === "ready" ? (
+        <ProtectedNatalCharts
+          profiles={chartState.profiles}
+          action={generateProtectedNatalChartAction}
+        />
+      ) : null}
     </AccountShell>
   );
 }

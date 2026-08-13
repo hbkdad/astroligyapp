@@ -1623,6 +1623,64 @@ tbody tr:target {
   cursor: pointer;
   font-weight: 700;
 }
+
+.protected-charts {
+  margin-top: 1.25rem;
+}
+
+.protected-chart-list {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.protected-chart-card {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+}
+
+.protected-chart-card h3,
+.protected-chart-card dd {
+  overflow-wrap: anywhere;
+}
+
+.protected-chart-card form {
+  margin-top: 1rem;
+}
+
+.protected-chart-card form > button {
+  min-height: 48px;
+  border: 1px solid var(--mint);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--mint);
+  padding: 0.7rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.protected-chart-card form > button:hover {
+  background: rgb(139 203 184 / 12%);
+}
+
+.protected-chart-card form > button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.protected-chart-facts {
+  margin-top: 1rem;
+}
+
+.protected-chart-facts > summary {
+  min-height: 48px;
+  cursor: pointer;
+  font-weight: 700;
+}
 .profile-form,
 .profile-delete form {
   display: grid;

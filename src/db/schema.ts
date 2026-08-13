@@ -183,6 +183,7 @@ export const calculationRun = pgTable(
       table.providerKey.asc().nullsLast().op("text_ops"),
       table.providerVersion.asc().nullsLast().op("text_ops"),
       table.configVersion.asc().nullsLast().op("text_ops"),
+      table.ownerUserId.asc().nullsLast().op("uuid_ops"),
     ),
     index("calculation_run_owner_idx").using(
       "btree",
@@ -861,7 +862,7 @@ export const birthChart = pgTable(
       columns: [table.calculationRunId],
       foreignColumns: [calculationRun.id],
       name: "birth_chart_calculation_run_id_calculation_run_id_fk",
-    }).onDelete("restrict"),
+    }).onDelete("cascade"),
     foreignKey({
       columns: [table.supersededById],
       foreignColumns: [table.id],
