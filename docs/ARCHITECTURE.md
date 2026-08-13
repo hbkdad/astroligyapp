@@ -493,11 +493,11 @@ production security gates are recorded in `docs/SECURITY_PRIVACY_AUDIT.md`.
 
 - Runtime and deployment verification for the selected composed ephemeris
   adapter on the eventual production host.
-- Managed PostgreSQL and deployment providers. Better Auth is selected as a
-  self-hosted framework, not as a managed infrastructure provider. Amazon SES API v2
-  in Canada Central is selected for authentication email, but its account, production
-  access, infrastructure, DNS, credentials, retention operations, and adapter remain
-  unprovisioned.
+- Exact AWS account structure, domain strategy, recovery objectives, observability vendor/export,
+  infrastructure-as-code tool, and calculator-backed staging/production budgets. AWS Canada Central
+  is the accepted deployment region and service topology, but no account, production access,
+  infrastructure, DNS, credentials, or retention operations have been provisioned. Better Auth
+  remains a self-hosted framework rather than managed infrastructure. See ADR 0010.
 - Coordinate and timezone resolution providers for user-entered locations.
 - Production browser end-to-end runner and observability stack. Local critical journeys use
   JSDOM interaction tests plus Playwright CLI inspection without adding a runtime dependency.
@@ -505,13 +505,18 @@ production security gates are recorded in `docs/SECURITY_PRIVACY_AUDIT.md`.
 ## Baseline decisions
 
 - Application: Next.js 16.3 App Router, React 19.2, strict TypeScript, and Tailwind CSS 4.
-- Runtime: Node.js, with a project minimum of 20.19 and Node 24 in CI.
+- Runtime: Node.js 24.15.0, pinned in `.nvmrc` and used in CI.
 - Testing: Vitest for deterministic unit/contract tests and JSDOM critical-workflow tests;
   Playwright CLI is the local real-browser inspection path. A production CI browser runner
   remains a release decision.
 - Quality: Prettier, ESLint with Next.js Core Web Vitals and TypeScript rules, strict `tsc`, production build, and GitHub Actions CI.
 - API style: Server Components for internal reads, Server Actions for first-party mutations, and Route Handlers for external/public HTTP contracts.
-- Deployment: platform-agnostic Node.js server contract; no hosting provider selected.
+- Deployment: AWS Canada Central behind CloudFront/WAF and an ALB, with portable Next.js standalone
+  containers on ECS Fargate, RDS PostgreSQL 18, and shared Valkey coordination. Production requires
+  at least two application tasks and proof of distributed ISR/tag invalidation, stable Server Action
+  encryption, deployment skew protection, bounded database pools, rollback, and cache-outage
+  behavior. RDS Proxy remains deferred until transaction-local role/RLS tests prove it safe. No live
+  resources exist. See ADR 0010 and `docs/STAGING_IMPLEMENTATION_CHECKLIST.md`.
 - Persistence: PostgreSQL 18 contract, Drizzle ORM/Kit, `pg`, checked-in SQL
   migrations, forced row-level security, and real disposable PostgreSQL tests.
   See ADR 0003.

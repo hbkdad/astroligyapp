@@ -4,10 +4,11 @@ Last updated: 2026-08-13
 
 ## Current position
 
-Status: Goal 78 complete; versioned release-candidate manifest, pinned runtime, reproducible CI gate,
-operator runbook, and explicit release decision now exist. The exact source is GO as an internal,
-non-production candidate and remains NO-GO for external staging/production until named infrastructure,
-provider, backup, observability, authenticated E2E, and assistive-technology gates are closed.
+Status: Goal 79 complete; ADR 0010 selects an AWS Canada Central container topology and maps every
+external release blocker to a control and unresolved owner. No cloud account, resource, purchase, DNS,
+secret, or deployment was created. The exact source remains GO as an internal, non-production candidate
+and NO-GO for external staging/production until the documented implementation and verification gates
+are closed.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -24,7 +25,8 @@ subscription-event ingestion. Better Auth 1.6.27 is installed with four isolated
 tables, strict server configuration, database sessions, and execute-only account and
 contact lookups plus a hardened public email/password HTTP boundary. No live billing
 account, production data, managed database/auth infrastructure, AI, general notification delivery, location-resolution,
-or deployment provider is selected. Authentication email has a provider decision, exact
+or live deployment infrastructure exists. AWS Canada Central is selected as the deployment topology,
+not provisioned infrastructure. Authentication email has a provider decision, exact
 SDK/adapter, and injected feedback/suppression seam, but no account, DNS, credentials,
 AWS infrastructure, signature implementation, queue polling, or live delivery.
 
@@ -101,6 +103,15 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 79: derive the Next.js runtime, Canadian-region, PostgreSQL 18/RLS, proxy, shared-abuse,
+      provider-worker, recovery, observability, cost, portability, rollback, and ownership requirements;
+      compare AWS, Azure, and Vercel/Supabase using current primary documentation and pricing.
+- [x] Accept ADR 0010 selecting CloudFront/WAF -> ALB -> private ECS Fargate in `ca-central-1`, private
+      RDS PostgreSQL 18, shared Valkey coordination, regional SES/SNS/SQS, ECR scanning, Secrets/KMS,
+      and CloudWatch/EventBridge, while deferring RDS Proxy until transaction-local RLS tests pass.
+- [x] Record a planning-only monthly cost envelope, failure/capacity model, portable exit path, exact
+      deployment order, every Goal 78 external NO-GO control/owner, and a staging checklist that keeps
+      all account/resource/purchase/DNS/secret/deployment mutations behind explicit approval.
 - [x] Goal 78: inventory the exact runtime/dependency/migration/route/environment/provider candidate;
       pin Node 24.15.0 and npm 11.12.1; document the 16-migration contract, data classes, health and
       indexing semantics, provider state, and immutable candidate-identification requirements.
@@ -692,25 +703,23 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 79 — select the deployment topology and managed infrastructure plan through current, sourced
-research and an ADR, without provisioning, purchasing, deploying, or creating live credentials.
+Goal 80 — build and verify the portable production-container and multi-instance runtime contract locally,
+without provisioning cloud infrastructure or using live credentials.
 
 Deliverables:
 
-1. Derive hard requirements from the release manifest: Next.js 16 Node runtime and ISR behavior,
-   Canadian/privacy-aware regional needs, PostgreSQL 18/RLS/role/migration support, TLS/proxy identity,
-   instance/shared-abuse topology, SES/Paddle ingress and feedback workers, backups/PITR, logs/metrics,
-   cost bounds, portability, rollback, and operational ownership.
-2. Compare at least three credible hosting/database topologies using current primary documentation and
-   pricing. Include cold starts, persistent Node support, cron/queue/background work, connection pooling,
-   networking/egress, Canadian regions/data residency, WAF/rate limiting, secrets, observability,
-   backups/restores, preview environments, lock-in, and the application's process-local cache limits.
-3. Record the selected or explicitly deferred topology in an ADR with threat model, cost envelope,
-   migration/deployment order, failure modes, exit strategy, and a mapping from every Goal 78 external
-   NO-GO item to the chosen control or named unresolved owner. Do not assume a provider feature exists.
-4. Produce a staging implementation checklist and exact approval boundary. Re-run `release:check` after
-   documentation/config-only changes, then queue infrastructure-as-code only if a complete topology is
-   accepted. Do not create accounts, buy services, change DNS, add secrets, or deploy in this goal.
+1. Read the installed Next.js 16 self-hosting and cache-handler guidance, then add a pinned multi-stage
+   standalone production image, non-root runtime, health check, signal-safe startup, `.dockerignore`, and
+   a local optimized-image smoke path without embedding secrets or private build data.
+2. Define and validate immutable deployment ID, stable Server Actions encryption, trusted proxy/runtime,
+   database-pool budget, and shared-cache configuration. Implement the smallest provider-neutral cache
+   boundary required for multi-instance ISR/tag coordination, with explicit unavailable/corruption behavior.
+3. Add a disposable local topology using PostgreSQL 18 and Valkey that can exercise at least two
+   application instances. Prove cross-instance cache/tag behavior, version skew/rollback expectations,
+   secure proxy headers, readiness, graceful shutdown, bounded connection use, and cache outage behavior.
+4. Invoke `security-audit` and `release-check`; run the full release gate plus container vulnerability/
+   secret/config checks available locally; document exact evidence and remaining risks. Queue reviewed IaC
+   only after the local runtime contract passes. Do not create cloud resources, accounts, DNS, or secrets.
 
 ## Phase queue
 
@@ -746,6 +755,14 @@ Deliverables:
 - Amazon SES API v2 in `ca-central-1` is selected only for authentication email behind
   the ADR 0009 provider-neutral boundary. The future adapter pins AWS SDK 3.1108.0;
   regional infrastructure, DNS, credentials, retention, and live delivery remain gates.
+- AWS Canada Central is the accepted deployment topology: CloudFront/WAF -> ALB -> private ECS
+  Fargate, private RDS PostgreSQL 18, shared Valkey, regional SES/SNS/SQS, ECR scanning,
+  Secrets/KMS, and CloudWatch/EventBridge. It is an architecture decision only; no live resource
+  exists, and all cloud mutations remain approval-gated. See ADR 0010.
+- Production requires at least two application tasks with durable Next.js cache/tag coordination,
+  a stable Server Actions encryption key, immutable deployment identity, and a database connection
+  budget. RDS Proxy is not selected until transaction-local role and RLS behavior passes the real
+  migration/isolation suite.
 - Longitudes normalize to `[0, 360)`. Zodiac and aspect calculations use
   provider-neutral degrees with no interpretation text or product weights.
 
@@ -3126,6 +3143,36 @@ tests/lunar-phase.test.ts tests/public-daily-readings.test.ts`;
 - Scope: no inferred-speed fallback, interpretation, category, score, timeline
   composition/UI, persistence, entitlement, notification, production provider
   call, or deployment was added.
+
+## Goal 79 deployment-topology decision record
+
+- Requirements/research: `docs/DEPLOYMENT_TOPOLOGY_RESEARCH.md` derives the release candidate's
+  persistent Next.js 16 runtime, multi-instance ISR/tag/action coordination, Canada-region,
+  PostgreSQL 18/RLS, proxy, abuse-control, worker, recovery, observability, cost, rollback, and
+  portability needs. It compares AWS, Azure, and Vercel/Supabase against current primary sources.
+- Decision: ADR 0010 accepts AWS `ca-central-1` with CloudFront/WAF -> ALB -> private ECS Fargate,
+  private RDS PostgreSQL 18, shared ElastiCache Serverless for Valkey, SES/SNS/encrypted SQS,
+  ECR/Inspector, Secrets Manager/KMS, and CloudWatch/EventBridge. Azure remains the portable
+  fallback. Vercel/Supabase is deferred because the current managed PostgreSQL baseline and
+  required recovery/security shape do not match this candidate as directly.
+- Runtime/connection constraints: production starts at two tasks and must prove a durable custom
+  Next cache handler, disabled process-only cache assumptions, stable Server Actions encryption,
+  immutable deployment ID, version-skew/rollback behavior, and cache outage handling. RDS Proxy is
+  deferred until transaction-local role/RLS behavior passes the real suite. Two tasks could expose
+  40 Better Auth connections before other pools, so task scaling and pool caps share one budget.
+- Cost/failure/exit: the research records a non-quote planning envelope of USD 100-250/month for
+  staging and USD 300-700/month for an HA production baseline, requiring a current calculator
+  estimate before purchase. It defines task, revision, cache, database, migration, provider, edge,
+  and traffic-spike behavior plus an OCI/PostgreSQL/provider-adapter exit path.
+- Blockers/approval: the ADR maps every Goal 78 external NO-GO item to a selected control and an
+  unresolved named owner. `docs/STAGING_IMPLEMENTATION_CHECKLIST.md` keeps account creation,
+  resource provisioning, purchase, DNS, secrets, deploy, production data, and indexing behind a
+  fresh explicit approval; this goal performed none of those actions.
+- Verification: `npm run release:check` passed on the final documentation state: formatting,
+  ESLint, strict TypeScript, 101 files/1,292 tests, the 33-page optimized build, 90.03% statement/
+  87.71% branch/96.55% function/92.18% line coverage, Drizzle consistency, PostgreSQL 18 legacy and
+  latest migrations, 71 database tests, and the high/critical production dependency threshold.
+  Four moderate development-only Drizzle Kit/esbuild advisories remain unchanged.
 
 ## Goal 78 release-candidate readiness record
 

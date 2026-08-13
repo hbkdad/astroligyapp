@@ -17,18 +17,19 @@ part of the candidate.
 | Application          | `personal-cosmic-calendar` 0.1.0 | Private package; no registry publication                              |
 | Node.js              | 24.15.0 from `.nvmrc`            | CI and release operators use the pinned version                       |
 | npm                  | 11.12.1 from `packageManager`    | Install only with `npm ci` for a candidate                            |
-| Next.js / React      | 16.3.0 / 19.2.8                  | Optimized Node server; deployment provider unselected                 |
+| Next.js / React      | 16.3.0 / 19.2.8                  | Optimized Node server; AWS container topology selected, not built     |
 | TypeScript / Vitest  | 5.9.3 / 4.1.10                   | Strict compilation and deterministic test gate                        |
-| PostgreSQL           | 18 test baseline                 | Managed provider, topology, extensions, and backup service unselected |
+| PostgreSQL           | 18 test baseline                 | RDS PostgreSQL 18 selected; instance/backup resources not provisioned |
 | Drizzle ORM / Kit    | 0.45.2 / 0.31.10                 | Checked-in forward migrations; no schema push                         |
 | Astronomy            | Astronomy Engine 2.1.19          | Local launch adapter behind `EphemerisProvider`                       |
 | Authentication       | Better Auth 1.6.27               | PostgreSQL sessions and verified email/password only                  |
 | Billing ingress      | Paddle SDK 3.10.0                | Signed webhook adapter only; no live account or checkout              |
 | Authentication email | AWS SES v2 SDK 3.1108.0          | Adapter selected; infrastructure and credentials absent               |
 
-The build output is `.next/`. No container image, standalone bundle, SBOM, signed artifact, hosting
-project, region, instance topology, or deployment command is selected. These are deployment-decision
-inputs, not implied by a successful local build.
+The build output is `.next/`. ADR 0010 selects AWS Canada Central and a production topology, but no
+container image, standalone bundle, SBOM, signed artifact, AWS account/resource, or deployment
+command exists. These remain implementation and approval gates, not implications of a successful
+local build.
 
 ## Included database contract
 
@@ -93,16 +94,16 @@ candidate, and unused credentials must not be provisioned speculatively.
 
 ## External dependencies and operational state
 
-| Dependency            | Current state                                        | Production gate                                                                                         |
-| --------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Astronomy Engine      | Installed local calculation dependency               | Preserve exact version/fixtures and provider metadata                                                   |
-| PostgreSQL            | Disposable PostgreSQL 18 suite passes                | Select managed service; network/IAM; pool sizing; PITR; backup/restore rehearsal                        |
-| Better Auth           | Installed, configured through strict server boundary | Real HTTPS/proxy/cookie/email and two-account isolation tests                                           |
-| AWS SES/SNS/SQS       | Adapter and feedback contracts exist                 | Account, verified domain, DKIM/SPF/DMARC, IAM, queue consumer, alarms, suppression/retry exercise       |
-| Paddle                | Signed webhook contract exists                       | Account/products, endpoint, secrets, edge limits, replay/reconciliation, customer provisioning decision |
-| Notification delivery | Candidates remain `pending-provider`                 | Select provider/worker or keep user-facing delivery explicitly unavailable                              |
-| Hosting/CDN/WAF       | Unselected                                           | Region/topology, TLS/domain, request limits, shared abuse controls, cache/header verification           |
-| Observability/on-call | No vendor/exporter/owner selected                    | Privacy-reviewed logs/errors/metrics, dashboards, alerts, escalation owner and retention                |
+| Dependency            | Current state                                                | Production gate                                                                                         |
+| --------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| Astronomy Engine      | Installed local calculation dependency                       | Preserve exact version/fixtures and provider metadata                                                   |
+| PostgreSQL            | RDS PostgreSQL 18 topology selected; disposable suite passes | Provision only after approval; network/IAM; pool sizing; PITR; backup/restore rehearsal                 |
+| Better Auth           | Installed, configured through strict server boundary         | Real HTTPS/proxy/cookie/email and two-account isolation tests                                           |
+| AWS SES/SNS/SQS       | Adapter and feedback contracts exist                         | Account, verified domain, DKIM/SPF/DMARC, IAM, queue consumer, alarms, suppression/retry exercise       |
+| Paddle                | Signed webhook contract exists                               | Account/products, endpoint, secrets, edge limits, replay/reconciliation, customer provisioning decision |
+| Notification delivery | Candidates remain `pending-provider`                         | Select provider/worker or keep user-facing delivery explicitly unavailable                              |
+| Hosting/CDN/WAF       | AWS Canada topology selected in ADR 0010; unprovisioned      | Approved account/budget/IaC; TLS/domain, limits, shared abuse, cache/header verification                |
+| Observability/on-call | No vendor/exporter/owner selected                            | Privacy-reviewed logs/errors/metrics, dashboards, alerts, escalation owner and retention                |
 
 ## Health, performance, and feature controls
 
