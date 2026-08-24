@@ -24,6 +24,7 @@ FROM ${NODE_IMAGE} AS runtime
 WORKDIR /app
 RUN apt-get update && \
   apt-get install --only-upgrade --yes --no-install-recommends libgnutls30=3.7.9-2+deb12u7 && \
+  rm -f /var/log/apt/* /var/log/dpkg.log && \
   rm -rf /var/lib/apt/lists/* /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn-v1.22.22 && \
   rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 ENV NODE_ENV=production \

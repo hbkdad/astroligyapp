@@ -1,6 +1,15 @@
 import assert from "node:assert/strict";
-import { randomBytes } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createHash, randomBytes } from "node:crypto";
+import {
+  lstatSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  readlinkSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -84,8 +93,9 @@ try {
   if (imageA.Id !== imageB.Id) {
     const layoutA = inspectOciArchive(archiveA, "a");
     const layoutB = inspectOciArchive(archiveB, "b");
+    const layerDrift = compareOciLayers(layoutA, layoutB);
     throw new Error(
-      `independent uncached builds produced different image IDs\n${JSON.stringify({ imageA: imageA.Id, imageB: imageB.Id, layoutA, layoutB }, null, 2)}`,
+      `independent uncached builds produced different image IDs\n${JSON.stringify({ imageA: imageA.Id, imageB: imageB.Id, layoutA: summarizeLayout(layoutA), layoutB: summarizeLayout(layoutB), layerDrift }, null, 2)}`,
     );
   }
   assert.equal(
@@ -271,10 +281,71 @@ function inspectOciArchive(archivePath, suffix) {
     ),
   );
   return {
+    directory,
     manifest: manifestDigest,
     config: manifest.config.digest,
     layers: manifest.layers.map((layer) => layer.digest),
   };
+}
+
+function summarizeLayout({ manifest, config, layers }) {
+  return { manifest, config, layers };
+}
+
+function compareOciLayers(layoutA, layoutB) {
+  const drift = [];
+  const count = Math.max(layoutA.layers.length, layoutB.layers.length);
+  for (let index = 0; index < count; index += 1) {
+    const digestA = layoutA.layers[index];
+    const digestB = layoutB.layers[index];
+    if (digestA === digestB) continue;
+    const filesA = extractAndHashLayer(layoutA, digestA, `a-${index}`);
+    const filesB = extractAndHashLayer(layoutB, digestB, `b-${index}`);
+    const paths = [...new Set([...filesA.keys(), ...filesB.keys()])].sort();
+    drift.push({
+      index,
+      digestA,
+      digestB,
+      changedFiles: paths
+        .filter((path) => filesA.get(path) !== filesB.get(path))
+        .slice(0, 100)
+        .map((path) => ({ path, a: filesA.get(path), b: filesB.get(path) })),
+    });
+  }
+  return drift;
+}
+
+function extractAndHashLayer(layout, digest, suffix) {
+  if (!digest) return new Map();
+  const directory = join(temporaryRoot, `layer-${suffix}`);
+  mkdirSync(directory);
+  run("tar", [
+    "-xf",
+    join(layout.directory, "blobs", "sha256", digest.slice(7)),
+    "-C",
+    directory,
+  ]);
+  return hashTree(directory);
+}
+
+function hashTree(directory, relative = "", result = new Map()) {
+  for (const entry of readdirSync(join(directory, relative), {
+    withFileTypes: true,
+  })) {
+    const path = relative ? `${relative}/${entry.name}` : entry.name;
+    const fullPath = join(directory, path);
+    if (entry.isDirectory()) {
+      hashTree(directory, path, result);
+    } else if (entry.isSymbolicLink()) {
+      result.set(path, `link:${readlinkSync(fullPath)}`);
+    } else if (lstatSync(fullPath).isFile()) {
+      result.set(
+        path,
+        createHash("sha256").update(readFileSync(fullPath)).digest("hex"),
+      );
+    }
+  }
+  return result;
 }
 
 function runTamperTests(manifest) {
