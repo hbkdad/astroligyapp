@@ -9,6 +9,8 @@ RUN npm ci
 FROM ${NODE_IMAGE} AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG SOURCE_DATE_EPOCH
+ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
 ARG NEXT_DEPLOYMENT_ID
 ENV NEXT_DEPLOYMENT_ID=${NEXT_DEPLOYMENT_ID}
 ENV NEXT_SHARED_CACHE_ENABLED=true
@@ -31,6 +33,14 @@ ENV NODE_ENV=production \
     NEXT_SHARED_CACHE_ENABLED=true
 ARG NEXT_DEPLOYMENT_ID
 ENV NEXT_DEPLOYMENT_ID=${NEXT_DEPLOYMENT_ID}
+ARG SOURCE_REVISION
+ARG SOURCE_CREATED
+LABEL org.opencontainers.image.title="astroligyapp" \
+      org.opencontainers.image.description="Personal Cosmic Calendar standalone application" \
+      org.opencontainers.image.source="https://github.com/hbkdad/astroligyapp" \
+      org.opencontainers.image.revision=${SOURCE_REVISION} \
+      org.opencontainers.image.created=${SOURCE_CREATED} \
+      org.opencontainers.image.licenses="LicenseRef-Proprietary"
 
 COPY --from=builder --chown=node:node /app/public ./public
 COPY --from=builder --chown=node:node /app/.next/standalone ./

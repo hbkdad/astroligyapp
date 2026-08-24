@@ -2,6 +2,7 @@
   "name": "personal-cosmic-calendar",
   "version": "0.1.0",
   "private": true,
+  "license": "UNLICENSED",
   "type": "module",
   "packageManager": "npm@11.12.1",
   "engines": {
@@ -20,6 +21,7 @@
     "test:database": "node scripts/test-database.mjs",
     "test:runtime": "node scripts/test-runtime-container.mjs",
     "scan:runtime": "node scripts/scan-runtime-image.mjs",
+    "test:artifact": "node scripts/test-release-artifact.mjs",
     "test:infrastructure": "node scripts/test-infrastructure.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -27,7 +29,7 @@
     "db:check": "drizzle-kit check",
     "db:migrate": "drizzle-kit migrate",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build",
-    "release:check": "npm run check && npm run test:coverage && npm run db:check && npm run test:database && npm audit --omit=dev --audit-level=high && npm run test:infrastructure"
+    "release:check": "npm run check && npm run test:coverage && npm run db:check && npm run test:database && npm audit --omit=dev --audit-level=high && npm run test:infrastructure && npm run test:artifact"
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "3.1108.0",
