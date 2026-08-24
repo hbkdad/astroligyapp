@@ -1,0 +1,5 @@
+# Reviewed prose-only false positives. Keep each exception bound to the exact
+# commit, path, rule, and line fingerprint emitted by Gitleaks.
+0b28d1fa0fb8a07db9983220d2110f092552aa4d:docs/PROJECT_STATUS.md:generic-api-key:597
+91597bea8e98817014eba83b2de90015c7d05a0c:docs/DATA_MODEL.md:generic-api-key:147
+d224cc40e10e5da4cbe91e612ffcbcd7bc7ef431:docs/DATA_MODEL.md:generic-api-key:146

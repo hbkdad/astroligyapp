@@ -126,7 +126,6 @@ try {
     `${root}:/repo:ro`,
     tools.gitleaks,
     "git",
-    "--source",
     "/repo",
     "--redact",
     "--no-banner",
