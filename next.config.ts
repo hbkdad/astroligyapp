@@ -15,7 +15,10 @@ const nextConfig: NextConfig = {
   output: "standalone",
   ...(configuredDeploymentId === undefined
     ? {}
-    : { deploymentId: configuredDeploymentId }),
+    : {
+        deploymentId: configuredDeploymentId,
+        generateBuildId: async () => configuredDeploymentId,
+      }),
   ...(sharedCacheEnabled
     ? {
         cacheHandler: resolve(process.cwd(), "cache-handler.cjs"),
