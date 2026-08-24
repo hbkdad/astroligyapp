@@ -65,8 +65,18 @@ try {
     ]);
   }
 
-  build(sourceA, tags[0], { commit, epoch, created, deploymentId });
-  build(sourceB, tags[1], { commit, epoch, created, deploymentId });
+  build(sourceA, tags[0], join(temporaryRoot, "artifact-a.oci.tar"), {
+    commit,
+    epoch,
+    created,
+    deploymentId,
+  });
+  build(sourceB, tags[1], join(temporaryRoot, "artifact-b.oci.tar"), {
+    commit,
+    epoch,
+    created,
+    deploymentId,
+  });
   const imageA = inspect(tags[0]);
   const imageB = inspect(tags[1]);
   assert.equal(
@@ -207,7 +217,7 @@ try {
   rmSync(temporaryRoot, { recursive: true, force: true });
 }
 
-function build(source, tag, inputs) {
+function build(source, tag, archivePath, inputs) {
   run(
     "docker",
     [
@@ -217,7 +227,7 @@ function build(source, tag, inputs) {
       "--platform=linux/amd64",
       "--provenance=false",
       "--sbom=false",
-      "--output=type=docker,rewrite-timestamp=true",
+      `--output=type=oci,dest=${archivePath},rewrite-timestamp=true`,
       "--secret",
       "id=next_server_actions_encryption_key,env=NEXT_SERVER_ACTIONS_ENCRYPTION_KEY",
       "--build-arg",
@@ -234,6 +244,7 @@ function build(source, tag, inputs) {
     ],
     { env: { ...process.env, NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: secret } },
   );
+  run("docker", ["load", "--input", archivePath]);
 }
 
 function inspect(tag) {
