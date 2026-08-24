@@ -65,13 +65,15 @@ try {
     ]);
   }
 
-  build(sourceA, tags[0], join(temporaryRoot, "artifact-a.oci.tar"), {
+  const archiveA = join(temporaryRoot, "artifact-a.oci.tar");
+  const archiveB = join(temporaryRoot, "artifact-b.oci.tar");
+  build(sourceA, tags[0], archiveA, {
     commit,
     epoch,
     created,
     deploymentId,
   });
-  build(sourceB, tags[1], join(temporaryRoot, "artifact-b.oci.tar"), {
+  build(sourceB, tags[1], archiveB, {
     commit,
     epoch,
     created,
@@ -79,11 +81,13 @@ try {
   });
   const imageA = inspect(tags[0]);
   const imageB = inspect(tags[1]);
-  assert.equal(
-    imageA.Id,
-    imageB.Id,
-    "independent uncached builds produced different image IDs",
-  );
+  if (imageA.Id !== imageB.Id) {
+    const layoutA = inspectOciArchive(archiveA, "a");
+    const layoutB = inspectOciArchive(archiveB, "b");
+    throw new Error(
+      `independent uncached builds produced different image IDs\n${JSON.stringify({ imageA: imageA.Id, imageB: imageB.Id, layoutA, layoutB }, null, 2)}`,
+    );
+  }
   assert.equal(
     imageA.Config.User,
     "node",
@@ -249,6 +253,28 @@ function build(source, tag, archivePath, inputs) {
 
 function inspect(tag) {
   return JSON.parse(capture("docker", ["image", "inspect", tag]))[0];
+}
+
+function inspectOciArchive(archivePath, suffix) {
+  const directory = join(temporaryRoot, `oci-${suffix}`);
+  run("powershell", [
+    "-NoProfile",
+    "-Command",
+    `New-Item -ItemType Directory -Path '${directory.replaceAll("'", "''")}' | Out-Null; tar -xf '${archivePath.replaceAll("'", "''")}' -C '${directory.replaceAll("'", "''")}'`,
+  ]);
+  const index = JSON.parse(readFileSync(join(directory, "index.json"), "utf8"));
+  const manifestDigest = index.manifests[0].digest;
+  const manifest = JSON.parse(
+    readFileSync(
+      join(directory, "blobs", "sha256", manifestDigest.slice(7)),
+      "utf8",
+    ),
+  );
+  return {
+    manifest: manifestDigest,
+    config: manifest.config.digest,
+    layers: manifest.layers.map((layer) => layer.digest),
+  };
 }
 
 function runTamperTests(manifest) {
