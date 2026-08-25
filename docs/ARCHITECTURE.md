@@ -47,6 +47,12 @@ Deterministic fallback   Optional schema-validated AI explanation
 
 The first release uses one Next.js App Router application with internal module boundaries. Extract packages or services only under the triggers recorded in ADR 0002.
 
+Release promotion uses the schema-2 dual-artifact set in ADR 0015. The application and feedback worker
+remain independently deployable and independently rollback-capable, but a release set is valid only when
+both immutable images and their SPDX evidence bind the same exact source revision. Local ephemeral
+Cosign evidence is labelled untrusted; a future remote promotion must verify protected workflow identity,
+transparency evidence, OCI referrers, and predicate policy before either ECS task definition changes.
+
 ```text
 src/
   app/                         routes and server entry points

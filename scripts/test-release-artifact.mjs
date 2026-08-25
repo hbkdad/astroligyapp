@@ -17,7 +17,9 @@ import { fileURLToPath } from "node:url";
 import {
   assertImmutablePromotionReference,
   canonicalJson,
+  extractDockerfileBaseImages,
   normalizeSpdx,
+  selectOciManifestDigest,
   sha256,
   validateArtifactManifest,
 } from "./lib/artifact-manifest.mjs";
@@ -54,6 +56,8 @@ try {
   const packageManifest = JSON.parse(
     readFileSync(join(root, "package.json"), "utf8"),
   );
+  const dockerfile = readFileSync(join(root, "Dockerfile"), "utf8");
+  const baseImages = extractDockerfileBaseImages(dockerfile);
   assert.equal(
     packageManifest.license,
     "UNLICENSED",
@@ -88,6 +92,16 @@ try {
     created,
     deploymentId,
   });
+  const imageDigests = [archiveA, archiveB].map((ociArchive) =>
+    selectOciManifestDigest(
+      JSON.parse(capture("tar", ["-xOf", ociArchive, "index.json"])),
+    ),
+  );
+  assert.equal(
+    imageDigests[0],
+    imageDigests[1],
+    "OCI manifests must reproduce",
+  );
   const imageA = inspect(tags[0]);
   const imageB = inspect(tags[1]);
   if (imageA.Id !== imageB.Id) {
@@ -200,7 +214,7 @@ try {
       commit,
       tree,
       sourceDateEpoch: Number(epoch),
-      dockerfileSha256: sha256(readFileSync(join(root, "Dockerfile"))),
+      dockerfileSha256: sha256(dockerfile),
     },
     subject: {
       imageId: imageA.Id,
@@ -229,6 +243,33 @@ try {
     imageId: imageA.Id,
     sbomSha256: sha256(sbomJson),
   });
+  const sharedEvidence = process.env.RELEASE_EVIDENCE_DIRECTORY;
+  if (sharedEvidence) {
+    mkdirSync(sharedEvidence, { recursive: true });
+    writeFileSync(
+      join(sharedEvidence, "application-artifact.json"),
+      canonicalJson({
+        source: { commit, tree, sourceDateEpoch: Number(epoch) },
+        artifact: {
+          name: "application",
+          repository: "astroligyapp",
+          baseImages,
+          dockerfileSha256: manifest.source.dockerfileSha256,
+          imageId: imageA.Id,
+          imageDigest: imageDigests[0],
+          platform: "linux/amd64",
+          reproducibleBuilds: 2,
+          sbom: { ...manifest.sbom },
+          scans: {
+            imageSecrets: "pass",
+            imageVulnerabilities: "pass",
+          },
+          rollbackPredecessor: null,
+        },
+      }),
+    );
+    writeFileSync(join(sharedEvidence, "application.spdx.json"), sbomJson);
+  }
   runTamperTests(manifest);
   writeFileSync(
     join(evidence, "artifact-manifest.json"),

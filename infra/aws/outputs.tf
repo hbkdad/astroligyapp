@@ -2,6 +2,8 @@ output "planning_summary" {
   value = {
     environment                  = var.environment
     region                       = var.aws_region
+    release_source_revision      = var.application_image_source_revision
+    release_set_sha256           = var.release_set_sha256
     public_indexing_enabled      = false
     application_minimum          = local.app_minimum_count
     application_maximum          = var.app_max_count

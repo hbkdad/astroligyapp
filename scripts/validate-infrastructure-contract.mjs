@@ -66,6 +66,8 @@ for (const [pattern, description] of [
     /AWS_EC2_METADATA_DISABLED",\s*value\s*=\s*"true"/u,
     "EC2 metadata disabled for feedback worker",
   ],
+  [/RELEASE_SOURCE_REVISION/u, "shared release source revision"],
+  [/RELEASE_SET_SHA256/u, "dual-artifact release-set identity"],
   [/expression\s*=\s*"queue \/ tasks"/u, "feedback backlog-per-task scaling"],
   [/feedback_worker_max_count[\s\S]*?<= 4/u, "bounded feedback worker scaling"],
   [/"sqs:ReceiveMessage"/u, "feedback queue receive permission"],

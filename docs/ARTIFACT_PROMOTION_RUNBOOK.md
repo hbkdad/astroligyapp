@@ -2,9 +2,14 @@
 
 ## Local evidence gate
 
-Run `npm run test:artifact` only from a clean tracked worktree. The command archives the exact `HEAD`
-tree twice, performs two independent uncached `linux/amd64` builds with rewritten timestamps, and
-requires byte-equivalent image configuration IDs. It uses one random in-memory Server Actions key for
+Run `npm run test:release-artifacts` only from a clean tracked worktree. The command first runs the
+application and worker evidence gates against the same exact `HEAD`. Each gate archives the tree twice,
+performs two independent uncached `linux/amd64` builds with rewritten timestamps, and requires both
+matching image-configuration IDs and matching OCI manifest digests. The worker gate also
+exports its bundle/metafile from the non-runtime `evidence` target. The command then validates the
+combined schema-2 release set.
+
+The application gate uses one random in-memory Server Actions key for
 both builds and derives Next preview metadata from that key with separate HMAC contexts. The key and
 its hash are never written to the evidence directory or logs.
 
@@ -17,13 +22,22 @@ The gate then:
 4. creates normalized SPDX 2.3 JSON with digest-pinned Syft;
 5. verifies every package has declared and concluded license fields, records unresolved assertions, and
    requires the application `UNLICENSED` declaration and proprietary notice;
-6. creates a disposable unsigned manifest binding source commit/tree, Dockerfile, image, SBOM, scan
-   results, tool digests, and two-build result;
+6. creates disposable artifact descriptors binding source commit/tree, Dockerfiles, images, SBOMs,
+   scan results, tool digests, and two-build results;
 7. proves rejection of source, image, SBOM, scan, signature, and mutable-reference tampering; and
 8. removes both local images and all evidence even on failure.
 
-Generated SBOMs, manifests, scan databases, BuildKit metadata, keys, and image archives are not committed.
-The local manifest establishes consistency only. Its `signature` and `attestation` fields must be null.
+The worker SBOM is generated from esbuild bundle metadata and `package-lock.json`. Every bundled npm
+input must map to an exact lockfile version, registry source, SHA-512 integrity, and reviewed license;
+the resulting SPDX document is scanned by Trivy. Bundle metadata and evidence are absent from the
+Distroless runtime image.
+
+The combined test produces an in-toto/SLSA 1.1 statement with both image subjects, creates random local
+Cosign keys, signs and attests the statement with networking disabled, verifies both bundles, proves a
+tampered statement fails, records only bundle/public-key hashes under `local-ephemeral-untrusted`, and
+deletes the entire evidence directory. Generated SBOMs, manifests, scan databases, BuildKit metadata,
+keys, bundles, and image archives are not committed. This proves local consistency, not trusted identity,
+timestamp, transparency inclusion, registry attachment, or a SLSA level.
 
 ## Reproducibility limits
 
@@ -59,19 +73,22 @@ Cosign private keys.
 
 The following is a design contract, not authorization to run it:
 
-1. Build once from the protected exact commit with full BuildKit SBOM and SLSA provenance enabled.
-2. Push to the approved ECR repository, capture the registry-returned `sha256` digest, and stop if it
-   differs from build metadata. Never promote by tag.
-3. Fetch the digest from a clean verifier and re-run Trivy plus runtime hardening checks.
-4. Use Cosign 3.1.3 keyless signing under GitHub OIDC against the digest. Store a modern Sigstore bundle
+1. Build both artifacts once from the protected exact commit with full BuildKit SBOM and SLSA provenance
+   enabled; reject any source-revision mismatch.
+2. Push each artifact to its approved ECR repository, capture both registry-returned OCI manifest
+   `sha256` digests, and stop if either differs from build metadata. A Docker configuration ID is not a
+   registry promotion subject. Never promote by tag.
+3. Fetch both digests from a clean verifier and re-run Trivy plus runtime hardening checks.
+4. Use Cosign 3.1.3 keyless signing under GitHub OIDC against each digest. Store modern Sigstore bundles
    and Rekor proof; do not use legacy JSON blob bundles.
-5. Attach SPDX 2.3 and SLSA provenance attestations to the same digest. The predicate must bind the exact
+5. Attach each SPDX 2.3 document and the dual-subject SLSA provenance as OCI 1.1 referrers. The predicate must bind the exact
    repository, commit, workflow identity, builder, materials, parameters, and no secret values.
 6. Verify signature and each attestation with the exact certificate identity and GitHub OIDC issuer,
    then independently enforce subject/predicate policy. A valid signature alone is insufficient.
-7. Copy/promote the already verified digest between approved environment repositories. Do not rebuild.
-8. Retain the digest, SPDX, SLSA bundle, signatures, scan outputs, approval, deployment record, and
-   rollback predecessor for the agreed audit period.
+7. Copy/promote the already verified pair of digests and their referrers between approved environment
+   repositories. Do not rebuild.
+8. Retain both digests, referrers, SPDX documents, SLSA/signature bundles, scan outputs, release-set
+   digest, approval, deployment record, and independent rollback predecessors for the agreed audit period.
 
 ## Verification and rollback
 

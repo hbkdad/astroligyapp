@@ -31,6 +31,13 @@ check "feedback_worker_desired_count_within_bounds" {
   }
 }
 
+check "dual_artifact_source_revision" {
+  assert {
+    condition     = var.application_image_source_revision == var.feedback_worker_image_source_revision
+    error_message = "application and feedback-worker images must come from the same verified source revision"
+  }
+}
+
 check "desired_count_within_bounds" {
   assert {
     condition     = local.effective_app_desired_count <= var.app_max_count

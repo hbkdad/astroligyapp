@@ -1,4 +1,4 @@
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 
 import { build } from "esbuild";
 
@@ -39,4 +39,8 @@ const result = await build({
 const output = Object.values(result.metafile.outputs)[0];
 if (!output || output.bytes > 5 * 1024 * 1024)
   throw new Error("feedback worker bundle exceeds the 5 MiB budget");
+await writeFile(
+  `${outputDirectory}/bundle-meta.json`,
+  `${JSON.stringify(result.metafile, null, 2)}\n`,
+);
 console.log(`feedback worker bundle valid (${output.bytes} bytes)`);

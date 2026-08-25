@@ -1,5 +1,29 @@
 # Security and privacy audit
 
+### Goal 85 dual-artifact evidence audit
+
+- **Assets and actors.** Protected assets are source/image/SBOM identity, promotion authorization,
+  signing identity, build secrets, registry subjects/referrers, and rollback history. Actors are a local
+  developer, future protected CI workflow, registry/AWS operator, verifier, and runtime operator.
+- **Trust boundaries.** Local Docker builders and scanners can prove consistency but are not trusted
+  release identities. The test uses a random Cosign key with networking disabled, records only public
+  key/bundle hashes as `local-ephemeral-untrusted`, and deletes all evidence. No Rekor, OIDC, registry,
+  AWS, KMS, production account, or deployment is contacted.
+- **Closed — artifact substitution.** Schema 2 requires exactly the application and worker with one
+  source revision, distinct immutable image identities, exact repository names, independent SPDX/scan
+  evidence, and independent rollback predecessors. Missing worker, mixed revision, mutable/wrong
+  repository reference, duplicate digest, changed SBOM, failed scan, and rollback-to-current tests fail.
+- **Closed — bundled dependency ambiguity.** Every worker `node_modules` bundle input maps to an exact
+  npm lock path, version, HTTPS registry source, SHA-512 integrity, and reviewed license. The SBOM maps
+  root-to-dependency relationships and is scanned; evidence and build tooling are absent from runtime.
+- **Closed — secret/personal-data leakage.** Release schema rejects secret-like fields, build secrets are
+  never serialized, signing passwords are random process environment only, evidence is disposable, and
+  the artifact path consumes committed source/lock metadata rather than account or birth data.
+- **Residual staging risks — NO-GO.** A local private key proves no durable identity or trusted time.
+  Protected GitHub OIDC identity/issuer, Rekor inclusion, ECR subject/referrer retention, AWS IAM/KMS,
+  current remote scans, cost, operator ownership, and deployment/rollback verification remain required.
+  No critical/high local finding is open; external promotion remains blocked.
+
 Audit date: 2026-08-25
 
 ## Scope and trust boundaries

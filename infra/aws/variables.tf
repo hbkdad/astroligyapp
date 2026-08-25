@@ -66,6 +66,33 @@ variable "feedback_worker_image_digest" {
   }
 }
 
+variable "application_image_source_revision" {
+  description = "Exact 40-character Git revision verified for the application image in the release set."
+  type        = string
+  validation {
+    condition     = can(regex("^[a-f0-9]{40}$", var.application_image_source_revision))
+    error_message = "application_image_source_revision must be an exact lowercase Git commit"
+  }
+}
+
+variable "feedback_worker_image_source_revision" {
+  description = "Exact 40-character Git revision verified for the feedback-worker image in the release set."
+  type        = string
+  validation {
+    condition     = can(regex("^[a-f0-9]{40}$", var.feedback_worker_image_source_revision))
+    error_message = "feedback_worker_image_source_revision must be an exact lowercase Git commit"
+  }
+}
+
+variable "release_set_sha256" {
+  description = "SHA-256 digest of the verified schema-v2 dual-artifact release set."
+  type        = string
+  validation {
+    condition     = can(regex("^sha256:[a-f0-9]{64}$", var.release_set_sha256))
+    error_message = "release_set_sha256 must be an immutable SHA-256 digest"
+  }
+}
+
 variable "origin_domain_name" {
   description = "Approved origin DNS name covered by the ALB certificate; DNS is managed separately."
   type        = string

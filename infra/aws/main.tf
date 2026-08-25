@@ -39,6 +39,8 @@ module "compute" {
   aws_region                          = var.aws_region
   image_digest                        = var.image_digest
   feedback_worker_image_digest        = var.feedback_worker_image_digest
+  source_revision                     = var.application_image_source_revision
+  release_set_sha256                  = var.release_set_sha256
   subnet_ids                          = module.network.application_subnet_ids
   public_subnet_ids                   = module.network.public_subnet_ids
   application_security_group_id       = module.network.application_security_group_id

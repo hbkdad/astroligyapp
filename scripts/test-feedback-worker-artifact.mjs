@@ -1,9 +1,23 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+
+import {
+  canonicalJson,
+  extractDockerfileBaseImages,
+  selectOciManifestDigest,
+  sha256,
+} from "./lib/artifact-manifest.mjs";
+import { createWorkerSpdx } from "./lib/worker-sbom.mjs";
 
 const temporary = mkdtempSync(join(tmpdir(), "astroligyapp-worker-artifact-"));
 const archive = join(temporary, "source.tar");
@@ -19,6 +33,7 @@ const ociArchives = [
 const trivy =
   "aquasec/trivy@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969";
 const shutdownContainer = `astroligyapp-feedback-worker-shutdown-${process.pid}`;
+const workerEvidenceDirectory = join(temporary, "worker-evidence");
 
 try {
   assert.equal(
@@ -27,8 +42,14 @@ try {
     "tracked worktree must be clean",
   );
   const commit = capture("git", ["rev-parse", "HEAD"]).trim();
+  const tree = capture("git", ["rev-parse", "HEAD^{tree}"]).trim();
   const epoch = capture("git", ["show", "-s", "--format=%ct", "HEAD"]).trim();
   const created = new Date(Number(epoch) * 1_000).toISOString();
+  const dockerfile = readFileSync(
+    join(sources[0], "Dockerfile.worker"),
+    "utf8",
+  );
+  const baseImages = extractDockerfileBaseImages(dockerfile);
   run("git", ["archive", "--format=tar", `--output=${archive}`, "HEAD"]);
   for (const source of sources) {
     run("powershell", [
@@ -60,6 +81,35 @@ try {
     ]);
     run("docker", ["load", "--input", ociArchives[index]]);
   }
+  const imageDigests = ociArchives.map((ociArchive) =>
+    selectOciManifestDigest(
+      JSON.parse(capture("tar", ["-xOf", ociArchive, "index.json"])),
+    ),
+  );
+  assert.equal(
+    imageDigests[0],
+    imageDigests[1],
+    "OCI manifests must reproduce",
+  );
+  run("docker", [
+    "buildx",
+    "build",
+    "--platform=linux/amd64",
+    "--provenance=false",
+    "--sbom=false",
+    "--target",
+    "evidence",
+    `--output=type=local,dest=${workerEvidenceDirectory}`,
+    "--file",
+    join(sources[0], "Dockerfile.worker"),
+    "--build-arg",
+    `SOURCE_DATE_EPOCH=${epoch}`,
+    "--build-arg",
+    `SOURCE_REVISION=${commit}`,
+    "--build-arg",
+    `SOURCE_CREATED=${created}`,
+    sources[0],
+  ]);
 
   const inspected = images.map(
     (image) => JSON.parse(capture("docker", ["image", "inspect", image]))[0],
@@ -128,6 +178,47 @@ try {
     "authentication email feedback worker failed",
   );
 
+  const bundle = readFileSync(join(workerEvidenceDirectory, "worker.mjs"));
+  const bundleSha256 = sha256(bundle);
+  const runtimeBundleSha256 = capture("docker", [
+    "run",
+    "--rm",
+    "--read-only",
+    "--network",
+    "none",
+    "--cap-drop",
+    "ALL",
+    images[0],
+    "/usr/local/bin/node",
+    "-e",
+    "const c=require('node:crypto'),f=require('node:fs');process.stdout.write('sha256:'+c.createHash('sha256').update(f.readFileSync('/app/worker.mjs')).digest('hex'))",
+  ]);
+  assert.equal(
+    runtimeBundleSha256,
+    bundleSha256,
+    "worker evidence must match the runtime bundle",
+  );
+  const workerSbom = createWorkerSpdx({
+    commit,
+    created,
+    metafile: JSON.parse(
+      readFileSync(join(workerEvidenceDirectory, "bundle-meta.json"), "utf8"),
+    ),
+    lockfile: JSON.parse(
+      readFileSync(join(sources[0], "package-lock.json"), "utf8"),
+    ),
+    packageManifest: JSON.parse(
+      readFileSync(join(sources[0], "package.json"), "utf8"),
+    ),
+    bundleSha256,
+  });
+  assert.equal(workerSbom.packageCount, 37);
+  assert.equal(workerSbom.dependencyCount, 36);
+  writeFileSync(
+    join(workerEvidenceDirectory, "worker.spdx.json"),
+    workerSbom.json,
+  );
+
   const feedbackKey = createHash("sha256")
     .update("synthetic-artifact-shutdown-key")
     .digest("base64url");
@@ -167,6 +258,55 @@ try {
     "SES_AUTH_EMAIL_CONFIGURATION_SET=authentication-events",
     images[0],
   ]);
+  run("docker", [
+    "run",
+    "--rm",
+    "--volume",
+    `${workerEvidenceDirectory}:/evidence:ro`,
+    trivy,
+    "sbom",
+    "--severity",
+    "HIGH,CRITICAL",
+    "--exit-code",
+    "1",
+    "--quiet",
+    "/evidence/worker.spdx.json",
+  ]);
+  const sharedEvidence = process.env.RELEASE_EVIDENCE_DIRECTORY;
+  if (sharedEvidence) {
+    mkdirSync(sharedEvidence, { recursive: true });
+    writeFileSync(
+      join(sharedEvidence, "feedback-worker-artifact.json"),
+      canonicalJson({
+        source: { commit, tree, sourceDateEpoch: Number(epoch) },
+        artifact: {
+          name: "feedback-worker",
+          repository: "astroligyapp-feedback-worker",
+          baseImages,
+          dockerfileSha256: sha256(dockerfile),
+          imageId: inspected[0].Id,
+          imageDigest: imageDigests[0],
+          platform: "linux/amd64",
+          reproducibleBuilds: 2,
+          sbom: {
+            format: "SPDX-2.3",
+            sha256: workerSbom.sha256,
+            packageCount: workerSbom.packageCount,
+            unresolvedLicenseCount: 0,
+          },
+          scans: {
+            imageSecrets: "pass",
+            imageVulnerabilities: "pass",
+          },
+          rollbackPredecessor: null,
+        },
+      }),
+    );
+    writeFileSync(
+      join(sharedEvidence, "feedback-worker.spdx.json"),
+      workerSbom.json,
+    );
+  }
   let healthy = false;
   for (let attempt = 0; attempt < 20 && !healthy; attempt += 1) {
     const health = run(
@@ -224,7 +364,7 @@ try {
     /USER nonroot[\s\S]*HEALTHCHECK[\s\S]*CMD/u,
   );
   console.log(
-    `feedback worker artifact gate passed: ${inspected[0].Id}, ${inspected[0].Size} bytes`,
+    `feedback worker artifact gate passed: ${inspected[0].Id}, ${inspected[0].Size} bytes, ${workerSbom.dependencyCount} traced dependencies`,
   );
 } finally {
   run("docker", ["container", "rm", "--force", shutdownContainer], {

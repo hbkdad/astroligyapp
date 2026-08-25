@@ -39,7 +39,11 @@ NAT because JPL, Paddle, SES, and AWS APIs are external dependencies; all-protoc
 - Copy the appropriate redacted file under `infra/aws/environments`; never fill or commit the example.
   Only secret ARNs and KMS key ARNs belong in variables. Secret values and notification endpoints do not.
 - Build and scan the independently promotable application and feedback-worker images first. Supply
-  only their exact ECR `@sha256:` references; mutable tags or using the web image for the worker fail.
+  only their exact ECR `@sha256:` references plus the common 40-hex source revision and schema-2
+  release-set SHA-256; mutable tags, using the web image for the worker, or mixed revisions fail.
+- Preserve SPDX, SLSA, signature, and verification bundles as OCI 1.1 referrers to each immutable
+  subject after remote promotion is approved. Include referrer storage/retention/replication in the ECR
+  cost and lifecycle review; local ephemeral bundles are not acceptable deployment trust evidence.
 - Supply `TF_ENCRYPTION` from the approved secret delivery path. Never put its passphrase/key in HCL,
   tfvars, command history, CI logs, or state. Losing the key makes encrypted state unrecoverable.
 - Bootstrap state separately from the application stack. The bucket must be in Canada Central, have

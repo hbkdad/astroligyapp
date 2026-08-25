@@ -60,13 +60,16 @@ mock_provider "aws" {
 }
 
 variables {
-  environment                  = "staging"
-  aws_account_id               = "123456789012"
-  availability_zones           = ["ca-central-1a", "ca-central-1b"]
-  image_digest                 = "123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-  feedback_worker_image_digest = "123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp-feedback-worker@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-  origin_domain_name           = "origin.example.invalid"
-  origin_certificate_arn       = "arn:aws:acm:ca-central-1:123456789012:certificate/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+  environment                           = "staging"
+  aws_account_id                        = "123456789012"
+  availability_zones                    = ["ca-central-1a", "ca-central-1b"]
+  image_digest                          = "123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  feedback_worker_image_digest          = "123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp-feedback-worker@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  application_image_source_revision     = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  feedback_worker_image_source_revision = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  release_set_sha256                    = "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  origin_domain_name                    = "origin.example.invalid"
+  origin_certificate_arn                = "arn:aws:acm:ca-central-1:123456789012:certificate/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
   runtime_secret_arns = {
     NEXT_SERVER_ACTIONS_ENCRYPTION_KEY = "arn:aws:secretsmanager:ca-central-1:123456789012:secret:staging/server-actions-AbCdEf"
     NEXT_SHARED_CACHE_URL              = "arn:aws:secretsmanager:ca-central-1:123456789012:secret:staging/cache-AbCdEf"
@@ -95,6 +98,16 @@ run "staging_contract" {
   assert {
     condition     = output.planning_summary.public_indexing_enabled == false
     error_message = "public indexing must remain disabled"
+  }
+
+  assert {
+    condition     = output.planning_summary.release_source_revision == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    error_message = "planning must expose the immutable release source revision"
+  }
+
+  assert {
+    condition     = output.planning_summary.release_set_sha256 == "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    error_message = "planning must expose the immutable release-set digest"
   }
 
   assert {
@@ -188,4 +201,12 @@ run "reject_extra_feedback_worker_secret" {
     }
   }
   expect_failures = [var.feedback_worker_secret_arns]
+}
+
+run "reject_mixed_artifact_revisions" {
+  command = plan
+  variables {
+    feedback_worker_image_source_revision = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+  expect_failures = [check.dual_artifact_source_revision]
 }

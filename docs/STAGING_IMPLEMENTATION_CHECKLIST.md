@@ -52,8 +52,11 @@ changes. The following require a separate explicit user approval after a reviewe
 - [x] Add credential-free IaC modules and policy tests for accounts/providers, network, edge/WAF, ECR,
       ECS, RDS, Valkey, secrets references, SES/SNS/SQS, logs/alarms, and backups. GitHub OIDC remains
       deferred until an exact AWS account/role and plan-only CI trust policy receive separate approval.
-- [ ] Add image SBOM, secret scan, ECR scan gate, IaC lint/plan/policy tests, and artifact digest output to
-      CI without granting deployment permission to pull requests.
+- [x] Add local application/worker SPDX evidence, secret/vulnerability scans, dual-artifact release-set
+      validation, IaC lint/plan/policy tests, immutable digest output, and untrusted ephemeral
+      signature/attestation tests without granting deployment permission to pull requests.
+- [ ] Add protected remote ECR scan/referrer verification and GitHub OIDC keyless promotion only after
+      the exact account, role, environment, cost, workflow identity, and saved plan are approved.
 
 ## Dry verification before resource approval
 

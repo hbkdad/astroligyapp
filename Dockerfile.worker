@@ -18,6 +18,10 @@ COPY scripts/build-auth-email-feedback-worker.mjs scripts/start-auth-email-feedb
 COPY src/server/authentication-email-feedback.ts src/server/authentication-email-feedback-runtime.ts src/server/authentication-email-feedback-service.ts src/server/authentication-email-feedback-worker.ts src/server/authentication-email-sns-authenticator.ts src/server/authentication-email-sqs-adapter.ts ./src/server/
 RUN npm run build:feedback-worker
 
+FROM scratch AS evidence
+COPY --from=builder /app/dist/auth-email-feedback-worker/bundle-meta.json /bundle-meta.json
+COPY --from=builder /app/dist/auth-email-feedback-worker/worker.mjs /worker.mjs
+
 FROM ${RUNTIME_IMAGE} AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \

@@ -1,6 +1,6 @@
 # Release candidate manifest
 
-- Manifest version: 1.0.0
+- Manifest version: 2.0.0
 - Candidate: `0.1.0-rc.1`
 - Target: internal, non-production release candidate
 - Production promotion: blocked until the gates in this document are closed
@@ -9,6 +9,13 @@ The exact source candidate is the Git commit containing this manifest. Record it
 `git rev-parse HEAD` in the release evidence; never identify a release only by a mutable branch.
 `package-lock.json` is the dependency artifact and all database migrations under `drizzle/` are
 part of the candidate.
+
+Schema 2 treats the release as one statement containing exactly two independently promotable artifacts:
+`application` and `feedback-worker`. Both must bind the same source commit/tree/epoch while retaining
+their own Dockerfile, base image, final image digest, SPDX evidence, scan result, ECR repository, and
+rollback predecessor. `npm run test:release-set` rejects mixed revisions, missing worker evidence,
+duplicate images, mutable or cross-repository references, changed SBOMs, failed scans, and a rollback
+digest equal to the current artifact. See ADR 0015.
 
 ## Runtime and build
 
@@ -27,10 +34,11 @@ part of the candidate.
 | Authentication email | AWS SES v2 SDK 3.1108.0          | Adapter selected; infrastructure and credentials absent               |
 | Shared cache client  | Redis 6.2.1                      | Valkey protocol boundary; no managed cache provisioned                |
 
-The local build produces `.next/` and a standalone OCI image from the digest-pinned Dockerfile. The
-image, two-instance disposable topology, and vulnerability/secret scan are locally verified, but no
-registry artifact, signature, AWS account/resource, or deployment command exists. Remote SBOM/
-provenance attachment and immutable ECR digest promotion remain implementation and approval gates.
+The local build produces `.next/`, a standalone application OCI image, and a separate bundled worker
+OCI image from digest-pinned Dockerfiles. `npm run test:release-artifacts` builds and scans both,
+generates SPDX 2.3 evidence, constructs a dual-subject SLSA 1.1 statement, and exercises disposable
+Cosign signature/attestation bundles. The ephemeral local key is deleted and explicitly untrusted: no
+registry artifact, trusted identity, transparency proof, AWS resource, or deployment is created.
 
 ## Included database contract
 

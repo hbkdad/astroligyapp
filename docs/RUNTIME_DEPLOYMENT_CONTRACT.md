@@ -40,6 +40,12 @@ health probe, absence of ports/tools/extra files, a 100 MiB size ceiling, generi
 and a pinned high/critical vulnerability plus secret scan. The gate never supplies credentials or
 network access to the running worker and never pushes an image.
 
+`npm run test:release-artifacts` composes the independently verified application and worker descriptors
+into release-set schema 2. Both task definitions must receive the same `RELEASE_SOURCE_REVISION` and
+`RELEASE_SET_SHA256`; infrastructure rejects mixed source revisions. These values are non-secret
+correlation identifiers, not authorization. Worker bundle metadata and SPDX evidence are exported from
+a dedicated build target and are never copied into the final runtime stage.
+
 ## Required runtime configuration
 
 - `NEXT_DEPLOYMENT_ID`: 7-128 URL-safe characters; identical for every task in one immutable release.

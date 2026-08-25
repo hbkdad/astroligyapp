@@ -3,6 +3,9 @@ aws_account_id     = "444455556666"
 availability_zones = ["ca-central-1a", "ca-central-1b"]
 image_digest       = "444455556666.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp@sha256:REPLACE_WITH_64_HEX_CHARACTERS"
 feedback_worker_image_digest = "444455556666.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp-feedback-worker@sha256:REPLACE_WITH_64_HEX_CHARACTERS"
+application_image_source_revision     = "REPLACE_WITH_40_HEX_GIT_COMMIT"
+feedback_worker_image_source_revision = "REPLACE_WITH_SAME_40_HEX_GIT_COMMIT"
+release_set_sha256                    = "sha256:REPLACE_WITH_64_HEX_CHARACTERS"
 origin_domain_name = "origin.example.com"
 origin_certificate_arn = "arn:aws:acm:ca-central-1:444455556666:certificate/REPLACE_WITH_CERTIFICATE_ID"
 
