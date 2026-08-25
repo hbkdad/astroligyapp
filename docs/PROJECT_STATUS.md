@@ -4,14 +4,16 @@ Last updated: 2026-08-25
 
 ## Current position
 
-Status: Goal 84 complete; authentication-email feedback now has an independently promotable,
-production-shaped worker process/image plus a credential-free private ECS service plan with exact
-task/execution roles, secrets, network, database budget, minimum capacity, backlog scaling, alarms, and
-rollback boundaries. No cloud account, queue poll, credential, purchase, DNS, image push, sender
-verification, redrive, email, or deployment was created or changed. Commit `4910e59` is GO as an
-internal candidate and NO-GO for external staging/production; live AWS IAM/KMS, TLS, scaling, alarm,
-rotation, cost, and owner evidence still require explicit approval, and all 101 SPDX package-license
-conclusions require review before external promotion.
+Status: Goal 85 complete; the application and authentication-email feedback worker now form one
+fail-closed, dual-subject release set with exact common-source, OCI manifest, Dockerfile/base,
+reproducibility, SPDX, scan, provenance, promotion, and independent rollback evidence. The bundled
+worker dependency graph resolves 36 exact lockfile packages without adding evidence or toolchains to
+its runtime image. Commit `cbd6da2` is GO as an internal candidate and NO-GO for external staging or
+production. Local ephemeral signatures are deliberately untrusted and offline; approved GitHub OIDC,
+Rekor inclusion, ECR referrers, AWS IAM/KMS, ownership, cost, and live environment evidence are still
+required, and all 101 application SPDX package-license conclusions require review. No cloud account,
+registry, remote signing service, credential, purchase, DNS, email, or deployment was created or
+changed.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -105,6 +107,36 @@ provisioned AWS infrastructure, live queue polling, or live delivery.
       handling, package metadata, and shared conformance behavior.
 
 ## Recently completed
+
+- [x] Goal 85: accept ADR 0015 defining a schema-2 dual-artifact release set with exactly one
+      application and one feedback-worker OCI subject, a common protected source revision, immutable
+      build/base inputs, independent promotion and rollback state, and dual-subject SLSA provenance.
+- [x] Derive a strict SPDX 2.3 worker SBOM from the esbuild metafile and npm lockfile: 36 bundled
+      dependencies resolve to exact versions, registry sources, SHA-512 integrity, and declared
+      licenses; 542 bundle inputs are traced, and undeclared, non-registry, unhashed, or mismatched
+      inputs fail closed. The evidence stage remains separate from the minimal worker runtime image.
+- [x] Reproduce both Docker image configurations and OCI manifest subjects, scan source, SBOMs, and
+      images, bind the release set to the saved infrastructure plan contract, and reject missing,
+      duplicate, mutable, tampered, mixed-source, or independently mis-rolled-back artifact pairs.
+- [x] Generate an ephemeral local key, sign the release statement, attest its dual-subject provenance,
+      verify both offline, reject tampering, and delete the private material. This proves local
+      integrity only: the evidence records `local-ephemeral-untrusted`, skips the transparency log, and
+      cannot authorize external promotion.
+- [x] Apply `security-audit`: no unresolved critical/high local finding remains. Private data and
+      secrets are excluded from evidence; signing runs without network access; the worker runtime has
+      no evidence, toolchain, shell, package manager, or listener. Trusted CI identity, Rekor inclusion,
+      registry referrers, effective IAM/KMS, live rollback, ownership, and license review remain gates.
+- [x] Apply `release-check` to exact commit `cbd6da2`: formatting, lint, strict TypeScript, 108 files /
+      1,342 tests, production build, the same 1,342 tests at 89.57% statements/87.43% branches/96.28%
+      functions/91.86% lines, Drizzle consistency, legacy/latest migrations plus 71 PostgreSQL tests,
+      the production dependency threshold, 8 mocked plans, 304 policy checks, all 8 unsafe fixtures,
+      and zero IaC findings passed. The final application OCI subject was
+      `sha256:151ce051c19651296d1725eea96c7d09d2a929c5f0c25566215e54c75329c711`; the 52,079,296-byte
+      worker subject was `sha256:487bee867dabe229102bd34681c49e9b9082e0bae96e29a57f3c15a2bfca9627`.
+- [x] Release decision: GO for the internal credential-free Goal 85 candidate; NO-GO for AWS staging,
+      production, or external redistribution. Four moderate Drizzle Kit development-chain advisories
+      remain below the high/critical threshold, and all 101 application license assertions remain
+      unresolved.
 
 - [x] Goal 84: accept ADR 0014 defining an independent feedback-worker artifact/service, ECS relative
       task credentials, verified PostgreSQL TLS, a four-connection pool, private/no-listener networking,
@@ -831,26 +863,25 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 85 — extend release evidence and promotion controls to the independently promotable application
-and feedback-worker artifacts without pushing, signing through a remote service, or contacting AWS.
+Goal 86 — make the credential-free staging-approval package complete and mechanically reviewable
+without provisioning infrastructure, configuring GitHub OIDC, pushing artifacts, or contacting AWS.
 
 Deliverables:
 
-1. Verify current SPDX/CycloneDX, OCI subject/referrer, SLSA provenance, Sigstore/Cosign, and ECR artifact
-   promotion contracts from primary specifications/documentation. Record what can be proven locally and
-   what requires an approved registry, KMS/identity, transparency-log, or deployment environment.
-2. Extend the versioned release manifest to identify both application and feedback-worker artifacts,
-   their exact common source revision, Dockerfiles/base digests, reproducible image digests, build inputs,
-   runtime dependency inventories, scanners, and independent promotion/rollback state. Reject mixed-source
-   or mutable artifact pairs.
-3. Generate and validate a worker SBOM/dependency evidence artifact despite bundled JavaScript: map every
-   bundled package to the exact lockfile version/license/source, fail on undeclared or untraceable inputs,
-   scan the materialized evidence, and keep secrets/private data out. Do not embed toolchains or evidence
-   files in the minimal runtime image.
-4. Extend local ephemeral signing/attestation and promotion tests across both artifacts, including subject
-   mismatch, tampering, missing worker evidence, mixed revisions, and independent rollback. Update the IaC
-   input/runbook contract and apply `security-audit` plus `release-check`. No registry push, AWS API call,
-   production mutation, persistent signing key, purchase, or external release.
+1. Define a versioned staging-approval manifest for exact environment/account/region, release-set digest,
+   saved-plan digest, change window, owners, recovery objectives, rollback predecessor, data handling,
+   and cost inputs. Keep contacts and secrets outside checked-in fixtures and reject incomplete,
+   inconsistent, stale, mutable, or unapproved evidence.
+2. Generate deterministic, redacted plan and cost-review summaries from the existing credential-free IaC
+   fixtures. Bind them to both release subjects and expose every value that must be supplied or verified
+   in an eventual approved AWS account without claiming calculator or live-price validation.
+3. Add a fail-closed preflight/checklist covering state recovery, IAM/KMS boundaries, registry referrers,
+   GitHub OIDC identity, Rekor inclusion, DNS/TLS, database restore, queue/redrive, alarm routing,
+   accessibility smoke, and independent application/worker rollback. Separate documentary readiness from
+   live evidence so neither can authorize an apply.
+4. Update the infrastructure runbook and decision record, exercise tamper/missing/stale/role-conflict and
+   split-approval cases, then apply `security-audit` and `release-check`. No AWS API call, OIDC trust,
+   registry push, remote signing, DNS, deployment, purchase, production mutation, or persistent secret.
 
 ## Phase queue
 
@@ -939,6 +970,10 @@ Deliverables:
 
 | Date       | Evidence                                           | Result                                                                                        |
 | ---------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 2026-08-25 | Goal 85 exact-commit release gate                  | 108 files/1,342 tests, build, coverage, 71 DB tests, IaC, scans, and signatures passed        |
+| 2026-08-25 | Goal 85 dual OCI release set                       | App `151ce0…9c711`; worker `487bee…9627`; common source and independent rollback proved       |
+| 2026-08-25 | Goal 85 worker dependency evidence                 | 36 exact lockfile packages and 542 bundle inputs traced; runtime stayed evidence-free         |
+| 2026-08-25 | Goal 85 release decision                           | Internal candidate GO; external staging/production and redistribution NO-GO                   |
 | 2026-08-11 | PostgreSQL 18 migration-upgrade harness            | Legacy row/backfill, malformed cleanup, overlap write, and RLS-scoped reader passed           |
 | 2026-08-11 | `npm run test:database`                            | 16/16 persistence and share-security integration tests passed                                 |
 | 2026-08-12 | Better Auth 1.6.27 PostgreSQL runtime path         | Unverified signup, injected verification, sign-in, live session, and immediate revoke passed  |
