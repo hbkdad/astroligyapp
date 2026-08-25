@@ -4,12 +4,13 @@ Last updated: 2026-08-24
 
 ## Current position
 
-Status: Goal 82 complete; the Node 24 standalone container now has a reproducible two-build OCI gate,
-normalized SPDX 2.3 evidence, exact Git/source secret scanning, zero high/critical runtime findings,
-tamper rejection, and a documented digest/sign/attest promotion boundary. No cloud account, registry,
-credential, purchase, DNS, image push, signature, attestation, or deployment was created or changed.
-The exact source remains GO as an internal candidate and NO-GO for external staging/production; all
-101 SPDX package license conclusions require review before external promotion.
+Status: Goal 83 complete; authentication-email feedback now has a credential-free, bounded SQS worker,
+SNS v2 signature and exact regional certificate boundary, durable acknowledge-only deletion, aggregate
+privacy-safe cycle signals, local queue/client doubles, and a least-privilege operations/redrive contract.
+No cloud account, queue poll, credential, purchase, DNS, image push, sender verification, redrive, email,
+or deployment was created or changed. Commit `b9fc493` is GO as an internal candidate and NO-GO for
+external staging/production; live AWS/IAM/TLS/alarms still require approval and all 101 SPDX package
+license conclusions require review before external promotion.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -28,8 +29,8 @@ contact lookups plus a hardened public email/password HTTP boundary. No live bil
 account, production data, managed database/auth infrastructure, AI, general notification delivery, location-resolution,
 or live deployment infrastructure exists. AWS Canada Central is selected as the deployment topology,
 not provisioned infrastructure. Authentication email has a provider decision, exact
-SDK/adapter, and injected feedback/suppression seam, but no account, DNS, credentials,
-AWS infrastructure, signature implementation, queue polling, or live delivery.
+SDK/adapter, authenticated feedback worker, and suppression seam, but no account, DNS, credentials,
+provisioned AWS infrastructure, live queue polling, or live delivery.
 
 ## Completed
 
@@ -104,6 +105,37 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 83: accept ADR 0013 defining an exact `ca-central-1` SES -> SNS -> SQS trust boundary,
+      SNS signature version 2, at-least-once replay semantics, durable acknowledgement, bounded
+      concurrency/visibility, content-free observability, and a separate operator-controlled DLQ path.
+- [x] Pin `@aws-sdk/client-sqs` 3.1108.0 and add strict queue configuration/normalization, a bounded
+      worker with visibility heartbeats and individual delete-after-commit behavior, an exact-host HTTPS
+      SNS certificate authority, RSA-SHA256 canonical verification, runtime composition, and a local
+      queue/client entrypoint that performs no network or credential operation.
+- [x] Cover malformed and oversized input, unsupported events, signature tampering/version/future skew,
+      certificate origin/redirect/size/outage policy, partial batches, concurrency, visibility/delete/
+      processor failure, shutdown/backoff, configuration isolation, and aggregate privacy. Existing
+      processor/database tests continue to prove replay, out-of-order delivery, complaint/permanent-bounce
+      suppression, transaction rollback, concurrency, and the narrow feedback-consumer role.
+- [x] Harden the credential-free IaC contract with SNS signature v2, exact-source DLQ redrive permission,
+      rendering-failure events, and an explicit rejection of unsupported SES `SEND` events. Retain the
+      20-second long poll, 60-second visibility timeout, five-receive redrive, four-day source retention,
+      14-day DLQ retention, source-age alarm, and immediate DLQ alarm.
+- [x] Apply `security-audit`: no critical/high issue remains in the local worker boundary. Raw bodies,
+      recipients, provider IDs, signatures, certificate URLs, receipt handles, diagnostics, and IPs are
+      prohibited telemetry; transient authentication/database failures retry and unauthenticated input
+      cannot mutate state. Residual live IAM, Node CA/TLS, queue, alarm delivery, and redrive behavior are
+      external staging gates. No migration or persistence contract changed, so `database-migration` was
+      not invoked.
+- [x] Apply `release-check` to exact commit `b9fc493`: `npm run release:check` passed formatting, ESLint,
+      strict TypeScript, two runs of 107 files / 1,329 tests, the 33-page optimized build, 89.57% statement/
+      87.39% branch/96.26% function/91.86% line coverage, Drizzle consistency, all 71 disposable
+      PostgreSQL tests, the production dependency threshold, the complete credential-free IaC gate, and
+      the two-build artifact gate at image digest
+      `sha256:581965d2567f5dca471996159c624604629f1ae9b82ae17cd4634c94e65b3513`.
+      Four moderate development-only Drizzle Kit/esbuild findings remain below the threshold; all 101
+      SPDX license assertions remain unresolved. Decision: internal candidate GO, external staging and
+      production NO-GO pending license review and explicitly approved live verification.
 - [x] Goal 82: accept ADR 0012 selecting digest-pinned Syft 1.51.0/SPDX 2.3, Gitleaks 8.30.1,
       Trivy 0.74.0, and Cosign 3.1.3, including the patched modern Sigstore bundle path and exact
       workflow-identity/OIDC verification contract.
@@ -772,25 +804,24 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 83 — implement a credential-free Amazon SES feedback-worker and suppression-processing baseline
-without polling a live queue, sending mail, or contacting AWS.
+Goal 84 — package and verify the authentication-email feedback worker as a production-shaped,
+credential-free container/ECS task baseline without polling AWS, pushing an image, or creating resources.
 
 Deliverables:
 
-1. Verify current SES event-publishing, SNS signature, SQS receive/delete/redrive, complaint/bounce,
-   and suppression-list contracts from primary AWS documentation; record the trust, privacy, retry,
-   idempotency, and regional boundaries without creating or querying AWS resources.
-2. Add a strict versioned parser and worker composition that accepts only validated SES feedback
-   envelopes, stores privacy-minimized idempotent outcomes through the existing feedback seam, and
-   deletes a queue message only after durable success. Do not log raw recipient, message, signature,
-   provider payload, or private account data.
-3. Add deterministic fixtures and adversarial tests for malformed/oversized envelopes, unsupported
-   event types, signature/certificate policy, replay/idempotency, partial batch failure, retry/redrive,
-   out-of-order delivery, complaint/bounce suppression, and database authorization/rollback.
-4. Provide a local worker entrypoint and credential-free queue/client doubles plus deployment/runbook
-   contracts for least-privilege IAM, concurrency, shutdown, alarms, retention, DLQ replay, and explicit
-   live staging approval. Run `security-audit`, `database-migration` if persistence changes, and the full
-   release gate. Do not poll SQS, call SES/SNS, create credentials, or mutate AWS/production.
+1. Verify current ECS service/task, SQS backlog autoscaling, container health/shutdown, IAM task-role,
+   Secrets Manager/KMS, and CloudWatch contracts from primary AWS documentation; record exact regional,
+   capacity, cost, failure, and approval boundaries without contacting AWS.
+2. Add a production worker bootstrap and minimal non-root/read-only container target that composes the
+   existing worker, PostgreSQL feedback role, SQS client, SNS certificate authority, aggregate signals,
+   and graceful `SIGTERM` handling. Keep application and worker artifacts independently promotable.
+3. Extend the credential-free IaC with a private worker task/service, exact queue/secret/KMS permissions,
+   bounded desired/max capacity, queue-backlog scaling/alarms, deployment rollback, and zero inbound
+   network exposure. Do not grant send, purge, DLQ payload, redrive, migration, or broad secret access.
+4. Add deterministic container/topology/policy tests for startup validation, non-root/read-only state,
+   no listener, concurrency/pool budget, repeated delivery, database/SQS/certificate outage, scale-to-zero
+   decision, SIGTERM within visibility, and task-role denial. Apply `security-audit`, `release-check`, and
+   any other changed-surface skill. No image push, AWS API call, state change, credential, or live poll.
 
 ## Phase queue
 
