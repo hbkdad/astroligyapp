@@ -59,6 +59,19 @@ provisioned AWS infrastructure, live queue polling, or live delivery.
       contains public package/license material rather than private user data, all release hashes are bound,
       and no network service, registry, cloud account, credential, or production system was mutated.
       Residual risk is the 32 total manual-review results and 2 unresolved application assertions.
+- [x] Apply `release-check` to exact commit `5946307`: formatting, ESLint, strict TypeScript, two runs of
+      108 files / 1,342 tests, the 33-page production build, 89.57% statements / 87.43% branches / 96.28%
+      functions / 91.86% lines coverage, Drizzle consistency, legacy/latest migrations plus all 71
+      PostgreSQL tests, the high/critical production dependency threshold, 8 mocked plans, 304 policy
+      checks, all 8 IaC unsafe fixtures, zero IaC scanner findings, and all 39 staging-approval unsafe cases
+      passed. The application reproduced as
+      `sha256:02c6b69fe39ed2c12df29d9d58a4cec5d43fc934a9c9c433682456355e24b0d4`; the 52,079,297-byte
+      worker reproduced as `sha256:02ebd6e3a37f18cc0fe981c8257ae5a03ca211d63a182dd63cd25fda64df80c2`.
+      Offline signatures and dual-subject attestation verified only as `local-ephemeral-untrusted`.
+- [x] Release decision: GO for the internal credential-free Goal 87 evidence candidate; NO-GO for external
+      redistribution, AWS staging/apply, or production. The promotion contract itself rejects the current
+      27 application and 5 worker manual reviews plus 2 unresolved application assertions. Four moderate
+      development-only Drizzle Kit/esbuild advisories remain below the configured high/critical threshold.
 
 - [x] Goal 0: inventory the initial workspace and establish the Codex control layer.
 - [x] Move the master product specification and execution queue under `docs/`.
@@ -1026,6 +1039,10 @@ Deliverables:
 
 | Date       | Evidence                                           | Result                                                                                        |
 | ---------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 2026-08-25 | Goal 87 exact-commit release gate                  | 108 files/1,342 tests, build, coverage, 71 DB tests, IaC, scans, evidence, signatures passed  |
+| 2026-08-25 | Goal 87 application/worker license evidence        | App 72 permitted/27 manual/2 unresolved; worker 31 permitted/5 manual/0 unresolved            |
+| 2026-08-25 | Goal 87 dual OCI release set                       | App `02c6b6…b0d4`; worker `02ebd6…80c2`; exact `5946307` source reproduced                    |
+| 2026-08-25 | Goal 87 release decision                           | Internal evidence GO; staging/apply/production/redistribution NO-GO                           |
 | 2026-08-25 | Goal 86 staging-approval adversarial gate          | 7 documentary/12 live gates passed; all 39 unsafe review/apply cases rejected                 |
 | 2026-08-25 | Goal 86 exact-commit release gate                  | 108 files/1,342 tests, build, coverage, 71 DB tests, IaC, scans, and signatures passed        |
 | 2026-08-25 | Goal 86 dual OCI release set                       | App `b60d50…efce6`; worker `480a14…67ac4`; exact `715027b` source reproduced                  |
