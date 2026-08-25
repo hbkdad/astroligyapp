@@ -1,16 +1,17 @@
 # Project status
 
-Last updated: 2026-08-24
+Last updated: 2026-08-25
 
 ## Current position
 
-Status: Goal 83 complete; authentication-email feedback now has a credential-free, bounded SQS worker,
-SNS v2 signature and exact regional certificate boundary, durable acknowledge-only deletion, aggregate
-privacy-safe cycle signals, local queue/client doubles, and a least-privilege operations/redrive contract.
-No cloud account, queue poll, credential, purchase, DNS, image push, sender verification, redrive, email,
-or deployment was created or changed. Commit `b9fc493` is GO as an internal candidate and NO-GO for
-external staging/production; live AWS/IAM/TLS/alarms still require approval and all 101 SPDX package
-license conclusions require review before external promotion.
+Status: Goal 84 complete; authentication-email feedback now has an independently promotable,
+production-shaped worker process/image plus a credential-free private ECS service plan with exact
+task/execution roles, secrets, network, database budget, minimum capacity, backlog scaling, alarms, and
+rollback boundaries. No cloud account, queue poll, credential, purchase, DNS, image push, sender
+verification, redrive, email, or deployment was created or changed. Commit `4910e59` is GO as an
+internal candidate and NO-GO for external staging/production; live AWS IAM/KMS, TLS, scaling, alarm,
+rotation, cost, and owner evidence still require explicit approval, and all 101 SPDX package-license
+conclusions require review before external promotion.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -104,6 +105,32 @@ provisioned AWS infrastructure, live queue polling, or live delivery.
       handling, package metadata, and shared conformance behavior.
 
 ## Recently completed
+
+- [x] Goal 84: accept ADR 0014 defining an independent feedback-worker artifact/service, ECS relative
+      task credentials, verified PostgreSQL TLS, a four-connection pool, private/no-listener networking,
+      exact task/execution roles, 90-second stop timeout, minimum one staging/two production tasks,
+      maximum four tasks, backlog-per-running-task target tracking, and explicit scale-to-zero rejection.
+- [x] Add a strict production bootstrap, generic aggregate/error output, direct signal handling, an
+      esbuild 0.28.2 bundle, pinned minimal Distroless image, PID-1 liveness check, separate immutable
+      ECR repository, private Fargate task/service, exact source-queue policy, exact two-secret/KMS
+      execution policy, bounded security-group paths, capacity alarm, and combined database budget.
+- [x] Apply `security-audit`: alternate credentials/endpoints, EC2 metadata fallback, browser-exposed
+      secrets, extra log fields, listener/inbound exposure, wildcard/unlisted SQS actions, scale-to-zero,
+      and excess secrets fail closed. No unresolved critical/high local finding remains; effective AWS
+      IAM/KMS, NAT/TLS, rotation, and alarm delivery remain staging gates.
+- [x] Apply `release-check` to exact commit `4910e59`: format, lint, strict typecheck, 108 files/1,342
+      tests, production build, the same 1,342 tests with 89.57% statements/87.43% branches/96.28%
+      functions/91.86% lines, Drizzle check, legacy/latest migrations plus 71 PostgreSQL tests, no
+      high/critical production dependency advisory, 7 mocked plans, 304 passing policy checks, all 8
+      unsafe fixtures rejected, zero IaC scanner findings, and credential isolation passed.
+- [x] Build the exact commit twice per artifact. The application image reproduced as
+      `sha256:75b7d1f8421f12b5bc21c5e557f7782a7731aad080006948e1eecdf1e812be64`; the 52,079,294-byte
+      worker reproduced as `sha256:27e0518673fb9a4f3b9259b3299cacf3318efae12a0de75d4b6ea08a95e0b334`,
+      ran non-root/read-only with no port/shell/npm/extra runtime files, failed startup generically,
+      stopped on `SIGTERM` without SIGKILL, and had zero high/critical image vulnerabilities or secrets.
+- [x] Release decision: GO for the internal credential-free Goal 84 candidate; NO-GO for AWS staging or
+      production. The four known moderate Drizzle Kit development-chain advisories remain deferred from
+      Goal 76; the forced downgrade is breaking and the affected development server stays unexposed.
 
 - [x] Goal 83: accept ADR 0013 defining an exact `ca-central-1` SES -> SNS -> SQS trust boundary,
       SNS signature version 2, at-least-once replay semantics, durable acknowledgement, bounded
@@ -804,24 +831,26 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 84 — package and verify the authentication-email feedback worker as a production-shaped,
-credential-free container/ECS task baseline without polling AWS, pushing an image, or creating resources.
+Goal 85 — extend release evidence and promotion controls to the independently promotable application
+and feedback-worker artifacts without pushing, signing through a remote service, or contacting AWS.
 
 Deliverables:
 
-1. Verify current ECS service/task, SQS backlog autoscaling, container health/shutdown, IAM task-role,
-   Secrets Manager/KMS, and CloudWatch contracts from primary AWS documentation; record exact regional,
-   capacity, cost, failure, and approval boundaries without contacting AWS.
-2. Add a production worker bootstrap and minimal non-root/read-only container target that composes the
-   existing worker, PostgreSQL feedback role, SQS client, SNS certificate authority, aggregate signals,
-   and graceful `SIGTERM` handling. Keep application and worker artifacts independently promotable.
-3. Extend the credential-free IaC with a private worker task/service, exact queue/secret/KMS permissions,
-   bounded desired/max capacity, queue-backlog scaling/alarms, deployment rollback, and zero inbound
-   network exposure. Do not grant send, purge, DLQ payload, redrive, migration, or broad secret access.
-4. Add deterministic container/topology/policy tests for startup validation, non-root/read-only state,
-   no listener, concurrency/pool budget, repeated delivery, database/SQS/certificate outage, scale-to-zero
-   decision, SIGTERM within visibility, and task-role denial. Apply `security-audit`, `release-check`, and
-   any other changed-surface skill. No image push, AWS API call, state change, credential, or live poll.
+1. Verify current SPDX/CycloneDX, OCI subject/referrer, SLSA provenance, Sigstore/Cosign, and ECR artifact
+   promotion contracts from primary specifications/documentation. Record what can be proven locally and
+   what requires an approved registry, KMS/identity, transparency-log, or deployment environment.
+2. Extend the versioned release manifest to identify both application and feedback-worker artifacts,
+   their exact common source revision, Dockerfiles/base digests, reproducible image digests, build inputs,
+   runtime dependency inventories, scanners, and independent promotion/rollback state. Reject mixed-source
+   or mutable artifact pairs.
+3. Generate and validate a worker SBOM/dependency evidence artifact despite bundled JavaScript: map every
+   bundled package to the exact lockfile version/license/source, fail on undeclared or untraceable inputs,
+   scan the materialized evidence, and keep secrets/private data out. Do not embed toolchains or evidence
+   files in the minimal runtime image.
+4. Extend local ephemeral signing/attestation and promotion tests across both artifacts, including subject
+   mismatch, tampering, missing worker evidence, mixed revisions, and independent rollback. Update the IaC
+   input/runbook contract and apply `security-audit` plus `release-check`. No registry push, AWS API call,
+   production mutation, persistent signing key, purchase, or external release.
 
 ## Phase queue
 
