@@ -139,10 +139,28 @@ validateReleaseSet(releaseSet, {
     "feedback-worker": workerImage,
   },
 });
-assertReleaseSetPromotionReferences(releaseSet, {
+const promotionReferences = {
   application: `123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp@${applicationImage}`,
   "feedback-worker": `123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp-feedback-worker@${workerImage}`,
-});
+};
+assert.throws(() =>
+  assertReleaseSetPromotionReferences(releaseSet, promotionReferences),
+);
+const licenseReadyReleaseSet = structuredClone(releaseSet);
+for (const artifact_ of licenseReadyReleaseSet.statement.artifacts) {
+  artifact_.licenses.permittedWithNoticeCount =
+    artifact_.licenses.packageCount - artifact_.licenses.firstPartyCount;
+  artifact_.licenses.manualReviewCount = 0;
+  artifact_.licenses.prohibitedCount = 0;
+  artifact_.licenses.unresolvedCount = 0;
+  artifact_.sbom.unresolvedLicenseCount = 0;
+}
+assert.doesNotThrow(() =>
+  assertReleaseSetPromotionReferences(
+    licenseReadyReleaseSet,
+    promotionReferences,
+  ),
+);
 assert.throws(() =>
   assertExternalRedistributionReady(workerLicenseEvidence.summary),
 );

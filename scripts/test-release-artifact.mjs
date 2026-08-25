@@ -225,6 +225,20 @@ try {
     policy,
     summary: licenseEvidence.summary,
   });
+  const runtimeEvidenceFiles = capture("docker", [
+    "run",
+    "--rm",
+    "--entrypoint",
+    "/usr/local/bin/node",
+    tags[0],
+    "-e",
+    "const f=require('node:fs');const found=[];const walk=p=>{for(const d of f.readdirSync(p,{withFileTypes:true})){const q=p+'/'+d.name;if(d.isDirectory())walk(q);else if(/license-evidence|third-party-notices/i.test(d.name))found.push(q)}};walk('/app');process.stdout.write(JSON.stringify(found))",
+  ]);
+  assert.deepEqual(
+    JSON.parse(runtimeEvidenceFiles),
+    [],
+    "license evidence must remain outside the runtime image",
+  );
   const sbomJson = canonicalJson(normalized);
   writeFileSync(join(evidence, "sbom.spdx.json"), sbomJson);
   const unresolvedLicenseCount = licenseEvidence.summary.unresolvedCount;
@@ -309,7 +323,7 @@ try {
     canonicalJson(manifest),
   );
   console.log(
-    `release artifact gate passed: ${imageA.Id}, ${normalized.packages.length} packages, ${unresolvedLicenseCount} unresolved license assertions`,
+    `release artifact gate passed: ${imageA.Id}, ${normalized.packages.length} packages, ${unresolvedLicenseCount} unresolved license assertions, ${licenseEvidence.summary.manualReviewCount} manual reviews`,
   );
 } finally {
   for (const tag of tags)

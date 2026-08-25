@@ -306,6 +306,21 @@ export function assertReleaseSetPromotionReferences(envelope, references) {
     "feedback-worker",
   ]);
   for (const artifact of envelope.statement.artifacts) {
+    assert.equal(
+      artifact.licenses.unresolvedCount,
+      0,
+      `${artifact.name} has unresolved license assertions`,
+    );
+    assert.equal(
+      artifact.licenses.manualReviewCount,
+      0,
+      `${artifact.name} requires manual license review`,
+    );
+    assert.equal(
+      artifact.licenses.prohibitedCount,
+      0,
+      `${artifact.name} is prohibited from redistribution`,
+    );
     const reference = references[artifact.name];
     assertImmutablePromotionReference(reference);
     assert.match(

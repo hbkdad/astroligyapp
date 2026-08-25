@@ -65,10 +65,12 @@ try {
       "feedback-worker": worker.artifact.imageDigest,
     },
   });
-  assertReleaseSetPromotionReferences(releaseSet, {
-    application: `123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp@${application.artifact.imageDigest}`,
-    "feedback-worker": `123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp-feedback-worker@${worker.artifact.imageDigest}`,
-  });
+  assert.throws(() =>
+    assertReleaseSetPromotionReferences(releaseSet, {
+      application: `123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp@${application.artifact.imageDigest}`,
+      "feedback-worker": `123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp-feedback-worker@${worker.artifact.imageDigest}`,
+    }),
+  );
 
   const statementPath = join(evidence, "release-statement.json");
   const provenancePath = join(evidence, "provenance.slsa.json");
