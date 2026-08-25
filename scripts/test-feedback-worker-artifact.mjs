@@ -156,7 +156,7 @@ try {
     "--env",
     "SES_AUTH_EMAIL_REGION=ca-central-1",
     "--env",
-    "SES_AUTH_EMAIL_FEEDBACK_QUEUE_URL=https://sqs.ca-central-1.amazonaws.com/123456789012/synthetic-feedback",
+    "SES_AUTH_EMAIL_FEEDBACK_QUEUE_URL=https://sqs.ca-central-1.amazonaws.com/123456789012/synthetic-email-feedback",
     "--env",
     "SES_AUTH_EMAIL_FEEDBACK_TOPIC_ARN=arn:aws:sns:ca-central-1:123456789012:synthetic-feedback",
     "--env",
