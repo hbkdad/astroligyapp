@@ -100,8 +100,8 @@ try {
   }
   assert.equal(
     imageA.Config.User,
-    "node",
-    "artifact must run as the node user",
+    "nonroot",
+    "artifact must run as the distroless nonroot user",
   );
   assert.equal(
     imageA.Config.Labels["org.opencontainers.image.revision"],
@@ -127,6 +127,19 @@ try {
     tools.gitleaks,
     "git",
     "/repo",
+    "--redact",
+    "--no-banner",
+    "--exit-code",
+    "1",
+  ]);
+  run("docker", [
+    "run",
+    "--rm",
+    "--volume",
+    `${sourceA}:/source:ro`,
+    tools.gitleaks,
+    "dir",
+    "/source",
     "--redact",
     "--no-banner",
     "--exit-code",

@@ -76,7 +76,7 @@ try {
   const hardeningLines = hardening.trim().split(/\r?\n/u);
   if (
     hardeningLines.length !== 2 ||
-    hardeningLines.some((line) => line !== "node|true|healthy")
+    hardeningLines.some((line) => line !== "nonroot|true|healthy")
   ) {
     throw new Error(
       "runtime containers are not non-root, read-only, and healthy",
