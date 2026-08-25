@@ -258,6 +258,42 @@ try {
     "SES_AUTH_EMAIL_CONFIGURATION_SET=authentication-events",
     images[0],
   ]);
+  let healthy = false;
+  for (let attempt = 0; attempt < 20 && !healthy; attempt += 1) {
+    const health = run(
+      "docker",
+      ["exec", shutdownContainer, "/usr/local/bin/node", "health.mjs"],
+      { capture: true, tolerateFailure: true },
+    );
+    healthy = health.status === 0;
+    if (!healthy)
+      run("powershell", [
+        "-NoProfile",
+        "-Command",
+        "Start-Sleep -Milliseconds 250",
+      ]);
+  }
+  assert.equal(healthy, true, "worker must reach its process-liveness check");
+  const stopStarted = Date.now();
+  run("docker", ["stop", "--timeout", "10", shutdownContainer]);
+  assert.ok(
+    Date.now() - stopStarted < 12_000,
+    "SIGTERM shutdown exceeded 12 seconds",
+  );
+  const shutdownState = JSON.parse(
+    capture("docker", ["inspect", shutdownContainer]),
+  )[0].State;
+  assert.equal(shutdownState.Running, false);
+  assert.equal(shutdownState.ExitCode, 0, "SIGTERM must stop without SIGKILL");
+  const shutdownLogs = run("docker", ["logs", shutdownContainer], {
+    capture: true,
+  });
+  assert.equal(shutdownLogs.stderr, "");
+  assert.doesNotMatch(
+    shutdownLogs.stdout,
+    /synthetic|credentials|postgres|sqs\.ca-central-1|security@example/u,
+  );
+
   run("docker", [
     "run",
     "--rm",
@@ -307,41 +343,6 @@ try {
       workerSbom.json,
     );
   }
-  let healthy = false;
-  for (let attempt = 0; attempt < 20 && !healthy; attempt += 1) {
-    const health = run(
-      "docker",
-      ["exec", shutdownContainer, "/usr/local/bin/node", "health.mjs"],
-      { capture: true, tolerateFailure: true },
-    );
-    healthy = health.status === 0;
-    if (!healthy)
-      run("powershell", [
-        "-NoProfile",
-        "-Command",
-        "Start-Sleep -Milliseconds 250",
-      ]);
-  }
-  assert.equal(healthy, true, "worker must reach its process-liveness check");
-  const stopStarted = Date.now();
-  run("docker", ["stop", "--timeout", "10", shutdownContainer]);
-  assert.ok(
-    Date.now() - stopStarted < 12_000,
-    "SIGTERM shutdown exceeded 12 seconds",
-  );
-  const shutdownState = JSON.parse(
-    capture("docker", ["inspect", shutdownContainer]),
-  )[0].State;
-  assert.equal(shutdownState.Running, false);
-  assert.equal(shutdownState.ExitCode, 0, "SIGTERM must stop without SIGKILL");
-  const shutdownLogs = run("docker", ["logs", shutdownContainer], {
-    capture: true,
-  });
-  assert.equal(shutdownLogs.stderr, "");
-  assert.doesNotMatch(
-    shutdownLogs.stdout,
-    /synthetic|credentials|postgres|sqs\.ca-central-1|security@example/u,
-  );
 
   run("docker", [
     "run",
