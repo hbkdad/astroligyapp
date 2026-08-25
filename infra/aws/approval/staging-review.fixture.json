@@ -1,0 +1,164 @@
+{
+  "environment": "staging",
+  "accountId": "123456789012",
+  "region": "ca-central-1",
+  "sourceRevision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "releaseSetSha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "generatedAt": "2026-08-25T12:00:00.000Z",
+  "validUntil": "2026-08-27T12:00:00.000Z",
+  "changeWindow": {
+    "start": "2026-08-26T12:00:00.000Z",
+    "end": "2026-08-26T14:00:00.000Z",
+    "timezone": "UTC"
+  },
+  "requesterId": "principal:fixture-requester",
+  "owners": {
+    "release": "team:fixture-release",
+    "security": "team:fixture-security",
+    "cost": "team:fixture-finops",
+    "rollback": "team:fixture-operations"
+  },
+  "recovery": {
+    "rpoMinutes": 1440,
+    "rtoMinutes": 240,
+    "backupRetentionDays": 7,
+    "restoreTestFrequencyDays": 30
+  },
+  "artifacts": [
+    {
+      "name": "application",
+      "subject": "123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "rollbackPredecessor": "123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp@sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+      "name": "feedback-worker",
+      "subject": "123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp-feedback-worker@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "rollbackPredecessor": "123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp-feedback-worker@sha256:2222222222222222222222222222222222222222222222222222222222222222"
+    }
+  ],
+  "resourceCounts": {
+    "applicationTasks": 1,
+    "backupVaults": 1,
+    "databases": 1,
+    "ecrRepositories": 2,
+    "natGateways": 1,
+    "queues": 2,
+    "valkeyCaches": 1,
+    "workerTasks": 1
+  },
+  "capacity": {
+    "applicationMaximumTasks": 2,
+    "applicationMinimumTasks": 1,
+    "databaseMaximumConnections": 100,
+    "databaseReservedConnections": 20,
+    "workerMaximumTasks": 4,
+    "workerMinimumTasks": 1
+  },
+  "retention": {
+    "backupDays": 7,
+    "logDays": 30,
+    "maximumImagesPerRepository": 30
+  },
+  "securityContract": {
+    "publicIndexingEnabled": false,
+    "applicationPublicIp": false,
+    "workerPublicIp": false,
+    "databasePublic": false,
+    "immutableRepositories": true,
+    "encryptedDatabase": true,
+    "deletionProtection": true,
+    "readOnlyRootFilesystems": true
+  },
+  "costServiceInputs": [
+    {
+      "service": "nat-gateway",
+      "assumptions": [
+        "one gateway",
+        "730 gateway hours",
+        "processed GB must be supplied"
+      ]
+    },
+    {
+      "service": "alb",
+      "assumptions": [
+        "one internet-facing ALB restricted to CloudFront",
+        "LCUs and processed GB must be supplied"
+      ]
+    },
+    {
+      "service": "ecs-fargate",
+      "assumptions": [
+        "one 0.5 vCPU and 1 GiB application task",
+        "one 0.5 vCPU and 1 GiB worker task",
+        "model configured maxima"
+      ]
+    },
+    {
+      "service": "ecr",
+      "assumptions": [
+        "two immutable repositories",
+        "30 images per repository",
+        "include images and OCI referrers"
+      ]
+    },
+    {
+      "service": "rds-postgresql",
+      "assumptions": [
+        "single-AZ db.t4g.small",
+        "20 GiB gp3",
+        "100 maximum connections",
+        "backup and I/O must be supplied"
+      ]
+    },
+    {
+      "service": "valkey",
+      "assumptions": [
+        "serverless maximum 2 GB",
+        "serverless maximum 1000 ECPUs"
+      ]
+    },
+    {
+      "service": "cloudfront-waf",
+      "assumptions": [
+        "compare pay-as-you-go and current flat-rate options",
+        "requests and transfer must be supplied"
+      ]
+    },
+    {
+      "service": "ses-sns-sqs",
+      "assumptions": [
+        "SES sending disabled",
+        "one feedback queue and one DLQ",
+        "request volume must be supplied"
+      ]
+    },
+    {
+      "service": "cloudwatch",
+      "assumptions": [
+        "30-day log retention",
+        "metrics alarms dashboards and query volume must be supplied"
+      ]
+    },
+    {
+      "service": "kms-secrets-manager",
+      "assumptions": [
+        "key and secret counts must be supplied",
+        "rotation and API call volume must be supplied"
+      ]
+    },
+    {
+      "service": "aws-backup",
+      "assumptions": [
+        "daily RDS recovery points",
+        "7-day retention",
+        "restore-test cost must be supplied"
+      ]
+    },
+    {
+      "service": "data-transfer",
+      "assumptions": [
+        "internet inter-AZ NAT origin and backup transfer must be supplied"
+      ]
+    }
+  ]
+}

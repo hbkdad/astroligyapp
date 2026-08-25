@@ -20,7 +20,8 @@ changes. The following require a separate explicit user approval after a reviewe
 
 - [ ] Name release, database, security/on-call, and rollback owners.
 - [ ] Confirm separate non-production and production AWS accounts and `ca-central-1`.
-- [ ] Approve an IaC tool and remote-state/locking/recovery model.
+- [x] OpenTofu 1.12.5, encrypted S3 state, and native lockfiles are accepted in ADR 0011; the exact
+      state account/bucket/role/key, retention, and tested recovery evidence remain approval gates.
 - [ ] Approve staging and production AWS Calculator estimates, monthly budgets, and anomaly thresholds.
 - [ ] Set staging/production RPO, RTO, backup retention, restore-test frequency, and Canadian backup
       location/contract requirements.
@@ -55,6 +56,9 @@ changes. The following require a separate explicit user approval after a reviewe
 - [x] Add local application/worker SPDX evidence, secret/vulnerability scans, dual-artifact release-set
       validation, IaC lint/plan/policy tests, immutable digest output, and untrusted ephemeral
       signature/attestation tests without granting deployment permission to pull requests.
+- [x] Add an expiring credential-free staging-approval schema with deterministic redacted plan/cost
+      preparation, opaque owners, recovery/data contracts, 7 documentary and 12 live gates, split
+      documentary review, and independent apply authorization. The checked-in fixture grants no authority.
 - [ ] Add protected remote ECR scan/referrer verification and GitHub OIDC keyless promotion only after
       the exact account, role, environment, cost, workflow identity, and saved plan are approved.
 
@@ -70,6 +74,8 @@ changes. The following require a separate explicit user approval after a reviewe
 - [ ] Generated plan contains no public database/cache/task, wildcard IAM, migration secret in runtime,
       long-lived CI key, unrestricted ingress/egress, unbounded retention, or missing encryption.
 - [ ] Cost estimate and resource/count diff are attached to the approval request.
+- [ ] The exact unexpired staging envelope passes documentary readiness, then separately passes live
+      readiness with an independent apply authorizer; retain only evidence hashes in the envelope.
 
 ## Staging execution after explicit approval
 

@@ -14,6 +14,25 @@ owners, cost ceiling, state location, recovery targets, change window, and revie
 approval does not authorize production. Apply requires a second approval after the exact saved plan and
 calculator estimate are reviewed; production requires another environment-specific approval.
 
+## Credential-free staging review package
+
+Run `npm run staging:approval:example` to inspect the deterministic synthetic schema and
+`npm run test:staging-approval` to exercise its three gates. See ADR 0016 and
+`docs/STAGING_APPROVAL_CONTRACT.md`. The fixture is `mock-contract-only`: it deliberately has no saved
+plan, calculator conclusion, reviewers, live evidence, or apply authority.
+
+For an approved external workflow, generate the real envelope outside Git from the exact release and
+saved plan. Store the encrypted plan, state, calculator export, contacts, live reports, and approval
+records in the restricted evidence system. The envelope retains only their hashes, redacted summary,
+opaque principals, integer-cent cost limits, and exact scope. Never commit or print the saved plan:
+OpenTofu warns that it may contain cleartext sensitive values even when terminal output hides them.
+
+Documentary review requires four unique reviewers separate from the requester and is always labelled
+`documentary-only`. Apply requires all live gates and a fifth independent authorizer bound to the same
+unexpired statement. A change to the target, release set, artifacts, plan, cost, window, recovery,
+data policy, or evidence invalidates the review. Any delete or replacement plan requires a separate
+destructive-change process; the baseline verifier rejects it.
+
 ## Toolchain and local gate
 
 The gate uses the image digests recorded in ADR 0011: OpenTofu 1.12.5, AWS provider 6.59.0, TFLint
@@ -88,6 +107,10 @@ region, pricing model, tax/support exclusions, traffic assumptions, and estimate
 The earlier planning envelopes—USD 100-250/month staging and USD 300-700/month production—are not a
 quote. Approval requires current calculator exports plus AWS Budgets and anomaly thresholds below the
 named owner’s ceiling.
+
+The schema records monetary limits as integer USD cents and hashes the complete ordered assumption
+inventory. It does not retain a calculator share link because shared estimates are public and updated
+estimates receive new links. Recreate/review the estimate when inputs or pricing status change.
 
 ## Release evidence to retain
 

@@ -40,6 +40,13 @@ generates SPDX 2.3 evidence, constructs a dual-subject SLSA 1.1 statement, and e
 Cosign signature/attestation bundles. The ephemeral local key is deleted and explicitly untrusted: no
 registry artifact, trusted identity, transparency proof, AWS resource, or deployment is created.
 
+`npm run test:staging-approval` verifies ADR 0016's schema-1 staging review boundary. The checked-in
+fixture generates only `mock-contract-only` preparation evidence. Documentary readiness additionally
+requires a reviewed saved-plan/export digest, safe change counts, current cost limits, and four split
+reviewers; it remains explicitly unable to apply. Live environment evidence and a fifth independent
+authorizer are mandatory for staging apply readiness. No real approval envelope, saved plan, calculator
+export/link, account contact, credential, secret, or private data belongs in this repository.
+
 ## Included database contract
 
 The candidate includes migrations `0000_strong_mandroid.sql` through

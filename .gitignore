@@ -22,8 +22,10 @@
 # deployment state
 /.vercel/
 /release-evidence/
+/approval-evidence/
 /artifact-manifest.json
 /sbom.spdx.json
+*.tfplan
 **/.terraform/*
 *.tfstate
 *.tfstate.*

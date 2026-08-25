@@ -1,5 +1,35 @@
 # Security and privacy audit
 
+### Goal 86 staging-approval boundary audit
+
+- **Assets and actors.** Protected assets are release/plan scope, AWS target, cost and recovery limits,
+  evidence pointers, review decisions, and apply authority. Actors are the requester; release, security,
+  cost, and rollback reviewers; an independent apply authorizer; future protected CI; and AWS operators.
+- **Trust boundaries.** The repository produces only a deterministic `mock-contract-only` package.
+  Saved plan/state, calculator export/link, contacts, credentials, provider payloads, live reports, and
+  approvals stay in an access-controlled external store. The envelope contains exact scope, opaque
+  principal IDs, redacted values, and SHA-256 pointers; no verifier invokes AWS, GitHub, Sigstore, DNS,
+  OpenTofu, or a registry.
+- **Closed — documentary authority confusion.** Structural validity, documentary readiness, and staging
+  apply readiness are separate assertions. Four unique reviewers cannot include the requester;
+  documentary authorization remains a required `documentary-only` literal. Apply requires all 12 live
+  gates and a fifth principal independent from the requester and documentary reviewers. Production is
+  not an accepted target. Every decision binds the complete statement scope, an external approval-record
+  hash, and an in-window timestamp; evidence changes invalidate earlier review.
+- **Closed — stale, mixed, or unsafe evidence.** The canonical scope binds an exact account/region,
+  source/release set, both immutable subjects/predecessors, saved-plan/redacted-summary hashes, safe
+  change counts, fresh calculator evidence and limits, UTC window, owners, recovery, data handling, and
+  every gate. Tests reject tampering, stale/expired scope, mutable/cross-account subjects, missing or
+  duplicate gates, deletes/replacements, over-budget cost, self-review, reviewer reuse, absent Rekor,
+  and incomplete apply authority.
+- **Closed — sensitive evidence leakage.** Saved plans are ignored and prohibited because they may
+  contain cleartext sensitive values. The schema rejects contact addresses and secret-like material;
+  synthetic-only data, indexing disabled, and no private routine logs are immutable policy fields.
+- **Residual staging risks — NO-GO.** No real plan, calculator export, accountable roster, environment
+  protection, OIDC role, ECR referrer, Rekor proof, IAM/KMS simulation, state recovery, restore, DNS/TLS,
+  alarm delivery, accessibility smoke, or rollback rehearsal exists. No critical/high local finding is
+  open, but no staging apply is authorized.
+
 ### Goal 85 dual-artifact evidence audit
 
 - **Assets and actors.** Protected assets are source/image/SBOM identity, promotion authorization,

@@ -53,6 +53,13 @@ both immutable images and their SPDX evidence bind the same exact source revisio
 Cosign evidence is labelled untrusted; a future remote promotion must verify protected workflow identity,
 transparency evidence, OCI referrers, and predicate policy before either ECS task definition changes.
 
+ADR 0016 adds an expiring schema-1 staging-approval envelope above the release set and saved plan. A
+credential-free preparation package can expose redacted plan/cost inputs but has no approval authority.
+Documentary readiness requires four split reviewers and still cannot apply; live environment evidence
+plus a fifth independent staging authorizer is a separate gate. The envelope stores hashes, exact scope,
+and opaque principal IDs only—never plan/state contents, calculator links, contacts, credentials, secret
+values, or private user data. Production cannot reuse a staging envelope.
+
 ```text
 src/
   app/                         routes and server entry points

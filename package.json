@@ -27,6 +27,8 @@
     "test:release-set": "npm run build:feedback-worker && node scripts/test-release-set.mjs",
     "test:release-artifacts": "node scripts/test-dual-release-artifacts.mjs",
     "test:infrastructure": "node scripts/test-infrastructure.mjs",
+    "test:staging-approval": "node scripts/test-staging-approval.mjs",
+    "staging:approval:example": "node scripts/generate-staging-approval-package.mjs",
     "worker:feedback:local": "node --experimental-strip-types scripts/run-auth-email-feedback-worker-local.mts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -34,7 +36,7 @@
     "db:check": "drizzle-kit check",
     "db:migrate": "drizzle-kit migrate",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build",
-    "release:check": "npm run check && npm run test:coverage && npm run db:check && npm run test:database && npm audit --omit=dev --audit-level=high && npm run test:infrastructure && npm run test:release-set && npm run test:release-artifacts"
+    "release:check": "npm run check && npm run test:coverage && npm run db:check && npm run test:database && npm audit --omit=dev --audit-level=high && npm run test:infrastructure && npm run test:staging-approval && npm run test:release-set && npm run test:release-artifacts"
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "3.1108.0",
