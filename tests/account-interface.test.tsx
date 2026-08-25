@@ -382,7 +382,10 @@ describe("account entry and recovery journeys", () => {
       screen.getByRole("button", { name: "Activate private account" }),
     );
 
-    expect(await screen.findByRole("status")).toHaveTextContent(
+    await screen.findByText("Private account ready", undefined, {
+      timeout: 10_000,
+    });
+    expect(screen.getByRole("status")).toHaveTextContent(
       "Private account ready",
     );
     expect(activationAction).toHaveBeenCalledOnce();

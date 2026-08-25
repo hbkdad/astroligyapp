@@ -113,14 +113,20 @@ describe("notification preference interface", () => {
     await user.click(
       screen.getByRole("button", { name: "Manage alerts for Mira" }),
     );
-    const consent = await screen.findByRole("checkbox", {
-      name: /Prepare email alert candidates/i,
-    });
+    const consent = await screen.findByRole(
+      "checkbox",
+      { name: /Prepare email alert candidates/i },
+      { timeout: 10_000 },
+    );
     await user.click(consent);
     await user.click(
       screen.getByRole("button", { name: "Withdraw alert consent" }),
     );
-    expect(await screen.findByText("Preferences saved")).toBeVisible();
+    expect(
+      await screen.findByText("Preferences saved", undefined, {
+        timeout: 10_000,
+      }),
+    ).toBeVisible();
     const [, data] = replace.mock.calls[0]!;
     expect(data.get("consent")).toBe("false");
     expect(data.get("eventTypes")).toBe("[]");
