@@ -8,7 +8,7 @@ const TREE = /^[a-f0-9]{40}$/u;
 export function validateArtifactManifest(manifest, expected = {}) {
   assert.equal(
     manifest.schemaVersion,
-    1,
+    2,
     "unsupported artifact manifest schema",
   );
   assert.equal(
@@ -51,6 +51,7 @@ export function validateArtifactManifest(manifest, expected = {}) {
     "UNLICENSED",
     "application license declaration drifted",
   );
+  assertLicenseSummary(manifest.licenses);
   assert.deepEqual(
     manifest.scans,
     { gitSecrets: "pass", imageSecrets: "pass", imageVulnerabilities: "pass" },
@@ -148,7 +149,7 @@ export function validateReleaseSet(envelope, expected = {}) {
     ["kind", "localVerification", "schemaVersion", "statement"],
     "release-set envelope fields drifted",
   );
-  assert.equal(envelope.schemaVersion, 2, "unsupported release-set schema");
+  assert.equal(envelope.schemaVersion, 3, "unsupported release-set schema");
   assert.equal(
     envelope.kind,
     "astroligyapp.release-set",
@@ -182,6 +183,7 @@ export function validateReleaseSet(envelope, expected = {}) {
         "dockerfileSha256",
         "imageDigest",
         "imageId",
+        "licenses",
         "name",
         "platform",
         "repository",
@@ -203,6 +205,17 @@ export function validateReleaseSet(envelope, expected = {}) {
     assert.match(artifact.imageId, SHA256);
     assert.equal(artifact.platform, "linux/amd64");
     assert.equal(artifact.reproducibleBuilds, 2);
+    assertLicenseSummary(artifact.licenses);
+    assert.equal(
+      artifact.licenses.packageCount,
+      artifact.sbom.packageCount,
+      "license evidence and SBOM package counts differ",
+    );
+    assert.equal(
+      artifact.licenses.unresolvedCount,
+      artifact.sbom.unresolvedLicenseCount,
+      "license evidence and SBOM unresolved counts differ",
+    );
     assert.equal(
       artifact.repository,
       artifact.name === "application"
@@ -400,5 +413,39 @@ function assertPinnedImageReference(reference) {
     reference,
     /^[a-z0-9][a-z0-9./_:-]+@sha256:[a-f0-9]{64}$/u,
     "base image must use a pinned sha256 digest",
+  );
+}
+
+function assertLicenseSummary(summary) {
+  assert.deepEqual(Object.keys(summary).sort(), [
+    "evidenceSha256",
+    "firstPartyCount",
+    "manualReviewCount",
+    "noticeSha256",
+    "packageCount",
+    "permittedWithNoticeCount",
+    "policySha256",
+    "policyVersion",
+    "prohibitedCount",
+    "unresolvedCount",
+  ]);
+  assert.match(summary.policyVersion, /^\d{4}-\d{2}-\d{2}\.\d+$/u);
+  for (const field of ["evidenceSha256", "noticeSha256", "policySha256"])
+    assert.match(summary[field], SHA256);
+  for (const field of [
+    "packageCount",
+    "permittedWithNoticeCount",
+    "manualReviewCount",
+    "prohibitedCount",
+    "firstPartyCount",
+    "unresolvedCount",
+  ])
+    assert.ok(Number.isSafeInteger(summary[field]) && summary[field] >= 0);
+  assert.equal(
+    summary.packageCount,
+    summary.permittedWithNoticeCount +
+      summary.manualReviewCount +
+      summary.prohibitedCount +
+      summary.firstPartyCount,
   );
 }

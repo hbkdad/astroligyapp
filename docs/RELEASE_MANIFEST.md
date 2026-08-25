@@ -1,5 +1,13 @@
 # Release candidate manifest
 
+## License evidence binding
+
+Dual release-set schema 3 adds an exact `licenses` summary to each artifact. It binds the policy version/hash,
+evidence hash, notice hash, package count, permitted-with-notice count, manual-review count, prohibited count,
+first-party count and unresolved count. The license package/unresolved counts must match the artifact SBOM.
+See `docs/DEPENDENCY_LICENSE_EVIDENCE.md` and ADR 0017. External redistribution additionally requires all
+unresolved, manual-review and prohibited counts to be zero.
+
 - Manifest version: 2.0.0
 - Candidate: `0.1.0-rc.1`
 - Target: internal, non-production release candidate

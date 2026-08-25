@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": "2026-08-25.1",
+  "purpose": "Mechanical redistribution evidence gate; not a legal conclusion",
+  "permittedWithNotice": [
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "BlueOak-1.0.0",
+    "CC0-1.0",
+    "ISC",
+    "MIT"
+  ],
+  "prohibited": [
+    "AGPL-1.0-only",
+    "AGPL-1.0-or-later",
+    "AGPL-3.0-only",
+    "AGPL-3.0-or-later",
+    "BUSL-1.1",
+    "Elastic-2.0",
+    "SSPL-1.0"
+  ],
+  "manualReviewPrefixes": ["LicenseRef-"],
+  "missingAssertions": ["NONE", "NOASSERTION", "UNKNOWN"]
+}

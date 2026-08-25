@@ -18,6 +18,10 @@ import {
   sha256,
 } from "./lib/artifact-manifest.mjs";
 import { createWorkerSpdx } from "./lib/worker-sbom.mjs";
+import {
+  concludeLicenseEvidence,
+  validateLicenseEvidenceBundle,
+} from "./lib/license-evidence.mjs";
 
 const temporary = mkdtempSync(join(tmpdir(), "astroligyapp-worker-artifact-"));
 const archive = join(temporary, "source.tar");
@@ -214,9 +218,36 @@ try {
   });
   assert.equal(workerSbom.packageCount, 37);
   assert.equal(workerSbom.dependencyCount, 36);
+  const workerLicenseEvidence = concludeLicenseEvidence({
+    artifact: "feedback-worker",
+    spdx: workerSbom.document,
+    policy: JSON.parse(
+      readFileSync(
+        join(sources[0], "config", "release-license-policy.json"),
+        "utf8",
+      ),
+    ),
+    sourceRoot: process.cwd(),
+    lockfile: JSON.parse(
+      readFileSync(join(sources[0], "package-lock.json"), "utf8"),
+    ),
+    proprietaryText: readFileSync(join(sources[0], "LICENSE"), "utf8"),
+  });
+  validateLicenseEvidenceBundle({
+    evidence: workerLicenseEvidence.evidence,
+    notice: workerLicenseEvidence.notice,
+    policy: JSON.parse(
+      readFileSync(
+        join(sources[0], "config", "release-license-policy.json"),
+        "utf8",
+      ),
+    ),
+    summary: workerLicenseEvidence.summary,
+  });
+  const workerSbomJson = canonicalJson(workerSbom.document);
   writeFileSync(
     join(workerEvidenceDirectory, "worker.spdx.json"),
-    workerSbom.json,
+    workerSbomJson,
   );
 
   const feedbackKey = createHash("sha256")
@@ -330,6 +361,7 @@ try {
             packageCount: workerSbom.packageCount,
             unresolvedLicenseCount: 0,
           },
+          licenses: { ...workerLicenseEvidence.summary },
           scans: {
             imageSecrets: "pass",
             imageVulnerabilities: "pass",
@@ -341,6 +373,14 @@ try {
     writeFileSync(
       join(sharedEvidence, "feedback-worker.spdx.json"),
       workerSbom.json,
+    );
+    writeFileSync(
+      join(sharedEvidence, "feedback-worker-license-evidence.json"),
+      workerLicenseEvidence.evidenceJson,
+    );
+    writeFileSync(
+      join(sharedEvidence, "feedback-worker-THIRD-PARTY-NOTICES.txt"),
+      workerLicenseEvidence.notice,
     );
   }
 

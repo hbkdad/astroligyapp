@@ -1,5 +1,20 @@
 # Security and privacy audit
 
+### Goal 87 dependency-license evidence review
+
+- **Scope.** Release evidence and promotion authorization only; no authentication, user data, production
+  system, registry, credential or network service was changed.
+- **Fail-closed behavior.** Missing assertions/text, custom terms, non-allowlisted identifiers and conflicts
+  route to manual review; prohibited identifiers fail; external redistribution requires zero unresolved,
+  manual and prohibited results.
+- **Integrity.** Exact npm version/source/SRI, enclosing Next.js identity, dpkg evidence, Node distribution
+  text, installed license text, policy, evidence and notices are digest-bound. Adversarial mutation checks
+  cover all bound fields.
+- **Privacy and secrets.** Evidence is package metadata and public license material only. It is generated
+  outside runtime images and checked by the existing release boundary.
+- **Residual risk.** Automated classification is not legal advice. All manual-review results require an
+  accountable human disposition before external redistribution.
+
 ### Goal 86 staging-approval boundary audit
 
 - **Assets and actors.** Protected assets are release/plan scope, AWS target, cost and recovery limits,

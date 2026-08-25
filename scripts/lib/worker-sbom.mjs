@@ -69,6 +69,7 @@ export function createWorkerSpdx(input) {
         versionInfo: evidence.locked.version,
         downloadLocation: evidence.locked.resolved,
         filesAnalyzed: false,
+        sourceInfo: `acquired package info from installed node module manifest file: /app/${lockPath}/package.json`,
         licenseConcluded: evidence.locked.license,
         licenseDeclared: evidence.locked.license,
         copyrightText: "NOASSERTION",

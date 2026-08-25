@@ -42,7 +42,7 @@ try {
     "artifact source revisions must match",
   );
   const releaseSet = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     kind: "astroligyapp.release-set",
     statement: {
       source: {

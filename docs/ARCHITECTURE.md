@@ -1,5 +1,13 @@
 # Architecture
 
+## Runtime dependency-license evidence
+
+ADR 0017 adds a release-only license-evidence boundary outside both runtime images. The raw SPDX inventory
+is correlated with npm lock source/integrity, exact enclosing Next.js package identity, dpkg evidence, the
+digest-pinned Node distribution license, and installed license files. A versioned fail-closed policy produces
+hashed evidence and notice artifacts; schema-3 dual-release evidence binds those hashes and decision counts.
+Manual or prohibited results block external redistribution without changing application runtime behavior.
+
 Status: accepted baseline; persistence approach selected and managed providers remain open.
 
 ## System shape

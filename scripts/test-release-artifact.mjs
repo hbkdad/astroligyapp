@@ -23,6 +23,10 @@ import {
   sha256,
   validateArtifactManifest,
 } from "./lib/artifact-manifest.mjs";
+import {
+  concludeLicenseEvidence,
+  validateLicenseEvidenceBundle,
+} from "./lib/license-evidence.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const temporaryRoot = mkdtempSync(join(tmpdir(), "astroligyapp-artifact-"));
@@ -198,16 +202,35 @@ try {
     JSON.parse(readFileSync(join(evidence, "sbom.raw.json"), "utf8")),
     { commit, created, imageId: imageA.Id },
   );
+  const runtimeTexts = collectRuntimeLicenseTexts(
+    normalized,
+    tags[0],
+    baseImages.build,
+  );
+  const policy = JSON.parse(
+    readFileSync(join(root, "config", "release-license-policy.json"), "utf8"),
+  );
+  const licenseEvidence = concludeLicenseEvidence({
+    artifact: "application",
+    spdx: normalized,
+    policy,
+    sourceRoot: root,
+    lockfile: JSON.parse(readFileSync(join(root, "package-lock.json"), "utf8")),
+    runtimeTexts,
+    proprietaryText: readFileSync(join(root, "LICENSE"), "utf8"),
+  });
+  validateLicenseEvidenceBundle({
+    evidence: licenseEvidence.evidence,
+    notice: licenseEvidence.notice,
+    policy,
+    summary: licenseEvidence.summary,
+  });
   const sbomJson = canonicalJson(normalized);
   writeFileSync(join(evidence, "sbom.spdx.json"), sbomJson);
-  const unresolvedLicenseCount = normalized.packages.filter(
-    (package_) =>
-      ["NOASSERTION", "NONE"].includes(package_.licenseDeclared) ||
-      ["NOASSERTION", "NONE"].includes(package_.licenseConcluded),
-  ).length;
+  const unresolvedLicenseCount = licenseEvidence.summary.unresolvedCount;
 
   const manifest = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     kind: "astroligyapp.release-evidence",
     source: {
       repository: "https://github.com/hbkdad/astroligyapp",
@@ -228,6 +251,7 @@ try {
       packageCount: normalized.packages.length,
       unresolvedLicenseCount,
     },
+    licenses: licenseEvidence.summary,
     scans: {
       gitSecrets: "pass",
       imageSecrets: "pass",
@@ -260,6 +284,7 @@ try {
           platform: "linux/amd64",
           reproducibleBuilds: 2,
           sbom: { ...manifest.sbom },
+          licenses: { ...manifest.licenses },
           scans: {
             imageSecrets: "pass",
             imageVulnerabilities: "pass",
@@ -269,6 +294,14 @@ try {
       }),
     );
     writeFileSync(join(sharedEvidence, "application.spdx.json"), sbomJson);
+    writeFileSync(
+      join(sharedEvidence, "application-license-evidence.json"),
+      licenseEvidence.evidenceJson,
+    );
+    writeFileSync(
+      join(sharedEvidence, "application-THIRD-PARTY-NOTICES.txt"),
+      licenseEvidence.notice,
+    );
   }
   runTamperTests(manifest);
   writeFileSync(
@@ -282,6 +315,42 @@ try {
   for (const tag of tags)
     run("docker", ["image", "rm", "--force", tag], { tolerateFailure: true });
   rmSync(temporaryRoot, { recursive: true, force: true });
+}
+
+function collectRuntimeLicenseTexts(spdx, image, nodeBaseImage) {
+  const debian = spdx.packages.filter((package_) =>
+    package_.sourceInfo?.includes("DPKG DB"),
+  );
+  const script = `const f=require('node:fs');const p=${JSON.stringify(
+    debian.map((package_) => ({ id: package_.SPDXID, name: package_.name })),
+  )};const o={};for(const x of p){const q='/usr/share/doc/'+x.name+'/copyright';if(f.existsSync(q))o[x.id]={source:q,text:f.readFileSync(q,'utf8')}};process.stdout.write(JSON.stringify(o))`;
+  const result = JSON.parse(
+    capture("docker", [
+      "run",
+      "--rm",
+      "--entrypoint",
+      "/usr/local/bin/node",
+      image,
+      "-e",
+      script,
+    ]),
+  );
+  const nodePackage = spdx.packages.find(
+    (package_) => package_.name === "node",
+  );
+  if (nodePackage) {
+    result[nodePackage.SPDXID] = {
+      source: `${nodeBaseImage}:/usr/local/LICENSE`,
+      text: capture("docker", [
+        "run",
+        "--rm",
+        nodeBaseImage,
+        "cat",
+        "/usr/local/LICENSE",
+      ]),
+    };
+  }
+  return result;
 }
 
 function build(source, tag, archivePath, inputs) {

@@ -9,6 +9,11 @@ import {
   validateReleaseSet,
 } from "./lib/artifact-manifest.mjs";
 import { createWorkerSpdx } from "./lib/worker-sbom.mjs";
+import {
+  assertExternalRedistributionReady,
+  concludeLicenseEvidence,
+  validateLicenseEvidenceBundle,
+} from "./lib/license-evidence.mjs";
 
 const commit = "a".repeat(40);
 const tree = "b".repeat(40);
@@ -29,6 +34,44 @@ const workerSbom = createWorkerSpdx({
   packageManifest: JSON.parse(readFileSync("package.json", "utf8")),
   bundleSha256: sha256(bundle),
 });
+const policy = JSON.parse(
+  readFileSync("config/release-license-policy.json", "utf8"),
+);
+const workerLicenseEvidence = concludeLicenseEvidence({
+  artifact: "feedback-worker",
+  spdx: workerSbom.document,
+  policy,
+  sourceRoot: process.cwd(),
+  lockfile: JSON.parse(readFileSync("package-lock.json", "utf8")),
+  proprietaryText: readFileSync("LICENSE", "utf8"),
+});
+assert.doesNotThrow(() =>
+  validateLicenseEvidenceBundle({
+    evidence: workerLicenseEvidence.evidence,
+    notice: workerLicenseEvidence.notice,
+    policy,
+    summary: workerLicenseEvidence.summary,
+  }),
+);
+for (const mutate of [
+  (copy) => (copy.evidence.packages[1].identity.version = "tampered"),
+  (copy) => (copy.evidence.packages[1].source = "https://example.invalid"),
+  (copy) => (copy.evidence.packages[1].integrity = "tampered"),
+  (copy) =>
+    (copy.evidence.packages[1].licenseExpression = "MIT OR AGPL-3.0-only"),
+  (copy) => (copy.evidence.packages[1].licenseText.text += "tampered"),
+  (copy) => (copy.notice += "tampered"),
+  (copy) => (copy.policy.policyVersion = "2026-08-25.2"),
+]) {
+  const copy = {
+    evidence: structuredClone(workerLicenseEvidence.evidence),
+    notice: workerLicenseEvidence.notice,
+    policy: structuredClone(policy),
+    summary: structuredClone(workerLicenseEvidence.summary),
+  };
+  mutate(copy);
+  assert.throws(() => validateLicenseEvidenceBundle(copy));
+}
 assert.equal(workerSbom.packageCount, 37);
 assert.equal(workerSbom.dependencyCount, 36);
 assert.equal(workerSbom.bundledInputCount, 542);
@@ -52,7 +95,7 @@ assert.doesNotMatch(
 );
 
 const releaseSet = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   kind: "astroligyapp.release-set",
   statement: {
     source: {
@@ -100,6 +143,18 @@ assertReleaseSetPromotionReferences(releaseSet, {
   application: `123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp@${applicationImage}`,
   "feedback-worker": `123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp-feedback-worker@${workerImage}`,
 });
+assert.throws(() =>
+  assertExternalRedistributionReady(workerLicenseEvidence.summary),
+);
+assert.doesNotThrow(() =>
+  assertExternalRedistributionReady({
+    ...workerLicenseEvidence.summary,
+    permittedWithNoticeCount:
+      workerLicenseEvidence.summary.permittedWithNoticeCount +
+      workerLicenseEvidence.summary.manualReviewCount,
+    manualReviewCount: 0,
+  }),
+);
 const slsa = createLocalSlsaStatement(releaseSet);
 assert.deepEqual(
   slsa.subject.map((subject) => subject.digest.sha256),
@@ -121,6 +176,7 @@ for (const mutate of [
     (copy.statement.artifacts[0].rollbackPredecessor = applicationImage),
   (copy) => (copy.statement.source.commit = "mixed-revision"),
   (copy) => (copy.localVerification = { trust: "production" }),
+  (copy) => (copy.statement.artifacts[0].licenses.noticeSha256 = "tampered"),
 ]) {
   const copy = structuredClone(releaseSet);
   mutate(copy);
@@ -166,6 +222,17 @@ function artifact(name, imageId, imageDigest, dockerfileSha256, packageCount) {
       packageCount,
       unresolvedLicenseCount: name === "application" ? 101 : 0,
     },
+    licenses:
+      name === "feedback-worker"
+        ? workerLicenseEvidence.summary
+        : {
+            ...workerLicenseEvidence.summary,
+            packageCount,
+            permittedWithNoticeCount: 90,
+            manualReviewCount: 10,
+            firstPartyCount: 1,
+            unresolvedCount: 101,
+          },
     scans: { imageSecrets: "pass", imageVulnerabilities: "pass" },
     rollbackPredecessor: null,
   };

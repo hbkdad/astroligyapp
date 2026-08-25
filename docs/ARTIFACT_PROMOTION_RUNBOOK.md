@@ -1,5 +1,13 @@
 # Release artifact and promotion runbook
 
+## Dependency-license precondition
+
+Before any external image redistribution, validate the evidence/notice/policy bundle for both artifacts and
+require zero `unresolvedCount`, `manualReviewCount` and `prohibitedCount`. A successful local artifact build
+or immutable registry digest is not sufficient. Preserve the generated SPDX, license-evidence JSON and notice
+index outside the runtime image and attach them to the same immutable release subject. Do not publish while
+either artifact remains in manual review.
+
 ## Local evidence gate
 
 Run `npm run test:release-artifacts` only from a clean tracked worktree. The command first runs the
