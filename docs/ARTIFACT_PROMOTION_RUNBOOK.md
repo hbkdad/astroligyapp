@@ -33,7 +33,8 @@ the resulting SPDX document is scanned by Trivy. Bundle metadata and evidence ar
 Distroless runtime image.
 
 The combined test produces an in-toto/SLSA 1.1 statement with both image subjects, creates random local
-Cosign keys, signs and attests the statement with networking disabled, verifies both bundles, proves a
+Cosign keys, explicitly disables the TUF-provided remote signing configuration, signs and attests the
+statement with networking disabled, verifies both bundles, proves a
 tampered statement fails, records only bundle/public-key hashes under `local-ephemeral-untrusted`, and
 deletes the entire evidence directory. Generated SBOMs, manifests, scan databases, BuildKit metadata,
 keys, bundles, and image archives are not committed. This proves local consistency, not trusted identity,

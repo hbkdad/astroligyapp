@@ -89,6 +89,7 @@ try {
     [
       "sign-blob",
       "--yes",
+      "--use-signing-config=false",
       "--key",
       "/evidence/local.key",
       "--bundle",
@@ -101,6 +102,7 @@ try {
     [
       "attest-blob",
       "--yes",
+      "--use-signing-config=false",
       "--key",
       "/evidence/local.key",
       "--predicate",
