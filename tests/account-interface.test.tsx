@@ -534,7 +534,7 @@ describe("account entry and recovery journeys", () => {
       );
       const alert = await screen.findByRole("alert");
       expect(alert).toHaveTextContent(title);
-      expect(alert).toHaveFocus();
+      await waitFor(() => expect(alert).toHaveFocus());
     },
   );
 
