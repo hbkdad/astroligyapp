@@ -85,11 +85,18 @@ try {
     ["generate-key-pair", "--output-key-prefix", "/evidence/local"],
     signingEnvironment,
   );
+  cosignRun([
+    "signing-config",
+    "create",
+    "--out",
+    "/evidence/offline-signing-config.json",
+  ]);
   cosignRun(
     [
       "sign-blob",
       "--yes",
-      "--use-signing-config=false",
+      "--signing-config",
+      "/evidence/offline-signing-config.json",
       "--key",
       "/evidence/local.key",
       "--bundle",
@@ -102,7 +109,8 @@ try {
     [
       "attest-blob",
       "--yes",
-      "--use-signing-config=false",
+      "--signing-config",
+      "/evidence/offline-signing-config.json",
       "--key",
       "/evidence/local.key",
       "--predicate",

@@ -31,8 +31,9 @@ Build attestations, and Amazon ECR OCI 1.1/referrer documentation.
   Bundle metadata and SBOMs are exported only from a dedicated build evidence stage; the final worker
   remains minimal.
 - Emit an in-toto Statement with a SLSA provenance 1.1 predicate for the two image subjects. Locally,
-  exercise Cosign 3.1.3 blob signature and attestation bundles with a random ephemeral key and no
-  network, then delete the key. The release set labels these hashes `local-ephemeral-untrusted`.
+  exercise Cosign 3.1.3 blob signature and attestation bundles with a random ephemeral key, a
+  service-free signing configuration, and no network, then delete the key. The release set labels these
+  hashes `local-ephemeral-untrusted`.
 - Make the common source revision and release-set SHA-256 mandatory infrastructure inputs. Both ECS task
   definitions expose those non-secret identifiers for operational correlation, and OpenTofu rejects a
   mixed-source pair.
