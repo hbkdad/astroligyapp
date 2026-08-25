@@ -4,15 +4,15 @@ Last updated: 2026-08-25
 
 ## Current position
 
-Status: Goal 86 complete; staging review now has an expiring, canonical schema that binds the exact
-account/region, dual-artifact release, saved-plan/redacted-summary hashes, cost inputs and limits, change
-window, opaque owners, recovery/data policy, 7 documentary gates, 12 live gates, split review, and an
-independent apply decision. The checked-in package is deterministically `mock-contract-only` and cannot
-pass documentary or apply readiness. Commit `715027b` is GO as an internal candidate and NO-GO for AWS
-staging, apply, production, or external redistribution. No real plan, calculator export, accountable
-roster, GitHub environment/OIDC role, registry/Rekor evidence, IAM/KMS result, restore, DNS/TLS, alarm,
-accessibility, rollback, credential, purchase, or deployment exists; all 101 application SPDX
-package-license conclusions still require review.
+Status: Goal 87 complete; both runtime artifacts now generate deterministic outside-image SPDX, full
+license-text evidence, notice indexes, and schema-3 release bindings under versioned fail-closed policy
+`2026-08-25.1`. The exact 101-package application result is 72 permitted-with-notice, 27 manual review,
+0 prohibited, 2 first-party, and 2 unresolved; the 37-package worker result is 31 permitted-with-notice,
+5 manual review, 0 prohibited, 1 first-party, and 0 unresolved. Immutable promotion references now fail
+while any unresolved/manual/prohibited result exists. Commit `64ecba5` is GO as an internal evidence
+candidate and NO-GO for external redistribution, AWS staging/apply, or production. No image was published
+and no legal approval, licensing acceptance, registry, cloud, credential, purchase, or production change
+was made.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -35,6 +35,30 @@ SDK/adapter, authenticated feedback worker, and suppression seam, but no account
 provisioned AWS infrastructure, live queue polling, or live delivery.
 
 ## Completed
+
+- [x] Goal 87: accept ADR 0017 and policy `2026-08-25.1`, separating the proprietary application from
+      third-party terms and defining explicit permitted-with-notice, manual-review, prohibited, and
+      first-party outcomes without representing automated results as legal conclusions.
+- [x] Trace all 101 application components across exact npm lock version/source/SRI, exact enclosing
+      Next.js 16.3.0 identity for 48 version-unknown compiled components, dpkg version/verification data,
+      the digest-pinned Node 24.15.0 distribution, installed license files, and proprietary OCI/root
+      identities. Unknown upstream versions remain honestly `UNKNOWN`; none were fabricated.
+- [x] Generate canonical application and worker license-evidence JSON with captured authoritative text,
+      text hashes, source/integrity evidence, normalized expressions and decision reasons plus third-party
+      notice indexes. Evidence remains outside both minimal runtime images.
+- [x] Upgrade artifact-manifest schema to 2 and dual release-set schema to 3, binding policy/evidence/notice
+      hashes and all counts. Reject identity, version, source, integrity, expression, license-text, notice,
+      policy, package-count and unresolved-count tampering; refuse immutable promotion references unless
+      both artifacts have zero unresolved, manual-review and prohibited results.
+- [x] Exact application gate at commit `64ecba5` reproduced image
+      `sha256:319f054ff0ae05865c0809fd5696ab3fad75d90c5ae43d589db34be9c9dd637d`, found zero
+      high/critical vulnerabilities or secrets, kept generated evidence absent from the runtime, and
+      reduced 101 unresolved assertions to 2 while preserving 27 manual reviews. The worker unit contract
+      found 31 permitted-with-notice and 5 manual-review dependencies plus the proprietary worker root.
+- [x] Apply `security-audit`: no critical/high local issue remains. The policy is fail-closed, evidence
+      contains public package/license material rather than private user data, all release hashes are bound,
+      and no network service, registry, cloud account, credential, or production system was mutated.
+      Residual risk is the 32 total manual-review results and 2 unresolved application assertions.
 
 - [x] Goal 0: inventory the initial workspace and establish the Codex control layer.
 - [x] Move the master product specification and execution queue under `docs/`.
@@ -896,25 +920,24 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 87 — resolve and enforce the application runtime dependency-license evidence required before
-external image redistribution, without publishing an image or making legal/commercial commitments.
+Goal 88 — reduce the 32 manual dependency-license cases to the smallest honest review set and create an
+accountable, immutable human disposition ledger without publishing an image or making legal commitments.
 
 Deliverables:
 
-1. Inventory every package represented in the application runtime SPDX output and trace each exact
-   installed version to package metadata, bundled/compiled notices, lockfile source/integrity, and
-   authoritative license text. Distinguish application proprietary status from third-party terms and do
-   not infer permission from a missing field or package-name convention.
-2. Define a versioned, fail-closed license policy with normalized SPDX expressions, explicit permitted,
-   prohibited, notice/source-disclosure, and manual-review outcomes. Record the distribution assumptions
-   and route ambiguous, conflicting, custom, copyleft, or missing evidence to review rather than making a
-   legal conclusion.
-3. Generate deterministic application and worker third-party notice/evidence artifacts outside runtime
-   images; bind their hashes and resolved/unresolved counts into the dual release set. Reject dependency,
-   version, source, integrity, license-text, notice, policy-version, or artifact tampering.
-4. Update the release/promotion documentation, exercise adversarial fixtures and container absence of
-   evidence/toolchains, then apply `security-audit` and `release-check`. No package publication, registry
-   push, licensing purchase/acceptance, legal representation, production change, or external release.
+1. Enumerate the exact 27 application and 5 worker manual-review records from generated evidence. For each
+   missing-text or missing-assertion case, locate version-matched authoritative publisher material and bind
+   its immutable source/hash; never substitute generic license text or infer an expression.
+2. Keep custom, composite, copyleft, exception, ambiguous, or conflicting cases manual. Add a versioned
+   disposition-ledger schema that requires an opaque accountable reviewer, exact policy/evidence hashes,
+   decision scope, evidence source, expiry/re-review trigger, and explicit outcome; provide only synthetic
+   fixtures and no fabricated approval.
+3. Bind the disposition-ledger hash and remaining counts into the dual release set. Reject stale, mixed,
+   expired, self-approved, scope-mismatched, missing-evidence, or tampered dispositions. External promotion
+   must remain blocked unless every required disposition is present and current.
+4. Update documentation, exercise adversarial cases, and apply `security-audit` plus `release-check`. Do not
+   publish, contact maintainers/counsel, accept terms, record a real legal decision, configure a registry or
+   cloud account, use credentials, purchase services, or mutate production.
 
 ## Phase queue
 
