@@ -42,6 +42,8 @@ LABEL org.opencontainers.image.title="astroligyapp" \
       org.opencontainers.image.licenses="LicenseRef-Proprietary"
 
 COPY --from=builder /usr/local/bin/node /usr/local/bin/node
+COPY --from=builder /lib/x86_64-linux-gnu/libgcc_s.so.1 /lib/x86_64-linux-gnu/libgcc_s.so.1
+COPY --from=builder /lib/x86_64-linux-gnu/libstdc++.so.6 /lib/x86_64-linux-gnu/libstdc++.so.6
 COPY --from=builder --chown=nonroot:nonroot /app/public ./public
 COPY --from=builder --chown=nonroot:nonroot /app/.next/standalone ./
 COPY --from=builder --chown=nonroot:nonroot /app/.next/static ./.next/static
