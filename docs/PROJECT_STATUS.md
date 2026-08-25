@@ -4,16 +4,15 @@ Last updated: 2026-08-25
 
 ## Current position
 
-Status: Goal 85 complete; the application and authentication-email feedback worker now form one
-fail-closed, dual-subject release set with exact common-source, OCI manifest, Dockerfile/base,
-reproducibility, SPDX, scan, provenance, promotion, and independent rollback evidence. The bundled
-worker dependency graph resolves 36 exact lockfile packages without adding evidence or toolchains to
-its runtime image. Commit `cbd6da2` is GO as an internal candidate and NO-GO for external staging or
-production. Local ephemeral signatures are deliberately untrusted and offline; approved GitHub OIDC,
-Rekor inclusion, ECR referrers, AWS IAM/KMS, ownership, cost, and live environment evidence are still
-required, and all 101 application SPDX package-license conclusions require review. No cloud account,
-registry, remote signing service, credential, purchase, DNS, email, or deployment was created or
-changed.
+Status: Goal 86 complete; staging review now has an expiring, canonical schema that binds the exact
+account/region, dual-artifact release, saved-plan/redacted-summary hashes, cost inputs and limits, change
+window, opaque owners, recovery/data policy, 7 documentary gates, 12 live gates, split review, and an
+independent apply decision. The checked-in package is deterministically `mock-contract-only` and cannot
+pass documentary or apply readiness. Commit `715027b` is GO as an internal candidate and NO-GO for AWS
+staging, apply, production, or external redistribution. No real plan, calculator export, accountable
+roster, GitHub environment/OIDC role, registry/Rekor evidence, IAM/KMS result, restore, DNS/TLS, alarm,
+accessibility, rollback, credential, purchase, or deployment exists; all 101 application SPDX
+package-license conclusions still require review.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -107,6 +106,40 @@ provisioned AWS infrastructure, live queue polling, or live delivery.
       handling, package metadata, and shared conformance behavior.
 
 ## Recently completed
+
+- [x] Goal 86: accept ADR 0016 separating structural validity, documentary readiness, and staging apply
+      readiness. Production is not a valid target, documentary approval is always non-authorizing, and
+      apply requires a fifth principal independent from the requester and four documentary reviewers.
+- [x] Add `astroligyapp.staging-approval` schema 1 with exact staging account/Canada Central scope,
+      release-set and immutable application/worker predecessor binding, saved-plan/redacted-summary
+      hashes, safe change counts, integer-cent cost evidence, UTC window, opaque owners, bounded
+      RPO/RTO/retention/restore cadence, and immutable synthetic-only/no-index/no-private-log policy.
+- [x] Generate a deterministic `mock-contract-only` package from the existing credential-free staging
+      fixture. Its ordered 12-service cost inventory exposes every calculator input category without
+      inventing prices; its saved plan, calculator conclusion, review decisions, live evidence, and
+      apply authority remain deliberately empty.
+- [x] Require 7 documentary and 12 live gates. Every decision binds the complete canonical statement,
+      a restricted external approval-record hash, and an in-window timestamp. Reject field drift,
+      stale/expired scope, mutable/cross-account artifacts, plan/release mismatch, changed hashes,
+      deletes/replacements, unsafe cost/recovery/data settings, missing/duplicate gates, self-review,
+      reviewer reuse, future decisions, missing Rekor evidence, and incomplete apply authority.
+- [x] Apply `security-audit`: no unresolved critical/high local finding remains. Real saved plans,
+      state, calculator links/exports, contacts, credentials, provider payloads, private data, and
+      approvals stay outside Git; the verifier performs no cloud, registry, DNS, signing, or IaC call.
+      All effective external controls remain staging gates and no apply is authorized.
+- [x] Apply `release-check` to exact commit `715027b`: formatting, lint, strict TypeScript, 108 files /
+      1,342 tests, production build, the same 1,342 tests at 89.57% statements/87.43% branches/96.28%
+      functions/91.86% lines, Drizzle consistency, legacy/latest migrations plus 71 PostgreSQL tests,
+      the production dependency threshold, 8 mocked plans, 304 policy checks, all 8 IaC unsafe fixtures,
+      zero IaC scanner findings, and all 39 staging-approval unsafe cases passed.
+- [x] Reproduce and scan the exact commit's application OCI subject
+      `sha256:b60d50bc91ca9e49661b6222428e356e563644ef3a789eececbda13f074efce6` and 52,079,296-byte worker
+      subject `sha256:480a14cecafad9615ba5f8f8d16470768d0c3b1e035ecd870ef96bc3ea967ac4`.
+      The worker retained 36 traced dependencies; offline signatures and dual-subject attestation
+      verified only as `local-ephemeral-untrusted`.
+- [x] Release decision: GO for the internal credential-free Goal 86 candidate; NO-GO for AWS staging,
+      apply, production, or external redistribution. Four moderate Drizzle Kit development-chain
+      advisories remain below threshold, and all 101 application license assertions remain unresolved.
 
 - [x] Goal 85: accept ADR 0015 defining a schema-2 dual-artifact release set with exactly one
       application and one feedback-worker OCI subject, a common protected source revision, immutable
@@ -863,25 +896,25 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 86 — make the credential-free staging-approval package complete and mechanically reviewable
-without provisioning infrastructure, configuring GitHub OIDC, pushing artifacts, or contacting AWS.
+Goal 87 — resolve and enforce the application runtime dependency-license evidence required before
+external image redistribution, without publishing an image or making legal/commercial commitments.
 
 Deliverables:
 
-1. Define a versioned staging-approval manifest for exact environment/account/region, release-set digest,
-   saved-plan digest, change window, owners, recovery objectives, rollback predecessor, data handling,
-   and cost inputs. Keep contacts and secrets outside checked-in fixtures and reject incomplete,
-   inconsistent, stale, mutable, or unapproved evidence.
-2. Generate deterministic, redacted plan and cost-review summaries from the existing credential-free IaC
-   fixtures. Bind them to both release subjects and expose every value that must be supplied or verified
-   in an eventual approved AWS account without claiming calculator or live-price validation.
-3. Add a fail-closed preflight/checklist covering state recovery, IAM/KMS boundaries, registry referrers,
-   GitHub OIDC identity, Rekor inclusion, DNS/TLS, database restore, queue/redrive, alarm routing,
-   accessibility smoke, and independent application/worker rollback. Separate documentary readiness from
-   live evidence so neither can authorize an apply.
-4. Update the infrastructure runbook and decision record, exercise tamper/missing/stale/role-conflict and
-   split-approval cases, then apply `security-audit` and `release-check`. No AWS API call, OIDC trust,
-   registry push, remote signing, DNS, deployment, purchase, production mutation, or persistent secret.
+1. Inventory every package represented in the application runtime SPDX output and trace each exact
+   installed version to package metadata, bundled/compiled notices, lockfile source/integrity, and
+   authoritative license text. Distinguish application proprietary status from third-party terms and do
+   not infer permission from a missing field or package-name convention.
+2. Define a versioned, fail-closed license policy with normalized SPDX expressions, explicit permitted,
+   prohibited, notice/source-disclosure, and manual-review outcomes. Record the distribution assumptions
+   and route ambiguous, conflicting, custom, copyleft, or missing evidence to review rather than making a
+   legal conclusion.
+3. Generate deterministic application and worker third-party notice/evidence artifacts outside runtime
+   images; bind their hashes and resolved/unresolved counts into the dual release set. Reject dependency,
+   version, source, integrity, license-text, notice, policy-version, or artifact tampering.
+4. Update the release/promotion documentation, exercise adversarial fixtures and container absence of
+   evidence/toolchains, then apply `security-audit` and `release-check`. No package publication, registry
+   push, licensing purchase/acceptance, legal representation, production change, or external release.
 
 ## Phase queue
 
@@ -970,6 +1003,10 @@ Deliverables:
 
 | Date       | Evidence                                           | Result                                                                                        |
 | ---------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 2026-08-25 | Goal 86 staging-approval adversarial gate          | 7 documentary/12 live gates passed; all 39 unsafe review/apply cases rejected                 |
+| 2026-08-25 | Goal 86 exact-commit release gate                  | 108 files/1,342 tests, build, coverage, 71 DB tests, IaC, scans, and signatures passed        |
+| 2026-08-25 | Goal 86 dual OCI release set                       | App `b60d50…efce6`; worker `480a14…67ac4`; exact `715027b` source reproduced                  |
+| 2026-08-25 | Goal 86 release decision                           | Internal candidate GO; staging/apply/production/redistribution NO-GO                          |
 | 2026-08-25 | Goal 85 exact-commit release gate                  | 108 files/1,342 tests, build, coverage, 71 DB tests, IaC, scans, and signatures passed        |
 | 2026-08-25 | Goal 85 dual OCI release set                       | App `151ce0…9c711`; worker `487bee…9627`; common source and independent rollback proved       |
 | 2026-08-25 | Goal 85 worker dependency evidence                 | 36 exact lockfile packages and 542 bundle inputs traced; runtime stayed evidence-free         |
