@@ -15,6 +15,9 @@ const result = await build({
   sourcemap: false,
   minify: true,
   legalComments: "none",
+  banner: {
+    js: 'import { createRequire as __createRequire } from "node:module"; const require = __createRequire(import.meta.url);',
+  },
   metafile: true,
   external: ["pg-native"],
   plugins: [
