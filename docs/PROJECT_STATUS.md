@@ -110,11 +110,11 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 - [x] Build twice from separate archives of the exact clean commit with common protected entropy,
       fixed source time/deployment identity, normalized Next preview metadata, OCI labels, and
       timestamp rewriting; both uncached builds produced image ID
-      `sha256:fb558d1165c4637d5eb04ec72baa140de67864f0708a2f9f6a95726d9bbdd2cf`.
+      `sha256:8697387e15114be24d3a1e38734e0dd57ebb2d189427c706b683c42f626ea2dc`.
 - [x] Replace the vulnerable Bookworm runtime with digest-pinned Distroless `base-nossl` Debian 13,
       copy only Node 24.15.0 plus required C++ runtime libraries, retain the non-root/read-only direct
       Node contract, and pass the complete two-task PostgreSQL/Valkey/outage/SIGTERM topology.
-- [x] Scan 92 Git commits and the exact archived source with Gitleaks, using only three reviewed
+- [x] Scan 95 Git commits and the exact archived source with Gitleaks, using only three reviewed
       commit/path/rule/line prose fingerprints; scan the final image with Trivy at zero high/critical
       findings and no detected secrets. No unfixed-finding suppression is used.
 - [x] Generate normalized disposable SPDX for 101 packages, bind source/tree/Dockerfile/image/SBOM/
@@ -125,6 +125,14 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
       in BuildKit secret mounts, preview keys use domain-separated HMAC derivation, generated evidence
       is temporary, CI remains `contents: read`, and ECR/keyless signing authority remains separately
       approval-gated. Residual risk is non-hermetic upstream resolution and unreviewed package licenses.
+- [x] Apply `release-check` to commit `12d03bc`: `npm run release:check` passed formatting, ESLint,
+      strict TypeScript, two runs of 103 files/1,303 tests, the 33-page optimized build, 90.03%
+      statement/87.71% branch/96.55% function/92.18% line coverage, Drizzle consistency, all 71
+      disposable PostgreSQL tests, the high/critical production dependency threshold, the complete
+      credential-free infrastructure gate, and the reproducible artifact gate. Four moderate
+      development-only Drizzle Kit/esbuild findings remain below the release threshold; external
+      promotion remains NO-GO because all 101 package license conclusions require review and no
+      registry/signing authority has been approved.
 - [x] Goal 81: accept ADR 0011 selecting MPL-2.0 OpenTofu 1.12.5, exact AWS provider 6.59.0,
       native enforced state/plan encryption, S3 lockfiles, and digest-pinned TFLint 0.64.0,
       Conftest 0.69.0, and Trivy 0.73.0 without initializing a backend or contacting AWS.
