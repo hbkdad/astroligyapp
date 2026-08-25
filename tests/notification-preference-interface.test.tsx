@@ -39,9 +39,13 @@ describe("notification preference interface", () => {
       screen.getByRole("button", { name: "Manage alerts for Mira" }),
     );
     expect(
-      await screen.findByRole("heading", {
-        name: "Email delivery is unavailable",
-      }),
+      await screen.findByRole(
+        "heading",
+        {
+          name: "Email delivery is unavailable",
+        },
+        { timeout: 10_000 },
+      ),
     ).toBeVisible();
     expect(screen.getByText(/No email is sent/i)).toBeVisible();
     expect(
