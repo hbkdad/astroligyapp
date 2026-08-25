@@ -23,6 +23,7 @@
     "scan:runtime": "node scripts/scan-runtime-image.mjs",
     "test:artifact": "node scripts/test-release-artifact.mjs",
     "test:infrastructure": "node scripts/test-infrastructure.mjs",
+    "worker:feedback:local": "node --experimental-strip-types scripts/run-auth-email-feedback-worker-local.mts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "db:generate": "drizzle-kit generate",
@@ -33,16 +34,16 @@
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "3.1108.0",
+    "@aws-sdk/client-sqs": "3.1108.0",
     "@paddle/paddle-node-sdk": "3.10.0",
     "astronomy-engine": "2.1.19",
     "better-auth": "1.6.27",
     "drizzle-orm": "^0.45.2",
     "next": "16.3.0",
     "pg": "^8.23.0",
-    "redis": "6.2.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "redis": "^6.2.1"
+    "redis": "6.2.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.3",

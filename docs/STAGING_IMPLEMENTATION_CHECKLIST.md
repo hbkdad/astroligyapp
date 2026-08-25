@@ -44,7 +44,7 @@ changes. The following require a separate explicit user approval after a reviewe
 - [ ] Inventory every PostgreSQL pool, cap per-task connections, reserve migration/operator headroom,
       and add a deterministic connection-budget assertion tied to ECS min/max tasks.
 - [ ] Add privacy-safe structured logging/metrics interfaces and redaction tests before an exporter.
-- [ ] Add a worker entry point for authenticated SES feedback queue messages, bounded batches,
+- [x] Add a worker entry point for authenticated SES feedback queue messages, bounded batches,
       visibility-timeout/idempotency behavior, DLQ/reconciliation, shutdown, and health/lag signals.
 - [x] Add credential-free IaC modules and policy tests for accounts/providers, network, edge/WAF, ECR,
       ECS, RDS, Valkey, secrets references, SES/SNS/SQS, logs/alarms, and backups. GitHub OIDC remains

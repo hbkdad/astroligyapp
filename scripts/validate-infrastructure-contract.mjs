@@ -18,6 +18,7 @@ const forbidden = [
   [/resources\s*=\s*\[\s*"\*"\s*\]/u, "wildcard IAM resource"],
   [/ip_protocol\s*=\s*"-1"/u, "unrestricted security-group protocol"],
   [/skip_final_snapshot\s*=\s*true/u, "missing final database snapshot"],
+  [/"SEND"/u, "unsupported SES send feedback"],
 ];
 
 for (const [pattern, description] of forbidden) {
@@ -41,6 +42,15 @@ for (const [pattern, description] of [
   ],
   [/use_lockfile\s*=\s*true/u, "native S3 lockfile"],
   [/enforced\s*=\s*true/u, "state and plan encryption"],
+  [/signature_version\s*=\s*2/u, "SNS SHA-256 signature version"],
+  [/"RENDERING_FAILURE"/u, "SES rendering-failure feedback"],
+  [/visibility_timeout_seconds\s*=\s*60/u, "feedback visibility timeout"],
+  [/maxReceiveCount\s*=\s*5/u, "bounded feedback redrive threshold"],
+  [/redrivePermission\s*=\s*"byQueue"/u, "exact DLQ redrive permission"],
+  [
+    /sourceQueueArns\s*=\s*\[aws_sqs_queue\.feedback\.arn\]/u,
+    "exact DLQ source queue",
+  ],
 ]) {
   assert.match(source, pattern, `missing ${description}`);
 }
@@ -102,5 +112,6 @@ function unsafeFixture(description) {
     "wildcard IAM resource": 'resources = ["*"]',
     "unrestricted security-group protocol": 'ip_protocol = "-1"',
     "missing final database snapshot": "skip_final_snapshot = true",
+    "unsupported SES send feedback": 'matching_event_types = ["SEND"]',
   }[description];
 }

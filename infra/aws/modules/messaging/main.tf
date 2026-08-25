@@ -22,10 +22,19 @@ resource "aws_sqs_queue" "feedback" {
   tags = var.tags
 }
 
+resource "aws_sqs_queue_redrive_allow_policy" "feedback" {
+  queue_url = aws_sqs_queue.dead_letter.id
+  redrive_allow_policy = jsonencode({
+    redrivePermission = "byQueue"
+    sourceQueueArns   = [aws_sqs_queue.feedback.arn]
+  })
+}
+
 resource "aws_sns_topic" "feedback" {
   name = "${var.name}-email-feedback"
   # trivy:ignore:AWS-0136 -- the topic is encrypted with the AWS-managed SNS key and carries provider event envelopes, not application secrets.
   kms_master_key_id = "alias/aws/sns"
+  signature_version = 2
   tags              = var.tags
 }
 
@@ -76,7 +85,7 @@ resource "aws_sesv2_configuration_set_event_destination" "feedback" {
   event_destination_name = "feedback-topic"
   event_destination {
     enabled              = true
-    matching_event_types = ["BOUNCE", "COMPLAINT", "DELIVERY", "DELIVERY_DELAY", "REJECT", "SEND"]
+    matching_event_types = ["BOUNCE", "COMPLAINT", "DELIVERY", "DELIVERY_DELAY", "REJECT", "RENDERING_FAILURE"]
     sns_destination { topic_arn = aws_sns_topic.feedback.arn }
   }
 }

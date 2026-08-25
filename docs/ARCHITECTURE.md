@@ -553,10 +553,13 @@ production security gates are recorded in `docs/SECURITY_PRIVACY_AUDIT.md`.
   dispatcher uses a single-attempt injected regional client and only local Simple
   content after durable reservation and keyed suppression lookup. An injected feedback
   processor now validates the fixed regional SNS envelope plus six SES configuration-set
-  event types, delegates signature authenticity, and writes content-free HMAC-deduplicated
+  outcome families, delegates signature authenticity, and writes content-free HMAC-deduplicated
   receipts and permanent-bounce/complaint suppression through a separate least-privilege
-  role. Raw payloads, recipients, diagnostics, and IPs are discarded. No account, DNS,
-  credential, SNS/SQS resource, queue poll, route, or live send exists yet. See ADR 0009.
+  role. A bounded SQS worker now verifies SNS v2 RSA-SHA256 signatures through an exact regional
+  HTTPS certificate boundary, extends visibility, and deletes only after durable acknowledgement;
+  credential-free doubles exercise partial failures and replay. Raw payloads, recipients,
+  diagnostics, signatures, receipt handles, and IPs are discarded. No account, DNS, credential,
+  live queue poll, resource mutation, or live send exists. See ADRs 0009 and 0013.
 - Ephemeris: exact Astronomy Engine 2.1.19 for tropical positions and local
   angles, composed with Whole Sign strategy 1.0.0. No silent house-system
   fallback; exact poles fail explicitly. See ADR 0006.

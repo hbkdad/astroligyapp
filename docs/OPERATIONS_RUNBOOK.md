@@ -56,7 +56,8 @@ after stopping writes and accounting for data created after the backup.
   revocation, password reset, email verification, and generic enumeration-safe responses.
 - Verify SES identity, DKIM/SPF/DMARC, configuration set, least-privilege IAM, account sending state,
   suppression behavior, idempotency lease recovery, SNS signature validation, SQS redrive policy,
-  feedback reconciliation, and alarms. No email flow is production-ready without the queue worker.
+  feedback reconciliation, and alarms. Apply the dedicated
+  `docs/AUTH_EMAIL_FEEDBACK_WORKER_RUNBOOK.md`; local worker code does not authorize live polling.
 
 ### Billing
 
