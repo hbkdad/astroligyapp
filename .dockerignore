@@ -1,10 +1,13 @@
 .git
 .github
+.agents
+.playwright-cli
 .next
 .env
 .env.*
 !.env.example
 coverage
+infra
 node_modules
 npm-debug.log*
 output
@@ -14,4 +17,5 @@ docs
 drizzle
 tests
 *.md
+*.tsbuildinfo
 !README.md
