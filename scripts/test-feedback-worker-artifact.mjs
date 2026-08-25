@@ -70,7 +70,7 @@ try {
     "worker builds must reproduce",
   );
   assert.equal(inspected[0].Config.User, "nonroot");
-  assert.equal(inspected[0].Config.ExposedPorts, null);
+  assert.equal(inspected[0].Config.ExposedPorts ?? null, null);
   assert.deepEqual(inspected[0].Config.Cmd, [
     "/usr/local/bin/node",
     "worker.mjs",
@@ -228,10 +228,12 @@ try {
   );
 } finally {
   run("docker", ["container", "rm", "--force", shutdownContainer], {
+    capture: true,
     tolerateFailure: true,
   });
   for (const image of images)
     run("docker", ["image", "rm", "--force", image], {
+      capture: true,
       tolerateFailure: true,
     });
   rmSync(temporary, { recursive: true, force: true });
