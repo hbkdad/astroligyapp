@@ -151,7 +151,7 @@ AI text is downstream output and cannot replace calculation records.
 - `id`, owner, two private profile references
 - versioned calculation references and category contributions
 - preserved-order complete private report JSON and report version
-- explicit share state, random share-token digest, expiry/revocation timestamps
+- explicit share state, digest of a cryptographically random share capability, and expiry/revocation timestamps
 - optional preserved-order redacted public JSON, public version, and integrity digest
 
 Never place raw birth data in the share token or public representation.
