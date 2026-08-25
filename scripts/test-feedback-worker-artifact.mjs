@@ -184,7 +184,7 @@ try {
   }
   assert.equal(healthy, true, "worker must reach its process-liveness check");
   const stopStarted = Date.now();
-  run("docker", ["stop", "--time", "10", shutdownContainer]);
+  run("docker", ["stop", "--timeout", "10", shutdownContainer]);
   assert.ok(
     Date.now() - stopStarted < 12_000,
     "SIGTERM shutdown exceeded 12 seconds",
