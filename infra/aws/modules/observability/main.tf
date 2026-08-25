@@ -80,3 +80,22 @@ resource "aws_cloudwatch_metric_alarm" "feedback_dlq" {
   dimensions          = { QueueName = var.feedback_dlq_name }
   tags                = var.tags
 }
+
+resource "aws_cloudwatch_metric_alarm" "feedback_worker_capacity" {
+  alarm_name          = "${var.name}-feedback-worker-capacity"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "RunningTaskCount"
+  namespace           = "ECS/ContainerInsights"
+  period              = 60
+  statistic           = "Minimum"
+  threshold           = var.feedback_worker_minimum_count
+  treat_missing_data  = "breaching"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
+  dimensions = {
+    ClusterName = var.cluster_name
+    ServiceName = var.feedback_worker_service_name
+  }
+  tags = var.tags
+}

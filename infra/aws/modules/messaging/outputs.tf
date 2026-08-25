@@ -5,3 +5,4 @@ output "feedback_queue_name" { value = aws_sqs_queue.feedback.name }
 output "feedback_dlq_arn" { value = aws_sqs_queue.dead_letter.arn }
 output "feedback_dlq_name" { value = aws_sqs_queue.dead_letter.name }
 output "configuration_set_name" { value = aws_sesv2_configuration_set.authentication.configuration_set_name }
+output "email_identity_arn" { value = aws_sesv2_email_identity.authentication.arn }

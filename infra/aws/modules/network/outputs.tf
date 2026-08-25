@@ -4,5 +4,6 @@ output "application_subnet_ids" { value = values(aws_subnet.application)[*].id }
 output "data_subnet_ids" { value = values(aws_subnet.data)[*].id }
 output "alb_security_group_id" { value = aws_security_group.alb.id }
 output "application_security_group_id" { value = aws_security_group.application.id }
+output "feedback_worker_security_group_id" { value = aws_security_group.feedback_worker.id }
 output "database_security_group_id" { value = aws_security_group.database.id }
 output "cache_security_group_id" { value = aws_security_group.cache.id }

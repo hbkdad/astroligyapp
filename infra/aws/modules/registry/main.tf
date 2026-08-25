@@ -29,6 +29,37 @@ resource "aws_ecr_lifecycle_policy" "application" {
   })
 }
 
+resource "aws_ecr_repository" "feedback_worker" {
+  name                 = "${var.name}-feedback-worker"
+  image_tag_mutability = "IMMUTABLE"
+  force_delete         = false
+
+  encryption_configuration {
+    encryption_type = "AES256"
+  }
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+  tags = var.tags
+}
+
+resource "aws_ecr_lifecycle_policy" "feedback_worker" {
+  repository = aws_ecr_repository.feedback_worker.name
+  policy = jsonencode({
+    rules = [{
+      rulePriority = 1
+      description  = "Retain the newest 30 immutable feedback worker images"
+      selection = {
+        tagStatus   = "any"
+        countType   = "imageCountMoreThan"
+        countNumber = 30
+      }
+      action = { type = "expire" }
+    }]
+  })
+}
+
 resource "aws_ecr_registry_scanning_configuration" "enhanced" {
   scan_type = "ENHANCED"
   rule {

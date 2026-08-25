@@ -11,6 +11,10 @@ const files = walk(infrastructureRoot)
   .filter((path) => extname(path) === ".tf")
   .filter((path) => !path.includes("policy-fixtures"));
 const source = files.map((path) => readFileSync(path, "utf8")).join("\n");
+const computeSource = readFileSync(
+  new URL("../infra/aws/modules/compute/main.tf", import.meta.url),
+  "utf8",
+);
 
 const forbidden = [
   [/publicly_accessible\s*=\s*true/u, "public data store"],
@@ -19,6 +23,7 @@ const forbidden = [
   [/ip_protocol\s*=\s*"-1"/u, "unrestricted security-group protocol"],
   [/skip_final_snapshot\s*=\s*true/u, "missing final database snapshot"],
   [/"SEND"/u, "unsupported SES send feedback"],
+  [/feedback_worker_desired_count\s*=\s*0/u, "feedback worker scale to zero"],
 ];
 
 for (const [pattern, description] of forbidden) {
@@ -51,9 +56,60 @@ for (const [pattern, description] of [
     /sourceQueueArns\s*=\s*\[aws_sqs_queue\.feedback\.arn\]/u,
     "exact DLQ source queue",
   ],
+  [
+    /resource\s+"aws_ecs_service"\s+"feedback_worker"/u,
+    "feedback worker ECS service",
+  ],
+  [/portMappings\s*=\s*\[\]/u, "headless feedback worker"],
+  [/stopTimeout\s*=\s*90/u, "feedback worker graceful stop timeout"],
+  [
+    /AWS_EC2_METADATA_DISABLED",\s*value\s*=\s*"true"/u,
+    "EC2 metadata disabled for feedback worker",
+  ],
+  [/expression\s*=\s*"queue \/ tasks"/u, "feedback backlog-per-task scaling"],
+  [/feedback_worker_max_count[\s\S]*?<= 4/u, "bounded feedback worker scaling"],
+  [/"sqs:ReceiveMessage"/u, "feedback queue receive permission"],
+  [/"sqs:DeleteMessage"/u, "feedback queue delete permission"],
+  [/"sqs:ChangeMessageVisibility"/u, "feedback visibility permission"],
+  [
+    /resources\s*=\s*\[var\.feedback_queue_arn\]/u,
+    "exact feedback queue IAM resource",
+  ],
+  [/AUTH_EMAIL_FEEDBACK_DATABASE_URL/u, "feedback database secret injection"],
+  [/AUTH_EMAIL_FEEDBACK_KEYS/u, "feedback HMAC secret injection"],
 ]) {
   assert.match(source, pattern, `missing ${description}`);
 }
+
+const workerTaskPolicy = computeSource.slice(
+  computeSource.indexOf(
+    'data "aws_iam_policy_document" "feedback_worker_queue"',
+  ),
+  computeSource.indexOf(
+    'resource "aws_iam_role_policy" "feedback_worker_queue"',
+  ),
+);
+assert.ok(
+  workerTaskPolicy.length > 0,
+  "feedback worker task policy is missing",
+);
+assert.deepEqual(
+  [...workerTaskPolicy.matchAll(/"(sqs:[A-Za-z]+)"/gu)].map(
+    (match) => match[1],
+  ),
+  [
+    "sqs:ReceiveMessage",
+    "sqs:DeleteMessage",
+    "sqs:ChangeMessageVisibility",
+    "sqs:GetQueueAttributes",
+  ],
+  "feedback worker task role must deny every unlisted SQS action",
+);
+assert.match(
+  workerTaskPolicy,
+  /resources\s*=\s*\[var\.feedback_queue_arn\]/u,
+  "feedback worker task role must target only the exact source queue",
+);
 
 const ciRoot = fileURLToPath(new URL("../.github/", import.meta.url));
 const ciSource = walk(ciRoot)
@@ -113,5 +169,6 @@ function unsafeFixture(description) {
     "unrestricted security-group protocol": 'ip_protocol = "-1"',
     "missing final database snapshot": "skip_final_snapshot = true",
     "unsupported SES send feedback": 'matching_event_types = ["SEND"]',
+    "feedback worker scale to zero": "feedback_worker_desired_count = 0",
   }[description];
 }

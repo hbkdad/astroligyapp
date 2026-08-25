@@ -557,9 +557,13 @@ production security gates are recorded in `docs/SECURITY_PRIVACY_AUDIT.md`.
   receipts and permanent-bounce/complaint suppression through a separate least-privilege
   role. A bounded SQS worker now verifies SNS v2 RSA-SHA256 signatures through an exact regional
   HTTPS certificate boundary, extends visibility, and deletes only after durable acknowledgement;
-  credential-free doubles exercise partial failures and replay. Raw payloads, recipients,
+  credential-free doubles exercise partial failures and replay. A separate minimal non-root,
+  read-only, no-listener worker artifact and private Fargate service use distinct execution/task roles,
+  an exact source-queue policy, exact worker secrets, four database connections per task, a 90-second
+  stop timeout, minimum one staging/two production tasks, and backlog-per-running-task scaling capped
+  at four. The web and worker artifacts remain independently promotable. Raw payloads, recipients,
   diagnostics, signatures, receipt handles, and IPs are discarded. No account, DNS, credential,
-  live queue poll, resource mutation, or live send exists. See ADRs 0009 and 0013.
+  live queue poll, resource mutation, or live send exists. See ADRs 0009, 0013, and 0014.
 - Ephemeris: exact Astronomy Engine 2.1.19 for tropical positions and local
   angles, composed with Whole Sign strategy 1.0.0. No silent house-system
   fallback; exact poles fail explicitly. See ADR 0006.

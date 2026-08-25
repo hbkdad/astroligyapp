@@ -1,0 +1,43 @@
+# syntax=docker/dockerfile:1.7
+ARG NODE_IMAGE=node:24.15.0-bookworm-slim@sha256:4e6b70dd6cbfc88c8157ba19aa3d9f9cce6ba4703576d55459e45efcbc9c5f5d
+ARG RUNTIME_IMAGE=gcr.io/distroless/base-nossl-debian13@sha256:5cab74e7f8a5e7c5f1c8a9e6268b1f352f053c36c656f493308340bcecbc636c
+ARG SOURCE_DATE_EPOCH
+
+FROM ${NODE_IMAGE} AS dependencies
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm,sharing=locked npm ci
+
+FROM ${NODE_IMAGE} AS builder
+WORKDIR /app
+ARG SOURCE_DATE_EPOCH
+ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY package.json ./
+COPY scripts/build-auth-email-feedback-worker.mjs scripts/start-auth-email-feedback-worker.ts ./scripts/
+COPY src/server/authentication-email-feedback.ts src/server/authentication-email-feedback-runtime.ts src/server/authentication-email-feedback-service.ts src/server/authentication-email-feedback-worker.ts src/server/authentication-email-sns-authenticator.ts src/server/authentication-email-sqs-adapter.ts ./src/server/
+RUN npm run build:feedback-worker
+
+FROM ${RUNTIME_IMAGE} AS runtime
+WORKDIR /app
+ENV NODE_ENV=production \
+    PATH=/usr/local/bin:/usr/bin
+ARG SOURCE_REVISION
+ARG SOURCE_CREATED
+LABEL org.opencontainers.image.title="astroligyapp-auth-email-feedback-worker" \
+      org.opencontainers.image.description="Authentication email feedback queue worker" \
+      org.opencontainers.image.source="https://github.com/hbkdad/astroligyapp" \
+      org.opencontainers.image.revision=${SOURCE_REVISION} \
+      org.opencontainers.image.created=${SOURCE_CREATED} \
+      org.opencontainers.image.licenses="LicenseRef-Proprietary"
+
+COPY --from=builder /usr/local/bin/node /usr/local/bin/node
+COPY --from=builder /lib/x86_64-linux-gnu/libgcc_s.so.1 /lib/x86_64-linux-gnu/libgcc_s.so.1
+COPY --from=builder /lib/x86_64-linux-gnu/libstdc++.so.6 /lib/x86_64-linux-gnu/libstdc++.so.6
+COPY --from=builder --chown=nonroot:nonroot /app/dist/auth-email-feedback-worker/worker.mjs ./worker.mjs
+COPY --chown=nonroot:nonroot scripts/check-auth-email-feedback-worker-health.mjs ./health.mjs
+
+USER nonroot
+HEALTHCHECK --interval=15s --timeout=3s --start-period=20s --retries=3 \
+  CMD ["/usr/local/bin/node", "health.mjs"]
+CMD ["/usr/local/bin/node", "worker.mjs"]

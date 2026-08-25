@@ -26,6 +26,20 @@ the scanner result. Pinned Trivy 0.74.0 reports zero high/critical OS or Node-pa
 image secret. Any base, Node executable, or copied-library update must repeat the runtime and artifact
 gates.
 
+The authentication-email feedback consumer is a second, independently promotable OCI artifact built
+from `Dockerfile.worker`. Its build stage bundles the production bootstrap with exact esbuild 0.28.2;
+its runtime uses the same pinned Distroless boundary but contains only the Node executable, required C++
+libraries, `worker.mjs`, and `health.mjs`. It runs as `nonroot`, exposes no port, has no shell/npm/source,
+and is configured read-only with no Linux capabilities or privilege escalation. The health probe reads
+only `/proc/1/cmdline` and succeeds only when the expected Node worker is PID 1. It is liveness, not a
+claim that SQS, HTTPS certificate retrieval, or PostgreSQL is ready.
+
+`npm run test:feedback-worker-artifact` builds the worker twice from two archives of the exact clean
+Git commit with rewritten timestamps and requires equal image IDs. It verifies the user, command,
+health probe, absence of ports/tools/extra files, a 100 MiB size ceiling, generic fail-closed startup,
+and a pinned high/critical vulnerability plus secret scan. The gate never supplies credentials or
+network access to the running worker and never pushes an image.
+
 ## Required runtime configuration
 
 - `NEXT_DEPLOYMENT_ID`: 7-128 URL-safe characters; identical for every task in one immutable release.
@@ -38,10 +52,12 @@ gates.
 - `APP_TASK_MAX_COUNT`, `DATABASE_MAX_CONNECTIONS`, and `DATABASE_RESERVED_CONNECTIONS` must prove
   `task maximum * 32 current pool slots + reserve <= database maximum` before startup.
 
-The 32-slot figure is the current per-task worst-case sum: Better Auth 8, account 4, authentication
+The 32-slot figure is the current application-task worst-case sum: Better Auth 8, account 4, authentication
 email 4, feedback 4, Paddle 8, and public compatibility share 4. It is deliberately conservative;
-changing any pool requires changing and retesting the assertion. Migrations and operator access use
-the reserved headroom, never an application task pool.
+the worker contributes a separate fixed four slots per maximum worker task. Infrastructure must prove
+`application max * 32 + worker max * 4 + reserve <= database maximum`. Changing any pool requires
+changing and retesting the assertion. Migrations and operator access use the reserved headroom, never
+an application or worker task pool.
 
 ## Shared cache boundary
 
@@ -102,3 +118,9 @@ RDS failover, real transaction pools under load, old/new image routing, ECR scan
 promotion, current AWS limits, or live alarms. The health endpoint remains shallow liveness. The first
 AWS-like environment must add readiness outside this route and repeat the two-instance, proxy/cookie,
 RLS, cache loss, rolling revision, and restore tests before any external GO decision.
+
+The separate worker additionally requires a staging proof of task-role credentials, exact secret/KMS
+access, TLS database identity verification, certificate-host egress, real queue backlog scaling,
+deployment rollback, secret rotation by task replacement, visibility extension, replay after forced
+termination, and aggregate-only CloudWatch evidence. See ADR 0014 and
+`docs/AUTH_EMAIL_FEEDBACK_WORKER_RUNBOOK.md`.

@@ -46,6 +46,9 @@ changes. The following require a separate explicit user approval after a reviewe
 - [ ] Add privacy-safe structured logging/metrics interfaces and redaction tests before an exporter.
 - [x] Add a worker entry point for authenticated SES feedback queue messages, bounded batches,
       visibility-timeout/idempotency behavior, DLQ/reconciliation, shutdown, and health/lag signals.
+- [x] Package that worker as a separate reproducible minimal non-root/no-listener artifact and model
+      its private Fargate service, exact task/execution roles, secrets, connection budget, minimum
+      availability, backlog scaling, alarms, and circuit-breaker rollback without contacting AWS.
 - [x] Add credential-free IaC modules and policy tests for accounts/providers, network, edge/WAF, ECR,
       ECS, RDS, Valkey, secrets references, SES/SNS/SQS, logs/alarms, and backups. GitHub OIDC remains
       deferred until an exact AWS account/role and plan-only CI trust policy receive separate approval.
@@ -57,6 +60,9 @@ changes. The following require a separate explicit user approval after a reviewe
 - [ ] `npm ci` and `npm run release:check` pass on the exact commit.
 - [ ] Container runs read-only/non-root locally, handles SIGTERM, exposes only the application port,
       passes `/api/health`, and completes representative optimized browser smoke.
+- [ ] Worker container reproduces from the exact commit, runs read-only/non-root with no port or shell,
+      fails generically without configuration, handles SIGTERM within visibility, and passes its pinned
+      vulnerability/secret scan.
 - [ ] IaC format/validate/lint/security/policy tests pass with no provider credentials or remote mutation.
 - [ ] Generated plan contains no public database/cache/task, wildcard IAM, migration secret in runtime,
       long-lived CI key, unrestricted ingress/egress, unbounded retention, or missing encryption.
@@ -69,6 +75,9 @@ changes. The following require a separate explicit user approval after a reviewe
 - [ ] Apply schema once through a one-off migration task; confirm the app role cannot migrate.
 - [ ] Deploy one task with indexing/features disabled; verify TLS, proxy headers, cookies, cache headers,
       WAF size/rate rules, private networking, secret rotation, logs, and alarms.
+- [ ] Deploy one private worker task; prove exact IAM allow/deny, secret replacement, TLS certificate and
+      database access, no inbound path, bounded backlog scaling, circuit-breaker rollback, and replay
+      after termination without private telemetry.
 - [ ] Scale to two tasks and prove ISR/tag/Server Action coordination, rolling rollback, pool headroom,
       Valkey outage, RDS failover/reconnect, queue retry/DLQ, and spend ceilings.
 - [ ] Run the complete Goal 78 production-like smoke matrix with two synthetic accounts and current

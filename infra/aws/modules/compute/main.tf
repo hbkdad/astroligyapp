@@ -247,3 +247,225 @@ resource "aws_appautoscaling_policy" "cpu" {
     predefined_metric_specification { predefined_metric_type = "ECSServiceAverageCPUUtilization" }
   }
 }
+
+resource "aws_cloudwatch_log_group" "feedback_worker" {
+  name              = "/ecs/${var.name}/authentication-email-feedback-worker"
+  retention_in_days = var.log_retention_days
+  kms_key_id        = aws_kms_key.logs.arn
+  skip_destroy      = false
+  tags              = var.tags
+}
+
+resource "aws_iam_role" "feedback_worker_execution" {
+  name               = "${var.name}-feedback-worker-execution"
+  assume_role_policy = data.aws_iam_policy_document.ecs_assume.json
+  tags               = var.tags
+}
+
+data "aws_iam_policy_document" "feedback_worker_execution" {
+  statement {
+    sid       = "ReadExactFeedbackWorkerSecrets"
+    actions   = ["secretsmanager:GetSecretValue"]
+    resources = values(var.feedback_worker_secret_arns)
+  }
+  statement {
+    sid       = "DecryptExactFeedbackWorkerSecrets"
+    actions   = ["kms:Decrypt"]
+    resources = var.feedback_worker_secret_kms_key_arns
+    condition {
+      test     = "StringEquals"
+      variable = "kms:ViaService"
+      values   = ["secretsmanager.${var.aws_region}.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "feedback_worker_execution" {
+  name   = "exact-feedback-worker-secrets"
+  role   = aws_iam_role.feedback_worker_execution.id
+  policy = data.aws_iam_policy_document.feedback_worker_execution.json
+}
+
+resource "aws_iam_role_policy_attachment" "feedback_worker_execution" {
+  role       = aws_iam_role.feedback_worker_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role" "feedback_worker_task" {
+  name               = "${var.name}-feedback-worker-task"
+  assume_role_policy = data.aws_iam_policy_document.ecs_assume.json
+  tags               = var.tags
+}
+
+data "aws_iam_policy_document" "feedback_worker_queue" {
+  statement {
+    sid = "ConsumeExactFeedbackQueue"
+    actions = [
+      "sqs:ReceiveMessage",
+      "sqs:DeleteMessage",
+      "sqs:ChangeMessageVisibility",
+      "sqs:GetQueueAttributes",
+    ]
+    resources = [var.feedback_queue_arn]
+  }
+}
+
+resource "aws_iam_role_policy" "feedback_worker_queue" {
+  name   = "consume-exact-feedback-queue"
+  role   = aws_iam_role.feedback_worker_task.id
+  policy = data.aws_iam_policy_document.feedback_worker_queue.json
+}
+
+resource "aws_ecs_task_definition" "feedback_worker" {
+  family                   = "${var.name}-feedback-worker"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 512
+  memory                   = 1024
+  execution_role_arn       = aws_iam_role.feedback_worker_execution.arn
+  task_role_arn            = aws_iam_role.feedback_worker_task.arn
+
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = "X86_64"
+  }
+
+  container_definitions = jsonencode([{
+    name                   = "authentication-email-feedback-worker"
+    image                  = var.feedback_worker_image_digest
+    essential              = true
+    readonlyRootFilesystem = true
+    portMappings           = []
+    environment = [
+      { name = "NODE_ENV", value = "production" },
+      { name = "AWS_REGION", value = var.aws_region },
+      { name = "AWS_DEFAULT_REGION", value = var.aws_region },
+      { name = "AWS_EC2_METADATA_DISABLED", value = "true" },
+      { name = "SES_AUTH_EMAIL_REGION", value = var.aws_region },
+      { name = "SES_AUTH_EMAIL_FROM", value = var.feedback_sender },
+      { name = "SES_AUTH_EMAIL_CONFIGURATION_SET", value = var.feedback_configuration_set },
+      { name = "SES_AUTH_EMAIL_FEEDBACK_TOPIC_ARN", value = var.feedback_topic_arn },
+      { name = "SES_AUTH_EMAIL_FEEDBACK_QUEUE_URL", value = var.feedback_queue_url },
+      { name = "SES_AUTH_EMAIL_IDENTITY_ARN", value = var.feedback_identity_arn },
+    ]
+    secrets = [for name, arn in var.feedback_worker_secret_arns : {
+      name      = name
+      valueFrom = arn
+    }]
+    linuxParameters = { initProcessEnabled = true }
+    healthCheck = {
+      command     = ["CMD", "/usr/local/bin/node", "health.mjs"]
+      interval    = 15
+      timeout     = 3
+      retries     = 3
+      startPeriod = 20
+    }
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        awslogs-group         = aws_cloudwatch_log_group.feedback_worker.name
+        awslogs-region        = var.aws_region
+        awslogs-stream-prefix = "feedback-worker"
+        mode                  = "non-blocking"
+        max-buffer-size       = "1m"
+      }
+    }
+    stopTimeout = 90
+  }])
+
+  ephemeral_storage { size_in_gib = 21 }
+  tags = var.tags
+}
+
+resource "aws_ecs_service" "feedback_worker" {
+  name                               = "authentication-email-feedback-worker"
+  cluster                            = aws_ecs_cluster.this.id
+  task_definition                    = aws_ecs_task_definition.feedback_worker.arn
+  desired_count                      = var.feedback_worker_desired_count
+  launch_type                        = "FARGATE"
+  platform_version                   = "LATEST"
+  enable_execute_command             = false
+  enable_ecs_managed_tags            = true
+  propagate_tags                     = "SERVICE"
+  deployment_minimum_healthy_percent = 100
+  deployment_maximum_percent         = 200
+  wait_for_steady_state              = false
+
+  network_configuration {
+    assign_public_ip = false
+    security_groups  = [var.feedback_worker_security_group_id]
+    subnets          = var.subnet_ids
+  }
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
+  lifecycle { ignore_changes = [desired_count] }
+  tags = var.tags
+}
+
+resource "aws_appautoscaling_target" "feedback_worker" {
+  max_capacity       = var.feedback_worker_maximum_count
+  min_capacity       = var.feedback_worker_minimum_count
+  resource_id        = "service/${aws_ecs_cluster.this.name}/${aws_ecs_service.feedback_worker.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+resource "aws_appautoscaling_policy" "feedback_worker_backlog" {
+  name               = "${var.name}-feedback-worker-backlog"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.feedback_worker.resource_id
+  scalable_dimension = aws_appautoscaling_target.feedback_worker.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.feedback_worker.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    target_value       = 10
+    scale_in_cooldown  = 300
+    scale_out_cooldown = 60
+    customized_metric_specification {
+      metrics {
+        id          = "queue"
+        label       = "Visible feedback messages"
+        return_data = false
+        metric_stat {
+          stat = "Sum"
+          metric {
+            metric_name = "ApproximateNumberOfMessagesVisible"
+            namespace   = "AWS/SQS"
+            dimensions {
+              name  = "QueueName"
+              value = var.feedback_queue_name
+            }
+          }
+        }
+      }
+      metrics {
+        id          = "tasks"
+        label       = "Running feedback worker tasks"
+        return_data = false
+        metric_stat {
+          stat = "Average"
+          metric {
+            metric_name = "RunningTaskCount"
+            namespace   = "ECS/ContainerInsights"
+            dimensions {
+              name  = "ClusterName"
+              value = aws_ecs_cluster.this.name
+            }
+            dimensions {
+              name  = "ServiceName"
+              value = aws_ecs_service.feedback_worker.name
+            }
+          }
+        }
+      }
+      metrics {
+        id          = "backlog"
+        label       = "Feedback backlog per running task"
+        expression  = "queue / tasks"
+        return_data = true
+      }
+    }
+  }
+}

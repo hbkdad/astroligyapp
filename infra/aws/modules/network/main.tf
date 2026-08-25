@@ -176,6 +176,33 @@ resource "aws_vpc_security_group_egress_rule" "application_to_cache" {
   description                  = "Application tasks to Valkey over TLS"
 }
 
+resource "aws_security_group" "feedback_worker" {
+  name_prefix = "${var.name}-feedback-worker-"
+  description = "Private authentication email feedback worker with no inbound traffic"
+  vpc_id      = aws_vpc.this.id
+  tags        = merge(var.tags, { Name = "${var.name}-feedback-worker" })
+  lifecycle { create_before_destroy = true }
+}
+
+resource "aws_vpc_security_group_egress_rule" "feedback_worker_https" {
+  security_group_id = aws_security_group.feedback_worker.id
+  # trivy:ignore:AWS-0104 -- outbound TLS through NAT is required for exact regional SQS and SNS certificate retrieval; all-protocol egress remains prohibited.
+  cidr_ipv4   = "0.0.0.0/0"
+  from_port   = 443
+  to_port     = 443
+  ip_protocol = "tcp"
+  description = "TLS egress through NAT for SQS and SNS certificate retrieval"
+}
+
+resource "aws_vpc_security_group_egress_rule" "feedback_worker_to_database" {
+  security_group_id            = aws_security_group.feedback_worker.id
+  referenced_security_group_id = aws_security_group.database.id
+  from_port                    = 5432
+  to_port                      = 5432
+  ip_protocol                  = "tcp"
+  description                  = "Feedback worker to PostgreSQL"
+}
+
 resource "aws_security_group" "database" {
   name_prefix = "${var.name}-db-"
   description = "Private PostgreSQL ingress"
@@ -191,6 +218,15 @@ resource "aws_vpc_security_group_ingress_rule" "database_from_app" {
   to_port                      = 5432
   ip_protocol                  = "tcp"
   description                  = "PostgreSQL only from application tasks"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "database_from_feedback_worker" {
+  security_group_id            = aws_security_group.database.id
+  referenced_security_group_id = aws_security_group.feedback_worker.id
+  from_port                    = 5432
+  to_port                      = 5432
+  ip_protocol                  = "tcp"
+  description                  = "PostgreSQL only from feedback worker tasks"
 }
 
 resource "aws_security_group" "cache" {

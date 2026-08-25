@@ -57,6 +57,15 @@ variable "image_digest" {
   }
 }
 
+variable "feedback_worker_image_digest" {
+  description = "Immutable feedback-worker ECR image reference including @sha256 digest."
+  type        = string
+  validation {
+    condition     = can(regex("^[0-9]{12}\\.dkr\\.ecr\\.ca-central-1\\.amazonaws\\.com/[a-z0-9._/-]+-feedback-worker@sha256:[a-f0-9]{64}$", var.feedback_worker_image_digest))
+    error_message = "feedback_worker_image_digest must be an immutable ca-central-1 feedback-worker ECR digest"
+  }
+}
+
 variable "origin_domain_name" {
   description = "Approved origin DNS name covered by the ALB certificate; DNS is managed separately."
   type        = string
@@ -103,6 +112,34 @@ variable "runtime_secret_kms_key_arns" {
   }
 }
 
+variable "feedback_worker_secret_arns" {
+  description = "Exact feedback-worker database URL and HMAC key Secrets Manager ARNs."
+  type        = map(string)
+  sensitive   = true
+  validation {
+    condition = length(keys(var.feedback_worker_secret_arns)) == 2 && length(setsubtract(toset(keys(var.feedback_worker_secret_arns)), toset([
+      "AUTH_EMAIL_FEEDBACK_DATABASE_URL",
+      "AUTH_EMAIL_FEEDBACK_KEYS",
+      ]))) == 0 && alltrue([
+      for name, arn in var.feedback_worker_secret_arns :
+      can(regex("^arn:aws:secretsmanager:ca-central-1:${var.aws_account_id}:secret:[A-Za-z0-9/_+=.@-]+$", arn))
+    ])
+    error_message = "feedback_worker_secret_arns must contain only the exact database URL and feedback key account-scoped Canada Central secret ARNs"
+  }
+}
+
+variable "feedback_worker_secret_kms_key_arns" {
+  description = "Exact customer-managed KMS keys protecting feedback-worker secrets."
+  type        = set(string)
+  validation {
+    condition = length(var.feedback_worker_secret_kms_key_arns) > 0 && alltrue([
+      for arn in var.feedback_worker_secret_kms_key_arns :
+      can(regex("^arn:aws:kms:ca-central-1:${var.aws_account_id}:key/[0-9a-f-]+$", arn))
+    ])
+    error_message = "feedback_worker_secret_kms_key_arns must contain exact account-scoped Canada Central KMS key ARNs"
+  }
+}
+
 variable "email_identity_domain" {
   description = "Authentication email identity domain; DNS records are applied separately."
   type        = string
@@ -137,6 +174,24 @@ variable "app_max_count" {
   validation {
     condition     = var.app_max_count >= 2 && var.app_max_count <= 10
     error_message = "app_max_count must be between 2 and 10"
+  }
+}
+
+variable "feedback_worker_desired_count" {
+  type    = number
+  default = 1
+  validation {
+    condition     = var.feedback_worker_desired_count >= 1 && var.feedback_worker_desired_count <= 4
+    error_message = "feedback_worker_desired_count must be between 1 and 4; scale-to-zero is intentionally disabled"
+  }
+}
+
+variable "feedback_worker_max_count" {
+  type    = number
+  default = 4
+  validation {
+    condition     = var.feedback_worker_max_count >= 2 && var.feedback_worker_max_count <= 4
+    error_message = "feedback_worker_max_count must be between 2 and 4"
   }
 }
 

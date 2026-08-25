@@ -10,6 +10,7 @@ export default defineConfig([
     "coverage/**",
     "out/**",
     "build/**",
+    "dist/**",
     "codex-scaffold-temp/**",
     "next-env.d.ts",
   ]),

@@ -38,7 +38,8 @@ NAT because JPL, Paddle, SES, and AWS APIs are external dependencies; all-protoc
 - Keep workloads in `ca-central-1`; only the CloudFront WAF provider uses `us-east-1` as AWS requires.
 - Copy the appropriate redacted file under `infra/aws/environments`; never fill or commit the example.
   Only secret ARNs and KMS key ARNs belong in variables. Secret values and notification endpoints do not.
-- Build and scan one immutable image first. Supply only an ECR `@sha256:` reference; mutable tags fail.
+- Build and scan the independently promotable application and feedback-worker images first. Supply
+  only their exact ECR `@sha256:` references; mutable tags or using the web image for the worker fail.
 - Supply `TF_ENCRYPTION` from the approved secret delivery path. Never put its passphrase/key in HCL,
   tfvars, command history, CI logs, or state. Losing the key makes encrypted state unrecoverable.
 - Bootstrap state separately from the application stack. The bucket must be in Canada Central, have
@@ -65,20 +66,20 @@ NAT because JPL, Paddle, SES, and AWS APIs are external dependencies; all-protoc
 Create independent AWS Pricing Calculator estimates for staging and production. Record date, currency,
 region, pricing model, tax/support exclusions, traffic assumptions, and estimate URL/export. Include:
 
-| Service                       | Staging baseline                                     | Production baseline / sensitivity                                            |
-| ----------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------- |
-| NAT Gateway                   | 1 gateway, hourly plus processed GB                  | 2 gateways; model processed GB and VPC endpoint alternative                  |
-| ALB                           | 1 internet-facing ALB                                | 1 ALB; requests, new/active connections, processed bytes and LCUs            |
-| ECS Fargate                   | 1 x86 task, 0.5 vCPU/1 GiB                           | minimum 2 tasks, 1 vCPU/2 GiB; model max 2-10 tasks and execution hours      |
-| ECR                           | image storage and enhanced scanning                  | retention capped at 30 images; scan frequency and transfer                   |
-| RDS PostgreSQL 18             | Single-AZ `db.t4g.small`, 20 GiB gp3, max 100 GiB    | Multi-AZ, 50 GiB gp3, max 500 GiB; backup, I/O, PI and connection headroom   |
-| ElastiCache Serverless Valkey | max 2 GB / 1,000 ECPUs                               | max 10 GB / 5,000 ECPUs; measured data/ECPU hours                            |
-| CloudFront and WAF            | compare pay-as-you-go and current flat-rate option   | requests, transfer, managed rules, rate rules, logging and origin traffic    |
-| SES/SNS/SQS                   | sandbox/disabled sending, bounded feedback traffic   | send volume, attachments, events, queue requests, DLQ retention and transfer |
-| CloudWatch                    | 30-day logs, metrics, alarms                         | chosen 30-365 day retention, ingestion, alarms, dashboards and queries       |
-| KMS/Secrets Manager           | data/log/backup keys plus referenced runtime secrets | key count, rotations, API calls, secret count and rotation frequency         |
-| AWS Backup                    | daily RDS recovery points and vault lock             | 14+ day production retention, snapshot size, cross-account copy sensitivity  |
-| Data transfer                 | modest internet and inter-AZ assumptions             | CloudFront origin, NAT, inter-AZ, backup copy and provider API traffic       |
+| Service                       | Staging baseline                                                    | Production baseline / sensitivity                                                            |
+| ----------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| NAT Gateway                   | 1 gateway, hourly plus processed GB                                 | 2 gateways; model processed GB and VPC endpoint alternative                                  |
+| ALB                           | 1 internet-facing ALB                                               | 1 ALB; requests, new/active connections, processed bytes and LCUs                            |
+| ECS Fargate                   | app: 1 x86 task, 0.5 vCPU/1 GiB; worker: 1 x86 task, 0.5 vCPU/1 GiB | app: minimum 2, 1 vCPU/2 GiB; worker: minimum 2, 0.5 vCPU/1 GiB; model both maxima and hours |
+| ECR                           | two artifact repositories, storage and enhanced scanning            | retention capped at 30 images per repository; scan frequency and transfer                    |
+| RDS PostgreSQL 18             | Single-AZ `db.t4g.small`, 20 GiB gp3, max 100 GiB                   | Multi-AZ, 50 GiB gp3, max 500 GiB; backup, I/O, PI and connection headroom                   |
+| ElastiCache Serverless Valkey | max 2 GB / 1,000 ECPUs                                              | max 10 GB / 5,000 ECPUs; measured data/ECPU hours                                            |
+| CloudFront and WAF            | compare pay-as-you-go and current flat-rate option                  | requests, transfer, managed rules, rate rules, logging and origin traffic                    |
+| SES/SNS/SQS                   | sandbox/disabled sending, bounded feedback traffic                  | send volume, events, queue polling/visibility/delete requests, DLQ retention and transfer    |
+| CloudWatch                    | 30-day logs, metrics, alarms                                        | chosen 30-365 day retention, ingestion, alarms, dashboards and queries                       |
+| KMS/Secrets Manager           | data/log/backup keys plus referenced runtime secrets                | key count, rotations, API calls, secret count and rotation frequency                         |
+| AWS Backup                    | daily RDS recovery points and vault lock                            | 14+ day production retention, snapshot size, cross-account copy sensitivity                  |
+| Data transfer                 | modest internet and inter-AZ assumptions                            | CloudFront origin, NAT, inter-AZ, backup copy and provider API traffic                       |
 
 The earlier planning envelopes—USD 100-250/month staging and USD 300-700/month production—are not a
 quote. Approval requires current calculator exports plus AWS Budgets and anomaly thresholds below the

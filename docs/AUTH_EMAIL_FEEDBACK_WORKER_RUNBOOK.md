@@ -1,6 +1,6 @@
 # Authentication-email feedback worker runbook
 
-Contract version: 1.0.0
+Contract version: 1.1.0
 
 This is a deployment and incident contract, not authorization to contact AWS. No queue, credential,
 sender identity, DNS record, secret, database, task, redrive, or live email may be created or changed
@@ -13,6 +13,12 @@ service-only feedback database login and the existing feedback HMAC key ring. Re
 10 messages per receive, concurrency 4, 20-second long polling, 60-second visibility, a 20-second
 heartbeat, four-day source retention, five receives before redrive, and 14-day DLQ retention.
 
+Run the independently promoted `-feedback-worker@sha256:` image in its private Fargate service. The
+task is 0.5 vCPU/1 GiB, has no port/load balancer/public IP/inbound rule, runs read-only as `nonroot`,
+and receives only HTTPS egress through NAT plus PostgreSQL traffic to the database security group.
+Keep one task minimum in staging, two in production, and four maximum. Scale-to-zero is rejected because
+suppression freshness cannot wait for capacity to return after a new metric datapoint.
+
 The worker deletes only a durably acknowledged message. Retry, reconciliation, invalid batch input,
 visibility failure, and delete failure stay on the source queue and eventually redrive. Standard SQS is
 at least once: duplicates and a crash between database commit and delete are normal and are resolved by
@@ -23,6 +29,7 @@ For a credential-free smoke test:
 
 ```text
 npm run worker:feedback:local
+npm run build:feedback-worker
 ```
 
 The command must report only versioned aggregate counts. It must not print the queue body, SNS message
@@ -41,6 +48,12 @@ transaction wrapper. It cannot read raw auth users, migrate schema, or use the a
 An operator who inspects counts and initiates an approved DLQ redrive uses a separate, time-bounded
 role. Do not grant redrive or DLQ payload access to the steady-state worker.
 
+The ECS execution role, not the task role, pulls the image and emits logs. It may read only
+`AUTH_EMAIL_FEEDBACK_DATABASE_URL` and `AUTH_EMAIL_FEEDBACK_KEYS` and decrypt their exact customer KMS
+keys through `secretsmanager.ca-central-1.amazonaws.com`. A running task does not receive rotated
+injected secrets: register/reuse the reviewed task definition and force a deployment after rotation.
+Never place a value in Terraform, task environment, image, plan evidence, or routine logs.
+
 ## Startup and shutdown
 
 Before startup, validate the exact regional queue URL, topic ARN, sender identity, configuration-set
@@ -48,7 +61,8 @@ name, feedback HMAC key versions, TLS database URL, and pool limit. Configuratio
 never fall back to another region, topic, identity, queue, key, or database role.
 
 On `SIGTERM`, abort the active long poll and start no newly returned batch after cancellation. Allow
-already-started work to finish within the task stop timeout. Keep the stop grace at least 60 seconds.
+already-started work and visibility heartbeats to finish within the 90-second task stop timeout, then
+close the four-connection database pool. Keep the stop grace above the 60-second visibility period.
 If the process is killed, the visibility timeout expires and the item is retried idempotently. Do not
 purge the source queue or DLQ during deployment or rollback.
 
@@ -60,6 +74,12 @@ exceeds 300 seconds for two periods and when the DLQ has any visible message. Al
 worker absence, repeated receive failures, delete failures, visibility failures, database pool
 saturation, or a material suppression-rate increase. Alarm destinations and owners require staging
 approval and must not be stored as plaintext Terraform values.
+
+Target tracking uses visible source-queue backlog divided by the service's Container Insights
+`RunningTaskCount`: target 10, 60-second scale-out, and 300-second scale-in cooldowns. These are bounded
+planning values, not a proven SLO. Alarm when running tasks are below the environment minimum with
+missing data treated as breaching. Validate the division metric and alarm delivery in staging before
+email is enabled.
 
 Application logs use fixed event names and error classes only. Disable debug SDK wire logging. Logging
 or exporting bodies, identifiers, addresses, signatures, receipt handles, certificate URLs, delivery
@@ -104,3 +124,9 @@ delivery, visibility expiry, five-receive redrive, bounded DLQ replay, shutdown 
 alarm delivery. Confirm CloudWatch/application evidence contains none of the prohibited data. Production
 remains NO-GO until this matrix, account suppression behavior, IAM simulation, owners, costs, and rollback
 are reviewed.
+
+Before approval, run `npm run test:feedback-worker-artifact`, `npm run test:infrastructure`, and the
+exact-commit release gate. In staging, additionally prove IAM allow/deny simulation, task replacement
+after secret rotation, no inbound/listener, certificate and PostgreSQL TLS identity, target tracking in
+both directions without exceeding four tasks, circuit-breaker rollback, and termination/replay within
+the visibility contract.

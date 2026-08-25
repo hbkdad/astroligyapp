@@ -34,25 +34,39 @@ module "messaging" {
 }
 
 module "compute" {
-  source                        = "./modules/compute"
-  name                          = local.name
-  aws_region                    = var.aws_region
-  image_digest                  = var.image_digest
-  subnet_ids                    = module.network.application_subnet_ids
-  public_subnet_ids             = module.network.public_subnet_ids
-  application_security_group_id = module.network.application_security_group_id
-  alb_security_group_id         = module.network.alb_security_group_id
-  origin_certificate_arn        = var.origin_certificate_arn
-  runtime_secret_arns           = var.runtime_secret_arns
-  runtime_secret_kms_key_arns   = var.runtime_secret_kms_key_arns
-  desired_count                 = local.effective_app_desired_count
-  minimum_count                 = local.app_minimum_count
-  maximum_count                 = var.app_max_count
-  database_max_connections      = var.database_max_connections
-  database_reserved_connections = var.database_reserved_connections
-  log_retention_days            = var.log_retention_days
-  production                    = local.production
-  tags                          = local.required_tags
+  source                              = "./modules/compute"
+  name                                = local.name
+  aws_region                          = var.aws_region
+  image_digest                        = var.image_digest
+  feedback_worker_image_digest        = var.feedback_worker_image_digest
+  subnet_ids                          = module.network.application_subnet_ids
+  public_subnet_ids                   = module.network.public_subnet_ids
+  application_security_group_id       = module.network.application_security_group_id
+  feedback_worker_security_group_id   = module.network.feedback_worker_security_group_id
+  alb_security_group_id               = module.network.alb_security_group_id
+  origin_certificate_arn              = var.origin_certificate_arn
+  runtime_secret_arns                 = var.runtime_secret_arns
+  runtime_secret_kms_key_arns         = var.runtime_secret_kms_key_arns
+  feedback_worker_secret_arns         = var.feedback_worker_secret_arns
+  feedback_worker_secret_kms_key_arns = var.feedback_worker_secret_kms_key_arns
+  feedback_queue_arn                  = module.messaging.feedback_queue_arn
+  feedback_queue_url                  = module.messaging.feedback_queue_url
+  feedback_queue_name                 = module.messaging.feedback_queue_name
+  feedback_topic_arn                  = module.messaging.feedback_topic_arn
+  feedback_identity_arn               = module.messaging.email_identity_arn
+  feedback_sender                     = "security@${var.email_identity_domain}"
+  feedback_configuration_set          = module.messaging.configuration_set_name
+  desired_count                       = local.effective_app_desired_count
+  minimum_count                       = local.app_minimum_count
+  maximum_count                       = var.app_max_count
+  feedback_worker_desired_count       = local.effective_feedback_worker_desired_count
+  feedback_worker_minimum_count       = local.feedback_worker_minimum_count
+  feedback_worker_maximum_count       = var.feedback_worker_max_count
+  database_max_connections            = var.database_max_connections
+  database_reserved_connections       = var.database_reserved_connections
+  log_retention_days                  = var.log_retention_days
+  production                          = local.production
+  tags                                = local.required_tags
 }
 
 module "edge" {
@@ -75,13 +89,15 @@ module "backup" {
 }
 
 module "observability" {
-  source                   = "./modules/observability"
-  name                     = local.name
-  load_balancer_arn_suffix = module.compute.load_balancer_arn_suffix
-  cluster_name             = module.compute.cluster_name
-  service_name             = module.compute.service_name
-  database_identifier      = module.data.database_identifier
-  feedback_queue_name      = module.messaging.feedback_queue_name
-  feedback_dlq_name        = module.messaging.feedback_dlq_name
-  tags                     = local.required_tags
+  source                        = "./modules/observability"
+  name                          = local.name
+  load_balancer_arn_suffix      = module.compute.load_balancer_arn_suffix
+  cluster_name                  = module.compute.cluster_name
+  service_name                  = module.compute.service_name
+  feedback_worker_service_name  = module.compute.feedback_worker_service_name
+  feedback_worker_minimum_count = local.feedback_worker_minimum_count
+  database_identifier           = module.data.database_identifier
+  feedback_queue_name           = module.messaging.feedback_queue_name
+  feedback_dlq_name             = module.messaging.feedback_dlq_name
+  tags                          = local.required_tags
 }

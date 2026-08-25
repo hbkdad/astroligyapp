@@ -1,6 +1,6 @@
 # Security and privacy audit
 
-Audit date: 2026-08-13
+Audit date: 2026-08-25
 
 ## Scope and trust boundaries
 
@@ -16,6 +16,41 @@ Audit date: 2026-08-13
 | External email/ephemeris/billing adapters                           | Provider credentials and responses                                              | Server-only typed adapters, exact versions/config, bounded inputs/outputs, generic UI failures, no secrets in fixtures/logs                                                                                                    | Real credentials, regional infrastructure, DNS/signatures, provider outage exercises         |
 
 ## Findings and disposition
+
+### Goal 84 feedback-worker deployment audit
+
+- **Assets and actors.** The assets are the feedback database credential, HMAC key ring, signed SNS
+  envelope, source queue, suppression ledger, receipt state, and aggregate operational signals. The
+  runtime actor is one dedicated ECS task role; image pull/log/secret injection belongs to a separate
+  execution role; migration, DLQ inspection/redrive, email dispatch, and human operations remain
+  separate actors.
+- **Trust boundaries and entry points.** The worker has no HTTP listener or inbound security-group
+  rule. Its only runtime inputs are exact injected secrets, ECS relative task credentials, the exact
+  regional SQS queue, the exact SNS certificate host, and TLS PostgreSQL. The existing authenticated
+  envelope, bounded body, idempotent database, replay, ordering, and content-free logging controls are
+  unchanged.
+- **Closed — alternate credential and endpoint injection.** Production startup now rejects static
+  access/session keys, profiles/shared files, full credential URIs/tokens, web identity/role override,
+  alternate AWS endpoints, and EC2 metadata endpoint override. It disables EC2 instance metadata and
+  requires the ECS-injected relative credential path. Tests cover accepted and rejected configurations.
+- **Closed — workload privilege coupling.** The worker uses a separate immutable image, task role,
+  execution role, secrets set, security group, log group, service, and ECR repository. The task policy
+  contract requires exactly receive/delete/change-visibility/get-attributes on the exact source queue;
+  send, purge, DLQ receive, redrive, SES, SNS, migration, and broad secret permissions are absent.
+- **Closed — container and failure leakage.** The artifact is non-root/read-only, has no port, shell,
+  npm, source, or extra runtime files, and logs only fixed aggregate fields or one fixed startup error.
+  Tests cover unsafe configuration, extra-field removal, pool closure, replay/outages, process health,
+  and bounded `SIGTERM`; the exact-commit gate performs vulnerability and secret scans.
+- **Residual staging gates.** Local mocked plans cannot prove AWS's effective IAM evaluation, KMS key
+  policies, credential endpoint behavior, NAT routing, certificate TLS, RDS identity, secret rotation,
+  CloudWatch privacy, or alarm delivery. TCP 443 NAT egress is broad at the network layer because the
+  SQS API and SNS signing-certificate HTTPS endpoint are external; an approved staging review must
+  evaluate SQS VPC endpoints and any egress-filtering control without breaking certificate validation.
+  IAM simulation and observed denial tests are mandatory before enabling email.
+
+The Goal 84 audit found no unresolved critical or high local finding. Its decision is GO for the
+credential-free repository baseline and NO-GO for AWS staging or production until the residual gates
+are evidenced under explicit approval.
 
 ### Closed in Goal 76
 

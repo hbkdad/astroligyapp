@@ -60,17 +60,25 @@ mock_provider "aws" {
 }
 
 variables {
-  environment            = "staging"
-  aws_account_id         = "123456789012"
-  availability_zones     = ["ca-central-1a", "ca-central-1b"]
-  image_digest           = "123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-  origin_domain_name     = "origin.example.invalid"
-  origin_certificate_arn = "arn:aws:acm:ca-central-1:123456789012:certificate/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+  environment                  = "staging"
+  aws_account_id               = "123456789012"
+  availability_zones           = ["ca-central-1a", "ca-central-1b"]
+  image_digest                 = "123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  feedback_worker_image_digest = "123456789012.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp-feedback-worker@sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  origin_domain_name           = "origin.example.invalid"
+  origin_certificate_arn       = "arn:aws:acm:ca-central-1:123456789012:certificate/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
   runtime_secret_arns = {
     NEXT_SERVER_ACTIONS_ENCRYPTION_KEY = "arn:aws:secretsmanager:ca-central-1:123456789012:secret:staging/server-actions-AbCdEf"
     NEXT_SHARED_CACHE_URL              = "arn:aws:secretsmanager:ca-central-1:123456789012:secret:staging/cache-AbCdEf"
   }
   runtime_secret_kms_key_arns = [
+    "arn:aws:kms:ca-central-1:123456789012:key/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+  ]
+  feedback_worker_secret_arns = {
+    AUTH_EMAIL_FEEDBACK_DATABASE_URL = "arn:aws:secretsmanager:ca-central-1:123456789012:secret:staging/feedback-database-AbCdEf"
+    AUTH_EMAIL_FEEDBACK_KEYS         = "arn:aws:secretsmanager:ca-central-1:123456789012:secret:staging/feedback-keys-AbCdEf"
+  }
+  feedback_worker_secret_kms_key_arns = [
     "arn:aws:kms:ca-central-1:123456789012:key/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
   ]
   email_identity_domain = "example.invalid"
@@ -113,6 +121,22 @@ run "staging_contract" {
     condition     = output.security_contract.readonly_root_filesystem
     error_message = "the application root filesystem must remain read-only"
   }
+
+  assert {
+    condition     = output.security_contract.feedback_worker_assign_public_ip == false
+    error_message = "feedback worker tasks must remain private"
+  }
+
+  assert {
+    condition     = output.security_contract.feedback_worker_readonly_root_filesystem
+    error_message = "feedback worker root filesystem must remain read-only"
+  }
+
+  assert {
+    condition     = output.planning_summary.feedback_worker_minimum == 1
+    error_message = "staging feedback worker must not scale to zero"
+  }
+
 }
 
 run "reject_wrong_region" {
@@ -146,4 +170,22 @@ run "reject_unbounded_tasks" {
   command = plan
   variables { app_max_count = 21 }
   expect_failures = [var.app_max_count]
+}
+
+run "reject_feedback_worker_scale_to_zero" {
+  command = plan
+  variables { feedback_worker_desired_count = 0 }
+  expect_failures = [var.feedback_worker_desired_count]
+}
+
+run "reject_extra_feedback_worker_secret" {
+  command = plan
+  variables {
+    feedback_worker_secret_arns = {
+      AUTH_EMAIL_FEEDBACK_DATABASE_URL = "arn:aws:secretsmanager:ca-central-1:123456789012:secret:staging/feedback-database-AbCdEf"
+      AUTH_EMAIL_FEEDBACK_KEYS         = "arn:aws:secretsmanager:ca-central-1:123456789012:secret:staging/feedback-keys-AbCdEf"
+      UNRELATED_SECRET                 = "arn:aws:secretsmanager:ca-central-1:123456789012:secret:staging/unrelated-AbCdEf"
+    }
+  }
+  expect_failures = [var.feedback_worker_secret_arns]
 }

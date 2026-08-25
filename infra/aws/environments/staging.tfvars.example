@@ -2,6 +2,7 @@ environment        = "staging"
 aws_account_id     = "111122223333"
 availability_zones = ["ca-central-1a", "ca-central-1b"]
 image_digest       = "111122223333.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp@sha256:REPLACE_WITH_64_HEX_CHARACTERS"
+feedback_worker_image_digest = "111122223333.dkr.ecr.ca-central-1.amazonaws.com/astroligyapp-feedback-worker@sha256:REPLACE_WITH_64_HEX_CHARACTERS"
 origin_domain_name = "origin.staging.example.com"
 origin_certificate_arn = "arn:aws:acm:ca-central-1:111122223333:certificate/REPLACE_WITH_CERTIFICATE_ID"
 
@@ -11,6 +12,15 @@ runtime_secret_arns = {
 }
 
 runtime_secret_kms_key_arns = [
+  "arn:aws:kms:ca-central-1:111122223333:key/REPLACE_WITH_KEY_ID",
+]
+
+feedback_worker_secret_arns = {
+  AUTH_EMAIL_FEEDBACK_DATABASE_URL = "arn:aws:secretsmanager:ca-central-1:111122223333:secret:staging/feedback-database-REDACTED"
+  AUTH_EMAIL_FEEDBACK_KEYS         = "arn:aws:secretsmanager:ca-central-1:111122223333:secret:staging/feedback-keys-REDACTED"
+}
+
+feedback_worker_secret_kms_key_arns = [
   "arn:aws:kms:ca-central-1:111122223333:key/REPLACE_WITH_KEY_ID",
 ]
 

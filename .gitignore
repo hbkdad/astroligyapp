@@ -12,6 +12,7 @@
 /.next/
 /out/
 /build/
+/dist/
 
 # local environment and provider data
 .env*
