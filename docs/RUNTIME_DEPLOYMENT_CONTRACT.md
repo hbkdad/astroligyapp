@@ -4,21 +4,27 @@ Status: locally verified; no cloud resources or live credentials exist
 
 ## Artifact
 
-The production artifact is an OCI image built from `Dockerfile`. Its Node.js base is pinned by tag and
-multi-platform digest to Node 24.15.0 on Debian Bookworm slim. The build uses `npm ci`, Next.js
+The production artifact is an OCI image built from `Dockerfile`. Its build base is pinned by tag and
+multi-platform digest to Node 24.15.0 on Debian Bookworm slim. The runtime is pinned separately to
+Distroless `base-nossl` Debian 13 and receives only the Node executable plus its required `libgcc_s`
+and `libstdc++` libraries from the pinned build base. The build uses `npm ci`, Next.js
 standalone output, an immutable non-secret deployment ID, and a BuildKit secret mount for the Server
 Actions encryption key. The key is available only to `next build`; it is not a build argument, copied
 file, image environment value, or committed fixture.
 
-The runtime image contains only the standalone trace, public assets, static chunks, and two startup
+The runtime image contains only the Node executable and two required C++ runtime libraries, the
+standalone trace, public assets, static chunks, and two startup
 scripts. npm, Corepack, Yarn, package-manager entry points, source/tests/docs, Git data, local output,
-and environment files are absent. The runtime runs as the upstream `node` user, with an exec-form Node
+and environment files are absent. The runtime runs as Distroless `nonroot`, with an exec-form Node
 entrypoint and HTTP health check. The disposable topology additionally enforces a read-only root,
 16 MiB `/tmp`, no added Linux capabilities, and `no-new-privileges`.
 
-The pinned base initially contained fixable 2026 GnuTLS findings. The runtime stage installs exact
-Debian `libgnutls30` `3.7.9-2+deb12u7` and removes package managers not needed to serve the app. A
-pinned Trivy 0.73.0 image is the local high/critical vulnerability and secret gate.
+The former Bookworm runtime accumulated high/critical findings, and current Distroless Node images
+still included a deferred high-severity system OpenSSL finding. The application does not operate an
+OpenSSL QUIC server, so the runtime instead uses the no-OpenSSL Distroless base rather than suppressing
+the scanner result. Pinned Trivy 0.74.0 reports zero high/critical OS or Node-package findings and no
+image secret. Any base, Node executable, or copied-library update must repeat the runtime and artifact
+gates.
 
 ## Required runtime configuration
 
@@ -85,8 +91,8 @@ Final Goal 80 evidence:
 - `npx vitest run tests/runtime-configuration.test.ts tests/shared-cache-handler.test.ts`: 2 files,
   11 tests passed;
 - `npm run test:runtime`: image build and the complete two-instance topology passed;
-- `npm run scan:runtime`: zero fixable high/critical OS or Node package findings and no detected image
-  secret with pinned Trivy 0.73.0;
+- `npm run scan:runtime`: zero high/critical OS or Node package findings, fixed or unfixed, and no
+  detected image secret with pinned Trivy 0.74.0;
 - `npm run release:check`: see the Goal 80 record in `docs/PROJECT_STATUS.md`.
 
 ## Remaining production gates

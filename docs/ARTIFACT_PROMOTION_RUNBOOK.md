@@ -5,12 +5,13 @@
 Run `npm run test:artifact` only from a clean tracked worktree. The command archives the exact `HEAD`
 tree twice, performs two independent uncached `linux/amd64` builds with rewritten timestamps, and
 requires byte-equivalent image configuration IDs. It uses one random in-memory Server Actions key for
-both builds. The key and its hash are never written to the evidence directory or logs.
+both builds and derives Next preview metadata from that key with separate HMAC contexts. The key and
+its hash are never written to the evidence directory or logs.
 
 The gate then:
 
 1. checks OCI revision, creation time, license, platform, and non-root identity;
-2. scans the complete committed Git history/worktree with digest-pinned Gitleaks;
+2. scans the complete committed Git history and exact archived source tree with digest-pinned Gitleaks;
 3. scans the final image for high/critical fixed and unfixed vulnerabilities plus embedded secrets with
    digest-pinned Trivy;
 4. creates normalized SPDX 2.3 JSON with digest-pinned Syft;

@@ -21,7 +21,8 @@ Sigstore bundles and pin both GitHub Actions identity and OIDC issuer.
 - Generate normalized SPDX 2.3 JSON with Syft 1.51.0. SPDX aligns with BuildKit's native SBOM
   attestation path, represents packages, relationships, checksums, and licenses, and is portable across
   registries and scanners. CycloneDX remains interoperable but adds no launch requirement.
-- Scan the complete committed Git history and worktree with Gitleaks 8.30.1, and scan the final image for
+- Scan the complete committed Git history and an archive of the exact committed tree with Gitleaks
+  8.30.1, and scan the final image for
   high/critical vulnerabilities and embedded secrets with Trivy 0.74.0. Trivy's fixed-vulnerability
   result is authoritative for this gate; `--ignore-unfixed` is not allowed.
 - Produce a deterministic, unsigned local evidence manifest that binds exact source commit/tree,
@@ -34,7 +35,13 @@ Sigstore bundles and pin both GitHub Actions identity and OIDC issuer.
   - Cosign 3.1.3: `ghcr.io/sigstore/cosign/cosign@sha256:9e5c2f2edc34351160407ca3416c61855bdf9403c3c5936e0f0be7fc261611b8`.
 - Build twice from separate archives of the exact clean commit using the same protected ephemeral build
   secret and `SOURCE_DATE_EPOCH`. BuildKit rewrites timestamps. Both independently uncached builds must
-  produce the same image ID. The secret value and its hash are never written to evidence.
+  produce the same image ID. Next's build ID is the immutable deployment ID; its randomly generated
+  preview metadata is replaced in both manifests with domain-separated HMAC values derived from the
+  protected build secret. The secret value and its hash are never written to evidence.
+- Use the digest-pinned Distroless `base-nossl` Debian 13 runtime. Copy only Node 24.15.0 plus its
+  required `libgcc_s` and `libstdc++` libraries from the pinned build image. This removed the former
+  Debian runtime's unresolved high/critical inventory without an ignore rule; any copied-runtime-file
+  change requires complete runtime, SBOM, and vulnerability verification.
 - Declare the private application `UNLICENSED` and the OCI artifact `LicenseRef-Proprietary`. Reject an
   absent root license declaration or any SBOM package with no license assertion; `NOASSERTION` is
   recorded as unresolved and blocks promotion until reviewed.
@@ -60,6 +67,11 @@ locked npm packages, Debian indexes, vulnerability databases, and pinned tool im
 reproducible output from fixed inputs rather than a hermetic build. The exact protected Server Actions
 build secret remains an undeclared input: reuse is required for byte-identical builds and promotion, but
 its value must never appear in a manifest, log, layer, SBOM, cache export, or repository.
+
+The initial local SPDX contains 101 packages and 101 `NOASSERTION` license conclusions. Structural
+license fields and the proprietary application declaration are present, but external promotion remains
+blocked until every unresolved package assertion is reviewed. The local evidence gate does not convert
+`NOASSERTION` into redistribution permission.
 
 ## Sources
 

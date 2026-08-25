@@ -1,14 +1,15 @@
 # Project status
 
-Last updated: 2026-08-13
+Last updated: 2026-08-24
 
 ## Current position
 
-Status: Goal 81 complete; OpenTofu 1.12.5 and AWS provider 6.59.0 are selected for the credential-free
-AWS Canada planning baseline, with dependency-ordered modules, encrypted state/plan contracts, mocked
-plan tests, policy/security gates, redacted templates, and a state/cost/apply runbook. No cloud account,
-resource, backend, credential, purchase, DNS, live secret, plan, apply, or deployment was created or
-changed. The exact source remains GO as an internal candidate and NO-GO for external staging/production.
+Status: Goal 82 complete; the Node 24 standalone container now has a reproducible two-build OCI gate,
+normalized SPDX 2.3 evidence, exact Git/source secret scanning, zero high/critical runtime findings,
+tamper rejection, and a documented digest/sign/attest promotion boundary. No cloud account, registry,
+credential, purchase, DNS, image push, signature, attestation, or deployment was created or changed.
+The exact source remains GO as an internal candidate and NO-GO for external staging/production; all
+101 SPDX package license conclusions require review before external promotion.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -103,6 +104,27 @@ AWS infrastructure, signature implementation, queue polling, or live delivery.
 
 ## Recently completed
 
+- [x] Goal 82: accept ADR 0012 selecting digest-pinned Syft 1.51.0/SPDX 2.3, Gitleaks 8.30.1,
+      Trivy 0.74.0, and Cosign 3.1.3, including the patched modern Sigstore bundle path and exact
+      workflow-identity/OIDC verification contract.
+- [x] Build twice from separate archives of the exact clean commit with common protected entropy,
+      fixed source time/deployment identity, normalized Next preview metadata, OCI labels, and
+      timestamp rewriting; both uncached builds produced image ID
+      `sha256:fb558d1165c4637d5eb04ec72baa140de67864f0708a2f9f6a95726d9bbdd2cf`.
+- [x] Replace the vulnerable Bookworm runtime with digest-pinned Distroless `base-nossl` Debian 13,
+      copy only Node 24.15.0 plus required C++ runtime libraries, retain the non-root/read-only direct
+      Node contract, and pass the complete two-task PostgreSQL/Valkey/outage/SIGTERM topology.
+- [x] Scan 92 Git commits and the exact archived source with Gitleaks, using only three reviewed
+      commit/path/rule/line prose fingerprints; scan the final image with Trivy at zero high/critical
+      findings and no detected secrets. No unfixed-finding suppression is used.
+- [x] Generate normalized disposable SPDX for 101 packages, bind source/tree/Dockerfile/image/SBOM/
+      scan/tool identities in an unsigned local manifest, and prove rejection of commit, image, SBOM,
+      scan, signature, and mutable-tag tampering. All 101 license conclusions are `NOASSERTION`, which
+      blocks external promotion pending review.
+- [x] Apply `security-audit`: no critical/high issue remains in the local boundary. Build secrets stay
+      in BuildKit secret mounts, preview keys use domain-separated HMAC derivation, generated evidence
+      is temporary, CI remains `contents: read`, and ECR/keyless signing authority remains separately
+      approval-gated. Residual risk is non-hermetic upstream resolution and unreviewed package licenses.
 - [x] Goal 81: accept ADR 0011 selecting MPL-2.0 OpenTofu 1.12.5, exact AWS provider 6.59.0,
       native enforced state/plan encryption, S3 lockfiles, and digest-pinned TFLint 0.64.0,
       Conftest 0.69.0, and Trivy 0.73.0 without initializing a backend or contacting AWS.
@@ -742,23 +764,25 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 82 — produce a credential-free, reproducible release-artifact and provenance baseline for the
-Goal 80 container without pushing an image or contacting AWS.
+Goal 83 — implement a credential-free Amazon SES feedback-worker and suppression-processing baseline
+without polling a live queue, sending mail, or contacting AWS.
 
 Deliverables:
 
-1. Compare current OCI provenance/SBOM and secret-scanning options using primary sources; select and pin
-   the minimum toolchain and record its formats, trust boundary, update path, and verification limits.
-2. Build the Goal 80 image reproducibly from the exact Git tree, generate CycloneDX or SPDX SBOM and
-   build metadata, verify the non-root/read-only/runtime contracts, and bind all evidence to the image
-   digest and source commit without embedding source secrets or private data.
-3. Add deterministic tamper/rejection tests plus local and CI gates for mutable tags, mismatched source/
-   image/SBOM identity, leaked credentials, missing licenses, critical/high image vulnerabilities, and
-   unreviewed build inputs. Keep generated scan/evidence files out of Git unless explicitly designed as
-   stable redacted manifests.
-4. Document the ECR push/sign/attestation and promotion approval boundary, keyless/OIDC prerequisites,
-   retention, rollback, and verification commands. Run `security-audit`, `release-check`, and full local
-   gates. Do not log in to AWS, push/sign an image, create a registry resource, or mutate CI credentials.
+1. Verify current SES event-publishing, SNS signature, SQS receive/delete/redrive, complaint/bounce,
+   and suppression-list contracts from primary AWS documentation; record the trust, privacy, retry,
+   idempotency, and regional boundaries without creating or querying AWS resources.
+2. Add a strict versioned parser and worker composition that accepts only validated SES feedback
+   envelopes, stores privacy-minimized idempotent outcomes through the existing feedback seam, and
+   deletes a queue message only after durable success. Do not log raw recipient, message, signature,
+   provider payload, or private account data.
+3. Add deterministic fixtures and adversarial tests for malformed/oversized envelopes, unsupported
+   event types, signature/certificate policy, replay/idempotency, partial batch failure, retry/redrive,
+   out-of-order delivery, complaint/bounce suppression, and database authorization/rollback.
+4. Provide a local worker entrypoint and credential-free queue/client doubles plus deployment/runbook
+   contracts for least-privilege IAM, concurrency, shutdown, alarms, retention, DLQ replay, and explicit
+   live staging approval. Run `security-audit`, `database-migration` if persistence changes, and the full
+   release gate. Do not poll SQS, call SES/SNS, create credentials, or mutate AWS/production.
 
 ## Phase queue
 
@@ -802,9 +826,10 @@ Deliverables:
   a stable Server Actions encryption key, immutable deployment identity, and a database connection
   budget. RDS Proxy is not selected until transaction-local role and RLS behavior passes the real
   migration/isolation suite.
-- The production artifact is a digest-pinned Node 24.15.0 standalone OCI image with an ephemeral
-  BuildKit Server Actions secret, non-root direct Node runtime, and strict deployment/cache/database
-  capacity validation. The runtime image contains no npm/Corepack/Yarn. See
+- The production artifact uses a digest-pinned Node 24.15.0 build image and Distroless no-OpenSSL
+  Debian 13 runtime with an ephemeral BuildKit Server Actions secret, non-root direct Node execution,
+  and strict deployment/cache/database capacity validation. The runtime image contains no package
+  manager or shell. See
   `docs/RUNTIME_DEPLOYMENT_CONTRACT.md`.
 - The singular Next.js cache handler owns current ISR/server/path-tag behavior through Valkey. It
   delegates only build and packaged read fallback to the exact pinned framework filesystem handler;

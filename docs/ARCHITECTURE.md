@@ -517,8 +517,9 @@ production security gates are recorded in `docs/SECURITY_PRIVACY_AUDIT.md`.
   encryption, deployment skew protection, bounded database pools, rollback, and cache-outage
   behavior. RDS Proxy remains deferred until transaction-local role/RLS tests prove it safe. No live
   resources exist. See ADR 0010 and `docs/STAGING_IMPLEMENTATION_CHECKLIST.md`.
-- Runtime artifact: a digest-pinned Node 24.15.0 multi-stage image builds standalone output with an
-  ephemeral Server Actions build secret, starts as non-root, validates deployment/cache/connection
+- Runtime artifact: a digest-pinned Node 24.15.0 build stage and Distroless no-OpenSSL Debian 13
+  runtime produce standalone output with an ephemeral Server Actions build secret, start as non-root,
+  validate deployment/cache/connection
   budgets, and uses the singular Next.js cache handler for shared ISR/tag state in Valkey. Build-time
   filesystem caching preserves packaged pre-rendered pages; runtime writes are external, validated,
   bounded, and digest-keyed. See `docs/RUNTIME_DEPLOYMENT_CONTRACT.md`.
