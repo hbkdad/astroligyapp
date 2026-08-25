@@ -45,11 +45,6 @@ try {
   const tree = capture("git", ["rev-parse", "HEAD^{tree}"]).trim();
   const epoch = capture("git", ["show", "-s", "--format=%ct", "HEAD"]).trim();
   const created = new Date(Number(epoch) * 1_000).toISOString();
-  const dockerfile = readFileSync(
-    join(sources[0], "Dockerfile.worker"),
-    "utf8",
-  );
-  const baseImages = extractDockerfileBaseImages(dockerfile);
   run("git", ["archive", "--format=tar", `--output=${archive}`, "HEAD"]);
   for (const source of sources) {
     run("powershell", [
@@ -58,6 +53,11 @@ try {
       `New-Item -ItemType Directory -Path '${source.replaceAll("'", "''")}' | Out-Null; tar -xf '${archive.replaceAll("'", "''")}' -C '${source.replaceAll("'", "''")}'`,
     ]);
   }
+  const dockerfile = readFileSync(
+    join(sources[0], "Dockerfile.worker"),
+    "utf8",
+  );
+  const baseImages = extractDockerfileBaseImages(dockerfile);
   for (let index = 0; index < images.length; index += 1) {
     run("docker", [
       "buildx",
