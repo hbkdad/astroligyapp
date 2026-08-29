@@ -52,11 +52,8 @@ try {
   const created = new Date(Number(epoch) * 1_000).toISOString();
   run("git", ["archive", "--format=tar", `--output=${archive}`, "HEAD"]);
   for (const source of sources) {
-    run("powershell", [
-      "-NoProfile",
-      "-Command",
-      `New-Item -ItemType Directory -Path '${source.replaceAll("'", "''")}' | Out-Null; tar -xf '${archive.replaceAll("'", "''")}' -C '${source.replaceAll("'", "''")}'`,
-    ]);
+    mkdirSync(source);
+    run("tar", ["-xf", archive, "-C", source]);
   }
   const dockerfile = readFileSync(
     join(sources[0], "Dockerfile.worker"),
@@ -306,12 +303,7 @@ try {
       { capture: true, tolerateFailure: true },
     );
     healthy = health.status === 0;
-    if (!healthy)
-      run("powershell", [
-        "-NoProfile",
-        "-Command",
-        "Start-Sleep -Milliseconds 250",
-      ]);
+    if (!healthy) sleep(250);
   }
   assert.equal(healthy, true, "worker must reach its process-liveness check");
   const stopStarted = Date.now();
@@ -434,6 +426,10 @@ try {
 
 function capture(command, arguments_) {
   return run(command, arguments_, { capture: true }).stdout;
+}
+
+function sleep(milliseconds) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
 }
 
 function run(command, arguments_, options = {}) {

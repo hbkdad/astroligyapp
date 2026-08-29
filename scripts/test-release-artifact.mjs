@@ -76,11 +76,8 @@ try {
 
   run("git", ["archive", "--format=tar", `--output=${archive}`, "HEAD"]);
   for (const source of [sourceA, sourceB]) {
-    run("powershell", [
-      "-NoProfile",
-      "-Command",
-      `New-Item -ItemType Directory -Path '${source.replaceAll("'", "''")}' | Out-Null; tar -xf '${archive.replaceAll("'", "''")}' -C '${source.replaceAll("'", "''")}'`,
-    ]);
+    mkdirSync(source);
+    run("tar", ["-xf", archive, "-C", source]);
   }
 
   const archiveA = join(temporaryRoot, "artifact-a.oci.tar");
@@ -181,11 +178,7 @@ try {
     tags[0],
   ]);
 
-  run("powershell", [
-    "-NoProfile",
-    "-Command",
-    `New-Item -ItemType Directory -Path '${evidence.replaceAll("'", "''")}' | Out-Null`,
-  ]);
+  mkdirSync(evidence);
   run("docker", [
     "run",
     "--rm",
@@ -416,11 +409,8 @@ function inspect(tag) {
 
 function inspectOciArchive(archivePath, suffix) {
   const directory = join(temporaryRoot, `oci-${suffix}`);
-  run("powershell", [
-    "-NoProfile",
-    "-Command",
-    `New-Item -ItemType Directory -Path '${directory.replaceAll("'", "''")}' | Out-Null; tar -xf '${archivePath.replaceAll("'", "''")}' -C '${directory.replaceAll("'", "''")}'`,
-  ]);
+  mkdirSync(directory);
+  run("tar", ["-xf", archivePath, "-C", directory]);
   const index = JSON.parse(readFileSync(join(directory, "index.json"), "utf8"));
   const manifestDigest = index.manifests[0].digest;
   const manifest = JSON.parse(
