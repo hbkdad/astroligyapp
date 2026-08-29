@@ -32,6 +32,10 @@ const tools = {
   trivy:
     "aquasec/trivy@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969",
 };
+const containerUserArguments =
+  process.platform === "win32"
+    ? []
+    : ["--user", `${process.getuid()}:${process.getgid()}`];
 
 try {
   assert.equal(
@@ -246,6 +250,7 @@ function cosignRun(arguments_, environment = {}, options = {}) {
       "--rm",
       "--network",
       "none",
+      ...containerUserArguments,
       "--volume",
       `${evidence}:/evidence`,
       "--workdir",
