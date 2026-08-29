@@ -4,18 +4,19 @@ Last updated: 2026-08-29
 
 ## Current position
 
-Status: Goal 90 complete; accepted ADR 0020 and policy `2026-08-29.1` separate read-only GitHub
-trust observation from a synthetic protected-promotion desired state. The redacted authenticated REST
-snapshot confirms numeric repository/owner identity and least-privilege default workflow permission, but
-observes zero rulesets, unprotected `main`, zero environments, unrestricted Actions without required SHA
-pinning, and default non-immutable OIDC. Trusted artifact attestation is unproven, so the deterministic
-decision is NO-GO with six gaps. The synthetic envelope binds active no-bypass branch rules and required
-checks, successful unexpired/unconsumed release evidence, two independent protected-environment reviewers,
-immutable environment-scoped OIDC, exact signer identity and verified attestation evidence while permanently
-fixing activation to false. Exact commit `e2c5874` passed the complete local release gate plus hosted CI runs
-`33264682462` and `33264682428`. No GitHub setting, workflow, environment, secret, OIDC/cloud trust,
-registry, AWS resource, credential, purchase, image publication, deployment, production system or user data
-was changed. External redistribution also remains blocked by 20 manual reviews and 2 unresolved assertions.
+Status: Goal 91 complete; accepted ADR 0021 adds immutable publisher-material bindings and a deterministic,
+non-authorizing dependency-license review packet. Exact locked evidence resolved `client-only` plus three AWS
+SDK missing-text gaps, reducing application manual reviews from 15 to 14 and worker reviews from 5 to 2;
+the two application assertions remain unresolved. The packet binds the finalized release set, exact source,
+policy/material/evidence/notice hashes, every remaining record, three separated roles, 30-day maximum expiry,
+and mandatory re-review triggers while fixing trust/status/decisions/authorization to
+`review-input-only`/`not-requested`/empty/false. Exact commit `38f96e3` passed the complete local release gate
+and credential-free release-candidate run `33266047163`; its downloaded 16-file evidence plus envelope passed
+the strict verifier. CI run `33266047047` failed its first attempt on intermittent Next.js static-output
+reproducibility, then passed an unchanged exact-commit rerun. No legal conclusion, terms acceptance, reviewer
+identity, approval, purchase, publication, deployment, setting, cloud resource, production system or user data
+was created or changed. External redistribution remains NO-GO with 16 manual reviews and 2 unresolved
+assertions; Goal 92 owns the observed reproducibility flake.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -38,6 +39,25 @@ SDK/adapter, authenticated feedback worker, and suppression seam, but no account
 provisioned AWS infrastructure, live queue polling, or live delivery.
 
 ## Completed
+
+- [x] Goal 91: enumerate the exact 15 application/5 worker starting records and two unresolved assertions;
+      group missing assertion/text, custom/composite, and review-only cases without inferred metadata.
+- [x] Bind `client-only` 0.0.1 to the exact Next.js 16.3.0 commit and three exact AWS SDK v3 packages to
+      tag commit `26b0eb790ff86399b7af7b74ce8c188f25512cc6` plus hash-checked Apache-2.0 text. Keep every custom,
+      composite, copyleft, review-only, missing-assertion, and unsupported provenance case manual.
+- [x] Add the finalized-release-set-bound `license-review-packet.json`, retain it as the sixteenth CI evidence
+      file, and permanently reject authorization, inserted decisions, role collision, trigger removal, stale
+      scope, evidence/source drift, missing/extra records, trust elevation, and secret fields in 17 cases.
+- [x] Apply `security-audit`: only public package/source/hash metadata is stored; no identity, contact,
+      decision, review prose, credential, private key, legal conclusion, or runtime data enters the packet.
+- [x] Apply `release-check`: exact commit `38f96e3` passed 108 files/1,342 tests twice, 33-route build, coverage,
+      Drizzle, 71 disposable PostgreSQL tests, dependency threshold, 8 OpenTofu tests, 304 policies, staging,
+      CI/trust/review contracts, two-build application/worker reproduction, Gitleaks, Trivy, SBOM, signature,
+      and attestation gates. Local application/worker digests are `sha256:5d0ee4…1ad8f` and
+      `sha256:ea886d…791ea`; application is 14 manual/2 unresolved and worker is 2 manual/0 unresolved.
+- [x] Verify hosted run `33266047163`, its exact 16-file public allowlist plus envelope, packet counts, source
+      commit, and unauthorized decision. CI run `33266047047` passed unchanged attempt 2 after attempt 1
+      exposed a static-page layer drift now routed to Goal 92.
 
 - [x] Goal 90: research current GitHub rulesets/status checks, environment reviewers/self-review/bypass,
       Actions permissions, OIDC customization and artifact-attestation verification from primary GitHub
@@ -1046,24 +1066,22 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 91 — reduce the remaining runtime dependency-license ambiguity with immutable upstream evidence and a
-bounded human-review packet, without making legal conclusions, accepting commercial terms, purchasing a
-license, publishing an artifact, or changing the current external-redistribution NO-GO decision.
+Goal 92 — reproduce, explain, and eliminate the intermittent Next.js static-output drift observed in Goal 91
+CI without weakening the byte-for-byte release gate or normalizing unexplained content differences.
 
 Deliverables:
 
-1. Generate and enumerate the exact current 15 application and 5 worker manual-review records plus the two
-   unresolved application assertions from a clean exact-commit artifact gate; group them by missing text,
-   missing provenance, composite/custom terms and review-only classification without fabricating metadata.
-2. Research only authoritative upstream package/source/license material for the exact locked versions and
-   digest-pinned runtime inputs. Add immutable evidence where it conclusively fills an existing provenance
-   or text gap; keep custom/copyleft/composite interpretation routed to accountable human review.
-3. Define a deterministic, non-authorizing review packet binding source commit, policy/material versions,
-   evidence/notice hashes, exact record scope, reviewer roles, expiry and re-review triggers. Store no legal
-   names, contact details, credentials or review decisions; synthetic fixtures must remain promotion-ineligible.
-4. Exercise evidence drift, missing/extra record, mutable source, self-review, stale scope and trust-elevation
-   cases; update license/runbook/security/status documentation and apply `security-audit` plus `release-check`.
-   Do not accept terms, purchase licensing, create accountable decisions, publish, deploy or change GitHub/AWS.
+1. Preserve and classify the exact failed attempt's evidence: only application layer 19 drifted, with
+   `/app/.next/server/app/index` and `/timeline` HTML/RSC/segment outputs changing while all earlier layers
+   matched. Do not treat a successful rerun as proof of determinism.
+2. Create a bounded Linux/BuildKit reproduction harness that retains two disposable OCI layouts on mismatch,
+   compares changed file bytes safely, and never exports build secrets or weakens clean-tree/two-build checks.
+3. Identify the actual framework/application nondeterministic input from exact byte differences and current
+   Next.js 16.3 local documentation/source. Fix or explicitly bind that input; do not blanket-rewrite generated
+   content, ignore layers, retry until green, or accept different manifests/config IDs.
+4. Add regression/adversarial coverage, document reproducibility limits, apply `security-audit` and
+   `release-check`, and require repeated local plus hosted exact-commit evidence before completion. Do not
+   publish, deploy, mutate GitHub/AWS settings, or expose secrets.
 
 ## Phase queue
 
@@ -1146,12 +1164,19 @@ Deliverables:
   four findings in `--omit=dev` audit accounting even though `npm explain` locates the
   vulnerable esbuild only beneath the migration CLI loader. There are no high/critical
   findings; never expose Drizzle Kit as a network service and recheck each update.
+- Goal 91 CI attempt 1 produced different static root/timeline HTML and RSC bytes across two otherwise
+  identical uncached builds; the unchanged rerun passed. This remains a release-reproducibility risk until
+  Goal 92 identifies and removes the input rather than relying on retries.
 - Product name, branding, final plans, and pricing are not implementation blockers for the deterministic foundation.
 
 ## Evidence log
 
 | Date       | Evidence                                           | Result                                                                                        |
 | ---------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 2026-08-29 | Goal 91 exact-commit release gate                  | App 14 manual/2 unresolved; worker 2 manual/0 unresolved; reproduction and scans passed       |
+| 2026-08-29 | Goal 91 dual OCI release set                       | Local app `5d0ee4…1ad8f`; worker `ea886d…791ea`; exact `38f96e3` source reproduced            |
+| 2026-08-29 | Goal 91 hosted evidence                            | Run `33266047163`; 16 retained files plus envelope downloaded and strictly verified           |
+| 2026-08-29 | Goal 91 hosted CI                                  | Run `33266047047`: attempt 1 static-output drift; unchanged attempt 2 passed                  |
 | 2026-08-29 | Goal 90 GitHub read-only trust snapshot            | Correct identity/token default; six absent/unproven promotion controls; deterministic NO-GO   |
 | 2026-08-29 | Goal 90 adversarial promotion contract             | 36 unsafe cases rejected; synthetic activation permanently denied                             |
 | 2026-08-29 | Goal 90 exact-commit release gate                  | 108 files/1,342 tests, build, coverage, 71 DB tests, IaC, scans, evidence, signatures passed  |
