@@ -4,17 +4,18 @@ Last updated: 2026-08-29
 
 ## Current position
 
-Status: Goal 89 complete; accepted ADR 0019 and policy `2026-08-29.1` establish a main-only,
-credential-free GitHub Actions release-candidate boundary with exact repository IDs, read-only token,
-full-SHA actions, an isolated OCI-capable builder, a 14-day evidence envelope, strict download verifier,
-and no environment, OIDC, registry, cloud, publishing, staging, or production authority. Exact commit
-`8c4ad20` passed the complete local release gate plus hosted CI runs `33252479005` and `33252479006`.
-The single uploaded artifact `9714878587` was downloaded and independently verified: 15 hashed release
-files plus one envelope bind commit/run/ref/event/runner/policy/workflow/approval and expire on 2026-09-12.
-Trust remains `credential-free-internal-candidate`; promotion is explicitly false. The application still
-has 15 manual reviews and 2 unresolved assertions, and the worker has 5 manual reviews, so external
-redistribution remains blocked. No image was published and no GitHub setting, environment, secret, OIDC
-trust, registry, cloud account, credential, purchase, deployment, or production system was changed.
+Status: Goal 90 complete; accepted ADR 0020 and policy `2026-08-29.1` separate read-only GitHub
+trust observation from a synthetic protected-promotion desired state. The redacted authenticated REST
+snapshot confirms numeric repository/owner identity and least-privilege default workflow permission, but
+observes zero rulesets, unprotected `main`, zero environments, unrestricted Actions without required SHA
+pinning, and default non-immutable OIDC. Trusted artifact attestation is unproven, so the deterministic
+decision is NO-GO with six gaps. The synthetic envelope binds active no-bypass branch rules and required
+checks, successful unexpired/unconsumed release evidence, two independent protected-environment reviewers,
+immutable environment-scoped OIDC, exact signer identity and verified attestation evidence while permanently
+fixing activation to false. Exact commit `e2c5874` passed the complete local release gate plus hosted CI runs
+`33264682462` and `33264682428`. No GitHub setting, workflow, environment, secret, OIDC/cloud trust,
+registry, AWS resource, credential, purchase, image publication, deployment, production system or user data
+was changed. External redistribution also remains blocked by 20 manual reviews and 2 unresolved assertions.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -37,6 +38,40 @@ SDK/adapter, authenticated feedback worker, and suppression seam, but no account
 provisioned AWS infrastructure, live queue polling, or live delivery.
 
 ## Completed
+
+- [x] Goal 90: research current GitHub rulesets/status checks, environment reviewers/self-review/bypass,
+      Actions permissions, OIDC customization and artifact-attestation verification from primary GitHub
+      documentation; accept ADR 0020 and desired-state policy `2026-08-29.1` without claiming deployment.
+- [x] Capture a reduced authenticated read-only REST snapshot with explicit `observed`, `unavailable` and
+      `unproven` states. Confirm repository ID `1329276081`, owner ID `93459210`, public non-fork `main`,
+      read-only default workflow permission and disabled workflow PR approval. Observe no rulesets, no branch
+      protection, no environment, all Actions allowed without mandatory SHA pins, mutable default OIDC, and
+      no trusted attestation subject. The snapshot hash is
+      `sha256:8e3fba654efcbd63ff180fc7ba4920d7509d9268837b8249f630a7e7c55c17c5`.
+- [x] Add the deterministic synthetic protected-promotion envelope binding numeric identity, active branch
+      protection with no bypass, exact required CI/release checks, immutable workflow commit, successful
+      unexpired and unconsumed Goal 89 evidence, two distinct non-requester production reviewers, prevented
+      self-review, no admin bypass, immutable environment-scoped OIDC/audience and verified exact-signer
+      attestation evidence. Synthetic trust is permanently non-authorizing and activation always fails.
+- [x] Reject all 36 unsafe cases, including identity/ref/check drift, mutable workflow references,
+      failed/stale/consumed/replayed evidence, permission expansion, insufficient/duplicate/self review,
+      bypass, mutable OIDC/audience, wrong attestation source/signer/commit, unverified evidence, scope
+      tampering, trust elevation and secret fields. The live verifier exits `2` with exactly six NO-GO gaps.
+- [x] Apply `security-audit`: the snapshot contains only reduced repository-control data; no API token,
+      reviewer identity, credential, user data or raw provider payload is stored. No critical/high local
+      finding remains. Platform status-check names and one-of-reviewer environment semantics require the
+      exact workflow/run and independent-review bindings retained by the future contract.
+- [x] Apply `release-check` to exact commit `e2c5874`: formatting, ESLint, strict TypeScript, two runs of
+      108 files / 1,342 tests, the 33-route build, 89.59% statements / 87.44% branches / 96.29% functions /
+      91.87% lines coverage, Drizzle consistency, all 71 PostgreSQL tests, high/critical dependency threshold,
+      8 mocked plans, 304 policy tests, all 8 unsafe IaC fixtures, zero IaC findings, all 39 staging cases,
+      CI evidence, Goal 90's 36 unsafe cases, release set and clean dual-artifact reproduction passed. The
+      application digest is `sha256:02a6702f4abe6d506388de611795a3cb1952d917a28ba4a8653c68e9a9e8086f`;
+      the worker is `sha256:623b8b3c6de2250fec8ba24e74e38f74b000569ad7375e519cfa580450ce93e8`
+      at 52,074,705 OCI transport bytes. Scans found no tested vulnerability, secret or repository leak.
+- [x] Hosted verification: ordinary CI run `33264682462` and credential-free release-candidate run
+      `33264682428` succeeded for exact commit `e2c5874`. Staging, production, registry publishing, cloud
+      trust, external redistribution and repository-setting mutation remain NO-GO.
 
 - [x] Goal 89: research current GitHub action pinning, token permission, artifact-attestation, OIDC subject,
       protected-environment, and artifact-retention behavior from primary documentation; accept ADR 0019
@@ -1011,25 +1046,24 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 90 — establish a read-only GitHub repository trust-readiness audit and a non-authorizing protected
-promotion configuration contract without changing repository settings, environments, secrets, OIDC/cloud
-trust, a registry, AWS, or production.
+Goal 91 — reduce the remaining runtime dependency-license ambiguity with immutable upstream evidence and a
+bounded human-review packet, without making legal conclusions, accepting commercial terms, purchasing a
+license, publishing an artifact, or changing the current external-redistribution NO-GO decision.
 
 Deliverables:
 
-1. Research current GitHub rulesets/branch protection, required workflows/status checks, environment
-   reviewers/no-bypass controls, artifact-attestation verification, OIDC customization, and relevant REST
-   representations from primary documentation; accept a desired-state policy in an ADR.
-2. Capture only a redacted, read-only snapshot of the repository's observable current settings and add a
-   deterministic validator that distinguishes observed, unavailable, and unproven controls. Do not mutate
-   GitHub or claim protections that the API evidence does not prove.
-3. Define a synthetic, non-authorizing protected-promotion configuration envelope binding numeric
-   owner/repository IDs, immutable workflow identity, required successful release evidence, independent
-   environment review/no self-review, no bypass, OIDC subject/audience constraints, and artifact-attestation
-   verification requirements. Reject missing/weak checks, mutable identities, replay and privilege expansion.
-4. Exercise adversarial fixtures, update runbooks/status, and apply `security-audit` plus `release-check`.
-   Keep staging, production and external redistribution NO-GO; do not create a ruleset/environment, add a
-   secret, grant OIDC/cloud trust, publish an artifact, push a registry subject, or deploy anything.
+1. Generate and enumerate the exact current 15 application and 5 worker manual-review records plus the two
+   unresolved application assertions from a clean exact-commit artifact gate; group them by missing text,
+   missing provenance, composite/custom terms and review-only classification without fabricating metadata.
+2. Research only authoritative upstream package/source/license material for the exact locked versions and
+   digest-pinned runtime inputs. Add immutable evidence where it conclusively fills an existing provenance
+   or text gap; keep custom/copyleft/composite interpretation routed to accountable human review.
+3. Define a deterministic, non-authorizing review packet binding source commit, policy/material versions,
+   evidence/notice hashes, exact record scope, reviewer roles, expiry and re-review triggers. Store no legal
+   names, contact details, credentials or review decisions; synthetic fixtures must remain promotion-ineligible.
+4. Exercise evidence drift, missing/extra record, mutable source, self-review, stale scope and trust-elevation
+   cases; update license/runbook/security/status documentation and apply `security-audit` plus `release-check`.
+   Do not accept terms, purchase licensing, create accountable decisions, publish, deploy or change GitHub/AWS.
 
 ## Phase queue
 
@@ -1118,6 +1152,11 @@ Deliverables:
 
 | Date       | Evidence                                           | Result                                                                                        |
 | ---------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 2026-08-29 | Goal 90 GitHub read-only trust snapshot            | Correct identity/token default; six absent/unproven promotion controls; deterministic NO-GO   |
+| 2026-08-29 | Goal 90 adversarial promotion contract             | 36 unsafe cases rejected; synthetic activation permanently denied                             |
+| 2026-08-29 | Goal 90 exact-commit release gate                  | 108 files/1,342 tests, build, coverage, 71 DB tests, IaC, scans, evidence, signatures passed  |
+| 2026-08-29 | Goal 90 dual OCI release set                       | App `02a670…8086f`; worker `623b8b…93e8`; exact `e2c5874` source reproduced                   |
+| 2026-08-29 | Goal 90 hosted workflows                           | CI `33264682462` and release candidate `33264682428` succeeded                                |
 | 2026-08-25 | Goal 87 exact-commit release gate                  | 108 files/1,342 tests, build, coverage, 71 DB tests, IaC, scans, evidence, signatures passed  |
 | 2026-08-25 | Goal 87 application/worker license evidence        | App 72 permitted/27 manual/2 unresolved; worker 31 permitted/5 manual/0 unresolved            |
 | 2026-08-25 | Goal 87 dual OCI release set                       | App `02c6b6…b0d4`; worker `02ebd6…80c2`; exact `5946307` source reproduced                    |
