@@ -122,6 +122,7 @@ export interface TimelineFacts {
 export function composeTimelineFacts(
   input: TimelineCompositionInput,
   numerologyStrategy?: NumerologyStrategy,
+  now: () => Date = () => new Date(),
 ): TimelineFacts {
   const interval = validateInterval(input.interval);
   if (input.numerology && !numerologyStrategy)
@@ -192,7 +193,7 @@ export function composeTimelineFacts(
     interval: structuredClone(input.interval),
     facts,
     metadata: {
-      composedAt: new Date().toISOString(),
+      composedAt: now().toISOString(),
       sourceVersions: {
         transitEventSearch: TRANSIT_EVENT_SEARCH_VERSION,
         lunarEventSearch: LUNAR_EVENT_SEARCH_VERSION,

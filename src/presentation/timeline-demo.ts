@@ -1,3 +1,4 @@
+import { DEFAULT_ASPECT_DEFINITIONS } from "@/domain/astro/aspects";
 import {
   composeTimelineFacts,
   type TimelineFacts,
@@ -15,6 +16,8 @@ import {
 
 let cachedFacts: Promise<TimelineFacts> | undefined;
 let cachedDemo: Promise<TimelineReadModel> | undefined;
+const DEMO_CALCULATED_AT = "2000-04-01T00:00:00.000Z";
+const demoNow = () => new Date(DEMO_CALCULATED_AT);
 
 export function getDemoTimeline(): Promise<TimelineReadModel> {
   cachedDemo ??= getDemoTimelineFacts().then(toTimelineReadModel);
@@ -27,9 +30,13 @@ export function getDemoTimelineFacts(): Promise<TimelineFacts> {
 }
 
 async function buildDemoTimelineFacts(): Promise<TimelineFacts> {
-  const provider = new AstronomyEngineProvider();
+  const provider = new AstronomyEngineProvider(undefined, demoNow);
   const [transit, lunar, station] = await Promise.all([
-    new TransitEventWindowSearch(provider).search(ZOLLIKON_NATAL_CHART_DEMO, {
+    new TransitEventWindowSearch(
+      provider,
+      DEFAULT_ASPECT_DEFINITIONS,
+      demoNow,
+    ).search(ZOLLIKON_NATAL_CHART_DEMO, {
       startInstant: "1999-12-15T00:00:00Z",
       endInstant: "2000-01-20T00:00:00Z",
       transitingBody: "venus",
@@ -40,7 +47,7 @@ async function buildDemoTimelineFacts(): Promise<TimelineFacts> {
       refinementToleranceSeconds: 1,
       maxRefinementIterations: 32,
     }),
-    new LunarEventSearch(provider).search({
+    new LunarEventSearch(provider, demoNow).search({
       eventType: "primary-phase",
       phase: "new-moon",
       startInstant: "2000-01-04T00:00:00Z",
@@ -50,7 +57,7 @@ async function buildDemoTimelineFacts(): Promise<TimelineFacts> {
       refinementToleranceSeconds: 1,
       maxRefinementIterations: 32,
     }),
-    new StationEventSearch(provider).search({
+    new StationEventSearch(provider, demoNow).search({
       eventType: "station-retrograde",
       body: "mercury",
       startInstant: "2000-02-19T00:00:00Z",
@@ -82,6 +89,7 @@ async function buildDemoTimelineFacts(): Promise<TimelineFacts> {
       },
     },
     new PythagoreanNumerology(),
+    demoNow,
   );
 }
 

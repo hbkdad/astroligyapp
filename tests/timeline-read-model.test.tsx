@@ -25,6 +25,26 @@ beforeAll(async () => {
 
 describe("timeline presentation boundary", () => {
   it("maps the Goal 23 aggregate into one frozen ordered read model", () => {
+    expect(facts.metadata.composedAt).toBe("2000-04-01T00:00:00.000Z");
+    for (const fact of facts.facts) {
+      if (
+        fact.type === "personal-transit" ||
+        fact.type === "primary-phase" ||
+        fact.type === "moon-sign-ingress" ||
+        fact.type === "planetary-station"
+      ) {
+        expect(fact.source.metadata.calculatedAt).toBe(
+          "2000-04-01T00:00:00.000Z",
+        );
+        expect(fact.source.metadata.provider.calculatedAt).toBe(
+          "2000-04-01T00:00:00.000Z",
+        );
+        for (const evaluation of fact.source.metadata.evaluations)
+          expect(evaluation.providerCalculatedAt).toBe(
+            "2000-04-01T00:00:00.000Z",
+          );
+      }
+    }
     expect(model).toMatchObject({
       version: TIMELINE_READ_MODEL_VERSION,
       sourceVersion: "1.0.0",

@@ -52,6 +52,7 @@ export class AstronomyEngineProvider implements EphemerisProvider {
 
   constructor(
     private readonly houseStrategy: HouseStrategy = new WholeSignHouseStrategy(),
+    private readonly now: () => Date = () => new Date(),
   ) {}
 
   async getPositions(
@@ -80,7 +81,7 @@ export class AstronomyEngineProvider implements EphemerisProvider {
             providerId: this.id,
             providerVersion: ASTRONOMY_ENGINE_PROVIDER_VERSION,
             dataVersion: ASTRONOMY_ENGINE_POSITION_DATA_VERSION,
-            calculatedAt: new Date().toISOString(),
+            calculatedAt: this.now().toISOString(),
             timeScale: "utc",
             referenceFrame: "ecliptic-of-date",
             zodiacReference: request.zodiacReference,
@@ -141,7 +142,7 @@ export class AstronomyEngineProvider implements EphemerisProvider {
             providerId: this.id,
             providerVersion: ASTRONOMY_ENGINE_PROVIDER_VERSION,
             dataVersion: `${ASTRONOMY_ENGINE_POSITION_DATA_VERSION}+${this.houseStrategy.id}-${this.houseStrategy.version}`,
-            calculatedAt: new Date().toISOString(),
+            calculatedAt: this.now().toISOString(),
             timeScale: "utc",
             referenceFrame: "ecliptic-of-date",
             zodiacReference: request.zodiacReference,

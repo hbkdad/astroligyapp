@@ -136,6 +136,7 @@ export class TransitEventWindowSearch {
   constructor(
     private readonly provider: EphemerisProvider,
     private readonly aspectDefinitions: readonly AspectDefinition[] = DEFAULT_ASPECT_DEFINITIONS,
+    private readonly now: () => Date = () => new Date(),
   ) {
     validateAspectDefinitions(aspectDefinitions);
   }
@@ -327,7 +328,7 @@ export class TransitEventWindowSearch {
         },
         metadata: {
           searchEngineVersion: TRANSIT_EVENT_SEARCH_VERSION,
-          calculatedAt: new Date().toISOString(),
+          calculatedAt: this.now().toISOString(),
           provider: { ...providerTrace! },
           natal: {
             input: structuredClone(natalChart.input),

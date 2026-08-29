@@ -143,7 +143,10 @@ const PHASE_ANCHORS: Readonly<Record<PrimaryLunarPhase, number>> = {
 };
 
 export class LunarEventSearch {
-  constructor(private readonly provider: EphemerisProvider) {}
+  constructor(
+    private readonly provider: EphemerisProvider,
+    private readonly now: () => Date = () => new Date(),
+  ) {}
 
   async search(input: LunarEventSearchInput): Promise<LunarEventSearchResult> {
     const validated = validateInput(input);
@@ -286,7 +289,7 @@ export class LunarEventSearch {
         event,
         metadata: {
           searchEngineVersion: LUNAR_EVENT_SEARCH_VERSION,
-          calculatedAt: new Date().toISOString(),
+          calculatedAt: this.now().toISOString(),
           provider: { ...providerTrace! },
           searchPolicy: {
             sampleStepSeconds: input.sampleStepSeconds,
