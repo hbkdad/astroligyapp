@@ -4,16 +4,17 @@ Last updated: 2026-08-29
 
 ## Current position
 
-Status: Goal 88 complete; exact version/integrity/commit-addressed publisher materials reduce the application
-manual set from 27 to 15 without changing the worker's 5 honest manual records. The exact 101-package
-application result is now 84 permitted-with-notice, 15 manual review, 0 prohibited, 2 first-party, and 2
-unresolved; the 37-package worker remains 31 permitted-with-notice, 5 manual review, 0 prohibited, 1
-first-party, and 0 unresolved. License-evidence schema 2 binds the publisher-material configuration;
-artifact-manifest schema 3 and dual release-set schema 4 bind a fail-closed disposition summary. Current
-artifacts use `trust: none`, so all 20 manual records remain undisposed and external promotion is blocked.
-Commit `f0fb5e1` passed the complete release gate and is GO only as an internal evidence candidate. No image
-was published and no real review, legal approval, licensing acceptance, registry, cloud, credential,
-purchase, or production change was made.
+Status: Goal 89 complete; accepted ADR 0019 and policy `2026-08-29.1` establish a main-only,
+credential-free GitHub Actions release-candidate boundary with exact repository IDs, read-only token,
+full-SHA actions, an isolated OCI-capable builder, a 14-day evidence envelope, strict download verifier,
+and no environment, OIDC, registry, cloud, publishing, staging, or production authority. Exact commit
+`8c4ad20` passed the complete local release gate plus hosted CI runs `33252479005` and `33252479006`.
+The single uploaded artifact `9714878587` was downloaded and independently verified: 15 hashed release
+files plus one envelope bind commit/run/ref/event/runner/policy/workflow/approval and expire on 2026-09-12.
+Trust remains `credential-free-internal-candidate`; promotion is explicitly false. The application still
+has 15 manual reviews and 2 unresolved assertions, and the worker has 5 manual reviews, so external
+redistribution remains blocked. No image was published and no GitHub setting, environment, secret, OIDC
+trust, registry, cloud account, credential, purchase, deployment, or production system was changed.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -36,6 +37,47 @@ SDK/adapter, authenticated feedback worker, and suppression seam, but no account
 provisioned AWS infrastructure, live queue polling, or live delivery.
 
 ## Completed
+
+- [x] Goal 89: research current GitHub action pinning, token permission, artifact-attestation, OIDC subject,
+      protected-environment, and artifact-retention behavior from primary documentation; accept ADR 0019
+      without claiming that repository settings exist. Bind immutable repository ID `1329276081`, owner ID
+      `93459210`, main ref, push/manual events, GitHub-hosted runner, exact workflow/source commits, run and
+      attempt, actor ID, tool versions, policy/workflow hashes, approval state, release-set hash, and 15
+      exact evidence-file hashes/sizes.
+- [x] Add the least-privilege release-candidate workflow with only `contents: read`, non-persisted full-history
+      checkout, full-SHA Checkout/Setup Node/Upload Artifact actions, fixed `ubuntu-24.04`, an isolated
+      `docker-container` Buildx builder, complete `release:check`, exact evidence allowlist, overwrite/hidden
+      file refusal, and 14-day retention. No pull-request trigger, environment, secret, OIDC, attestation,
+      package/deployment write, cloud action, registry push, apply, publish, or production command exists.
+- [x] Add strict create/validate/download paths for `astroligyapp.ci-release-evidence` schema 1. The verifier
+      accepts exactly 16 regular files and rejects extras, non-files/links, tampering, missing evidence,
+      repository/fork/ref/event/workflow/runner mismatch, mixed commits, excessive permissions, mutable
+      actions, changed approval, future/expired evidence, and consumed run-key replay.
+- [x] Make the existing dual-artifact gate portable to Linux hosted runners: preserve OCI evidence while
+      exporting a loadable Docker archive, measure worker transport size from OCI descriptors, map offline
+      Cosign to the POSIX runner identity, and inject a fixed clock into static demo calculation provenance.
+      The last change removes wall-clock drift from the six `/` and `/timeline` prerender payloads without
+      changing production calculation defaults.
+- [x] Apply `security-audit`: the envelope contains public dependency/build metadata only; the private key,
+      signing password, build secret, image archives, scanner data, saved state/plans, credentials and user
+      data stay excluded. No unresolved critical/high local issue remains. Artifact transport grants no
+      authorization; repository protections remain unproven external controls, and 20 real manual
+      dispositions plus 2 unresolved assertions keep external redistribution NO-GO.
+- [x] Apply `release-check` to exact commit `8c4ad20`: formatting, ESLint, strict TypeScript, two runs of
+      108 files / 1,342 tests, the 33-route production build, 89.59% statements / 87.44% branches / 96.29%
+      functions / 91.87% lines coverage, Drizzle consistency, legacy/latest migrations plus all 71
+      PostgreSQL tests, the high/critical production dependency threshold, 8 mocked plans, 304 policy
+      checks, all 8 IaC unsafe fixtures, zero IaC scanner findings, all 39 staging unsafe cases, and the CI
+      adversarial contract passed. The application reproduced as
+      `sha256:f449bd8b133279641f48c673cf5b9eb3ccd32ad58d7e268f57cd7e6163dac83e`; the worker reproduced as
+      `sha256:8a28f5162acd328eb384117ca110675ed11036df1a906ad8a30d033b7463f550` at 52,074,704 OCI
+      transport bytes. Offline signatures remain `local-ephemeral-untrusted` with no transparency proof.
+- [x] Hosted verification: ordinary CI run `33252479005` and release-candidate run `33252479006` succeeded
+      for exact commit `8c4ad20`. Artifact `9714878587` was retained once with digest
+      `sha256:2b2647faf89ba6586f6a1417a8757293ac2f6946b769c7c8656adfddd9766093`, reported unexpired,
+      and bound the same repository/head SHA. The downloaded envelope verified run key
+      `1329276081:33252479006:1`, main/push, `ubuntu-24.04`, `not-requested`, promotion false, and the
+      2026-08-29 to 2026-09-12 validity window.
 
 - [x] Goal 88: enumerate all 27 application and 5 worker manual records and accept ADR 0018, which permits
       version-matched publisher material only for already-permitted expressions with exact package,
@@ -969,23 +1011,25 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 89 — establish a credential-free trusted CI release-candidate workflow contract without configuring a
-registry, cloud account, protected environment, or production deployment.
+Goal 90 — establish a read-only GitHub repository trust-readiness audit and a non-authorizing protected
+promotion configuration contract without changing repository settings, environments, secrets, OIDC/cloud
+trust, a registry, AWS, or production.
 
 Deliverables:
 
-1. Research current GitHub Actions artifact attestations, OIDC subject claims, environment protection,
-   permissions, action pinning, and retention from primary documentation; record the accepted trust boundary
-   and threat model in an ADR without claiming that repository settings exist.
-2. Add a least-privilege workflow/validator that builds the existing dual release candidate on an immutable
-   commit, preserves SPDX/license/scan/provenance evidence, pins third-party actions by commit, and defaults
-   to no registry push, no cloud credential, no staging apply, and no production mutation.
-3. Bind workflow identity, source/ref/event, runner/tool versions, artifact hashes, and approval state into a
-   synthetic CI evidence envelope. Reject pull-request escalation, fork/untrusted contexts, mutable action
-   references, mixed commits, missing evidence, excessive permissions, expired artifacts, and replay.
+1. Research current GitHub rulesets/branch protection, required workflows/status checks, environment
+   reviewers/no-bypass controls, artifact-attestation verification, OIDC customization, and relevant REST
+   representations from primary documentation; accept a desired-state policy in an ADR.
+2. Capture only a redacted, read-only snapshot of the repository's observable current settings and add a
+   deterministic validator that distinguishes observed, unavailable, and unproven controls. Do not mutate
+   GitHub or claim protections that the API evidence does not prove.
+3. Define a synthetic, non-authorizing protected-promotion configuration envelope binding numeric
+   owner/repository IDs, immutable workflow identity, required successful release evidence, independent
+   environment review/no self-review, no bypass, OIDC subject/audience constraints, and artifact-attestation
+   verification requirements. Reject missing/weak checks, mutable identities, replay and privilege expansion.
 4. Exercise adversarial fixtures, update runbooks/status, and apply `security-audit` plus `release-check`.
-   Keep external redistribution blocked by the 20 real manual dispositions and 2 unresolved assertions; do
-   not enable environments, secrets, OIDC trust, a registry, AWS, publishing, or deployment.
+   Keep staging, production and external redistribution NO-GO; do not create a ruleset/environment, add a
+   secret, grant OIDC/cloud trust, publish an artifact, push a registry subject, or deploy anything.
 
 ## Phase queue
 

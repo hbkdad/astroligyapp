@@ -18,8 +18,10 @@
 - **Adversarial result.** Tests reject pull-request escalation, fork/repository mismatch, mutable actions,
   persisted credentials, mixed commits, excessive permissions, self-hosted runners, missing/tampered
   evidence, invalid release sets, changed approval, expiry and replay. No critical/high local finding remains.
-- **Residual risk and decision.** GitHub repository settings and an actual hosted run are external evidence;
-  YAML cannot prove environment/branch protection or artifact retention execution. Trust remains
+- **Hosted result and residual risk.** Exact-commit hosted CI and release-candidate runs `33252479005` and
+  `33252479006` passed. Downloaded artifact `9714878587` contained exactly the 15 bound files plus envelope
+  and passed the strict verifier. GitHub repository settings remain separate, unproven external controls;
+  YAML and one run do not prove environment/branch protection. Trust remains
   `credential-free-internal-candidate`, approval is not requested and promotion is false. External
   redistribution remains NO-GO due to 20 manual dispositions and two unresolved assertions.
 
