@@ -374,6 +374,7 @@ function collectRuntimeLicenseTexts(spdx, image, nodeBaseImage) {
 }
 
 function build(source, tag, archivePath, inputs) {
+  const dockerArchivePath = `${archivePath}.docker.tar`;
   run(
     "docker",
     [
@@ -384,6 +385,7 @@ function build(source, tag, archivePath, inputs) {
       "--provenance=false",
       "--sbom=false",
       `--output=type=oci,dest=${archivePath},rewrite-timestamp=true`,
+      `--output=type=docker,dest=${dockerArchivePath},rewrite-timestamp=true`,
       "--secret",
       "id=next_server_actions_encryption_key,env=NEXT_SERVER_ACTIONS_ENCRYPTION_KEY",
       "--build-arg",
@@ -400,7 +402,7 @@ function build(source, tag, archivePath, inputs) {
     ],
     { env: { ...process.env, NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: secret } },
   );
-  run("docker", ["load", "--input", archivePath]);
+  run("docker", ["load", "--input", dockerArchivePath]);
 }
 
 function inspect(tag) {

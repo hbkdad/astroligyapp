@@ -35,6 +35,10 @@ const ociArchives = [
   join(temporary, "a.oci.tar"),
   join(temporary, "b.oci.tar"),
 ];
+const dockerArchives = [
+  join(temporary, "a.docker.tar"),
+  join(temporary, "b.docker.tar"),
+];
 const trivy =
   "aquasec/trivy@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969";
 const shutdownContainer = `astroligyapp-feedback-worker-shutdown-${process.pid}`;
@@ -69,6 +73,7 @@ try {
       "--provenance=false",
       "--sbom=false",
       `--output=type=oci,dest=${ociArchives[index]},rewrite-timestamp=true`,
+      `--output=type=docker,dest=${dockerArchives[index]},rewrite-timestamp=true`,
       "--file",
       join(sources[index], "Dockerfile.worker"),
       "--build-arg",
@@ -81,7 +86,7 @@ try {
       images[index],
       sources[index],
     ]);
-    run("docker", ["load", "--input", ociArchives[index]]);
+    run("docker", ["load", "--input", dockerArchives[index]]);
   }
   const imageDigests = ociArchives.map((ociArchive) =>
     selectOciManifestDigest(
