@@ -99,19 +99,14 @@ try {
       JSON.parse(capture("tar", ["-xOf", ociArchive, "index.json"])),
     ),
   );
-  assert.equal(
-    imageDigests[0],
-    imageDigests[1],
-    "OCI manifests must reproduce",
-  );
   const imageA = inspect(tags[0]);
   const imageB = inspect(tags[1]);
-  if (imageA.Id !== imageB.Id) {
+  if (imageDigests[0] !== imageDigests[1] || imageA.Id !== imageB.Id) {
     const layoutA = inspectOciArchive(archiveA, "a");
     const layoutB = inspectOciArchive(archiveB, "b");
     const layerDrift = compareOciLayers(layoutA, layoutB);
     throw new Error(
-      `independent uncached builds produced different image IDs\n${JSON.stringify({ imageA: imageA.Id, imageB: imageB.Id, layoutA: summarizeLayout(layoutA), layoutB: summarizeLayout(layoutB), layerDrift }, null, 2)}`,
+      `independent uncached builds did not reproduce\n${JSON.stringify({ imageA: imageA.Id, imageB: imageB.Id, layoutA: summarizeLayout(layoutA), layoutB: summarizeLayout(layoutB), layerDrift }, null, 2)}`,
     );
   }
   assert.equal(
