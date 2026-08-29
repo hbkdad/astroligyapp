@@ -1,5 +1,13 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import { canonicalJson } from "./lib/artifact-manifest.mjs";
 import {
@@ -7,6 +15,7 @@ import {
   validateCiReleaseEvidence,
   validateWorkflowContract,
 } from "./lib/ci-release-evidence.mjs";
+import { verifyCiReleaseEvidenceDirectory } from "./lib/ci-release-evidence-directory.mjs";
 
 const policy = JSON.parse(
   readFileSync("config/release-ci-policy.json", "utf8"),
@@ -116,6 +125,50 @@ assert.throws(() =>
     seenRunKeys: new Set([envelope.identity.runKey]),
   }),
 );
+
+const directoryRoot = mkdtempSync(join(tmpdir(), "astroligyapp-ci-evidence-"));
+const evidenceDirectory = join(directoryRoot, "valid");
+try {
+  mkdirSync(evidenceDirectory);
+  for (const [name, bytes] of Object.entries(evidenceFiles))
+    writeFileSync(join(evidenceDirectory, name), bytes);
+  writeFileSync(
+    join(evidenceDirectory, "ci-release-evidence.json"),
+    canonicalJson(envelope),
+  );
+  assert.equal(
+    verifyCiReleaseEvidenceDirectory({
+      directory: evidenceDirectory,
+      policy,
+      workflowText,
+      now: createdAt,
+    }).identity.runKey,
+    envelope.identity.runKey,
+  );
+  writeFileSync(join(evidenceDirectory, "unexpected.txt"), "reject me\n");
+  assert.throws(() =>
+    verifyCiReleaseEvidenceDirectory({
+      directory: evidenceDirectory,
+      policy,
+      workflowText,
+      now: createdAt,
+    }),
+  );
+  rmSync(join(evidenceDirectory, "unexpected.txt"));
+  const nonFile = join(evidenceDirectory, policy.requiredEvidenceFiles[1]);
+  rmSync(nonFile);
+  mkdirSync(nonFile);
+  assert.throws(() =>
+    verifyCiReleaseEvidenceDirectory({
+      directory: evidenceDirectory,
+      policy,
+      workflowText,
+      now: createdAt,
+    }),
+  );
+} finally {
+  rmSync(directoryRoot, { force: true, recursive: true });
+}
 for (const mutateWorkflow of [
   (text) => text.replace("contents: read", "contents: write"),
   (text) => text.replace("workflow_dispatch:", "pull_request_target:"),

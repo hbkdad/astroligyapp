@@ -32,6 +32,18 @@ every retained file's byte length and SHA-256 plus the workflow/policy identity.
 matching requested artifact retention. Upload excludes hidden files, refuses overwrite and fails if evidence
 is missing.
 
+After downloading into a new directory from the run for the claimed commit, verify it from a checkout whose
+policy and workflow match the envelope:
+
+```powershell
+npm run ci:release:verify -- C:\path\to\downloaded-evidence
+```
+
+The verifier rejects missing or extra entries, links, non-files, stale or future envelopes, mismatched
+repository/workflow/run identity, altered permissions or approval, mixed release commits, and any byte/hash
+change. A consuming approval system must also maintain used run keys and pass them as a comma-separated
+`CI_RELEASE_SEEN_RUN_KEYS` value so replay is rejected.
+
 ## Interpretation
 
 `credential-free-internal-candidate` means only that the evidence came from a validated, read-only workflow

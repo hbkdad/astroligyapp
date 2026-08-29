@@ -30,6 +30,7 @@
     "test:staging-approval": "node scripts/test-staging-approval.mjs",
     "test:ci-release-evidence": "node scripts/test-ci-release-evidence.mjs",
     "ci:release:evidence": "node scripts/generate-ci-release-evidence.mjs",
+    "ci:release:verify": "node scripts/verify-ci-release-evidence.mjs",
     "staging:approval:example": "node scripts/generate-staging-approval-package.mjs",
     "worker:feedback:local": "node --experimental-strip-types scripts/run-auth-email-feedback-worker-local.mts",
     "test:watch": "vitest",
