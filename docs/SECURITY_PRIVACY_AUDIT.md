@@ -1,5 +1,34 @@
 # Security and privacy audit
 
+### Goal 90 GitHub trust-readiness review
+
+- **Assets and actors.** Protected assets are repository identity and ref integrity, required checks,
+  release evidence, reviewer separation, future OIDC identity, attestation identity and promotion
+  authority. Actors are repository administrators/writers, workflow initiators, environment reviewers,
+  the GitHub-hosted runner, future cloud trust, verifier and promotion operator.
+- **Read-only trust boundary.** Authenticated REST `GET` requests were reduced to numeric identity and
+  security-control fields. The repository stores no API token, reviewer identity, secret, cloud role,
+  provider payload or user data. No settings endpoint, environment, secret, OIDC/cloud trust, registry,
+  AWS resource or production system was mutated.
+- **Observed result.** Repository/owner IDs match policy and default workflow permission is read with
+  workflow PR approval disabled. Zero rulesets, unprotected `main`, zero environments, unrestricted
+  Actions without mandatory SHA pinning, and default non-immutable OIDC were also observed. A trusted
+  artifact attestation is unproven. The deterministic decision is NO-GO with six gaps.
+- **Authorization separation.** The desired policy and envelope bind active branch protection with no
+  bypass, required CI/release checks, at least two distinct non-requester environment reviewers, prevented
+  self-review, no admin bypass, immutable environment-scoped OIDC, successful unexpired/unconsumed release
+  evidence, exact signer workflow and verified subject digest. Synthetic trust is permanently
+  non-authorizing; the validator always rejects activation.
+- **Adversarial result.** Tests reach and reject numeric identity/ref drift, weak/missing checks, mutable
+  workflow identity, failed/stale/consumed/replayed evidence, permission expansion, insufficient/duplicate/
+  self review, bypass, mutable OIDC/audience, wrong attestation source/signer/commit, unverified evidence,
+  scope tampering, trust elevation and secret fields.
+- **Residual risk — NO-GO.** GitHub's named status checks do not by themselves bind the triggering workflow
+  or event, and environment execution needs only one configured required reviewer. A future authorized
+  design must preserve exact workflow/run evidence and independent review above those platform semantics.
+  No critical/high local finding remains, but repository protections, environment, immutable OIDC, trusted
+  attestation, cloud trust, registry subjects and accountable license dispositions do not exist.
+
 ### Goal 89 credential-free CI evidence review
 
 - **Assets and actors.** Protected assets are the exact source/workflow identity, dual-artifact evidence,

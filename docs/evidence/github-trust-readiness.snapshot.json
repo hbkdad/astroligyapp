@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "kind": "astroligyapp.github-trust-readiness-snapshot",
+  "capturedAt": "2026-08-29T12:53:00.000Z",
+  "apiVersion": "2026-03-10",
+  "repository": {
+    "name": "hbkdad/astroligyapp",
+    "id": "1329276081",
+    "ownerId": "93459210",
+    "visibility": "public",
+    "defaultBranch": "main",
+    "fork": false
+  },
+  "observations": {
+    "rulesets": {
+      "state": "observed",
+      "httpStatus": 200,
+      "count": 0,
+      "activeMainRulesetCount": 0
+    },
+    "branchProtection": {
+      "state": "observed",
+      "httpStatus": 404,
+      "protected": false,
+      "detail": "branch-not-protected"
+    },
+    "environments": {
+      "state": "observed",
+      "httpStatus": 200,
+      "count": 0,
+      "production": null
+    },
+    "actionsPolicy": {
+      "state": "observed",
+      "httpStatus": 200,
+      "enabled": true,
+      "allowedActions": "all",
+      "shaPinningRequired": false
+    },
+    "workflowPermissions": {
+      "state": "observed",
+      "httpStatus": 200,
+      "defaultWorkflowPermissions": "read",
+      "canApprovePullRequestReviews": false
+    },
+    "oidcSubject": {
+      "state": "observed",
+      "httpStatus": 200,
+      "useDefault": true,
+      "useImmutableSubject": false,
+      "subClaimPrefix": "repo:hbkdad@93459210/astroligyapp@1329276081"
+    },
+    "artifactAttestation": {
+      "state": "unproven",
+      "httpStatus": null,
+      "reason": "no-published-subject-or-trusted-attestation"
+    }
+  }
+}

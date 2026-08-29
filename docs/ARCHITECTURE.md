@@ -17,6 +17,12 @@ has read-only repository permission, full-SHA action pins and no environment, OI
 registry or cloud authority. Its expiring schema-1 envelope binds immutable repository IDs, workflow/source
 commit, runner/tool identity and every retained evidence hash while fixing promotion authority to false.
 
+ADR 0020 adds a read-only repository trust-observation boundary and a desired protected-promotion contract.
+Observed, unavailable and unproven controls remain distinct. The checked synthetic envelope binds numeric
+repository identity, active no-bypass branch rules, successful release evidence, split protected-environment
+review, immutable environment-scoped OIDC and verified attestation identity, but is permanently
+non-authorizing. No workflow, repository setting, environment, cloud trust or registry subject implements it.
+
 Status: accepted baseline; persistence approach selected and managed providers remain open.
 
 ## System shape

@@ -101,6 +101,25 @@ Pull-request workflows keep `contents: read` only. The future protected promotio
 `id-token: write` and the minimum ECR/OIDC role only after approval; it must never receive static AWS or
 Cosign private keys.
 
+## GitHub protected-promotion readiness
+
+Run `npm run test:github-trust-readiness` to validate the desired policy, checked read-only snapshot,
+synthetic configuration envelope and adversarial fixtures. Run `npm run github:trust:verify` when an
+explicit machine-readable decision is needed: exit `0` means all observed controls satisfy policy; exit `2`
+means deterministic NO-GO. An unavailable or unproven API control is always NO-GO.
+
+The current snapshot was reduced from authenticated GET requests only. Before any future configuration or
+promotion approval, recapture and independently review repository identity, active rulesets and bypass
+actors, `main` protection and exact required checks, production environment reviewers/self-review/bypass
+and branch policy, Actions allowlist/SHA policy, default token permission, immutable OIDC subject mode, and
+verified artifact-attestation evidence. Never place API tokens, reviewer names, secrets, cloud role
+credentials or raw provider payloads in the checked snapshot.
+
+The policy and synthetic envelope are desired-state evidence only. There is intentionally no
+`.github/workflows/protected-promotion.yml`; creating it or changing any GitHub/AWS setting requires a later
+explicitly approved goal. Presence of the policy, a green test, or a successful release-candidate artifact
+cannot authorize activation.
+
 ## Future push, sign, and attest sequence
 
 The following is a design contract, not authorization to run it:

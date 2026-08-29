@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": "2026-08-29.1",
+  "repository": "hbkdad/astroligyapp",
+  "repositoryId": "1329276081",
+  "repositoryOwnerId": "93459210",
+  "defaultBranch": "main",
+  "protectedRef": "refs/heads/main",
+  "releaseWorkflow": {
+    "path": ".github/workflows/release-candidate.yml",
+    "job": "release-candidate"
+  },
+  "promotionWorkflow": {
+    "path": ".github/workflows/protected-promotion.yml",
+    "job": "protected-promotion"
+  },
+  "environment": "production",
+  "requiredStatusChecks": ["CI", "release-candidate"],
+  "actions": {
+    "allowedActions": "selected",
+    "shaPinningRequired": true,
+    "defaultWorkflowPermissions": "read",
+    "canApprovePullRequestReviews": false
+  },
+  "review": {
+    "minimumIndependentReviewers": 2,
+    "preventSelfReview": true,
+    "canAdminsBypass": false
+  },
+  "oidc": {
+    "useDefault": false,
+    "useImmutableSubject": true,
+    "subject": "repo:hbkdad@93459210/astroligyapp@1329276081:environment:production",
+    "audience": "sts.amazonaws.com"
+  },
+  "attestation": {
+    "issuer": "https://token.actions.githubusercontent.com",
+    "sourceRepository": "https://github.com/hbkdad/astroligyapp",
+    "sourceRepositoryId": "1329276081",
+    "signerWorkflow": "hbkdad/astroligyapp/.github/workflows/release-candidate.yml"
+  }
+}
