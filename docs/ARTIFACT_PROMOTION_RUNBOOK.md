@@ -15,6 +15,11 @@ undisposed record. Dependency, evidence, policy, distribution-model, or expiry c
 The promotion call must receive the ledger hash returned by validation against the exact evidence documents;
 a matching hash asserted only inside the release set is not sufficient.
 
+The generated `license-review-packet.json` is a bounded handoff to those reviewers, not a ledger. Verify its
+release-set hash, record completeness, 30-day maximum validity, separated-role requirements, and re-review
+triggers. Its fixed `review-input-only` trust, empty decisions and false authorization can never waive the
+accountable-ledger requirement.
+
 ## Local evidence gate
 
 Run `npm run test:release-artifacts` only from a clean tracked worktree. The command first runs the
@@ -52,7 +57,7 @@ Cosign keys plus a service-free signing configuration (no Fulcio, Rekor, OIDC, o
 signs and attests the statement with networking disabled, verifies both bundles, proves a
 tampered statement fails, records only bundle/public-key hashes under `local-ephemeral-untrusted`, and
 deletes the entire disposable evidence directory. When `RELEASE_EVIDENCE_EXPORT_DIRECTORY` is explicitly
-set, it first copies only ADR 0019's public 15-file allowlist to a newly created destination; the private
+set, it first copies only ADR 0019/0021's public 16-file allowlist to a newly created destination; the private
 key, password, signing configuration, scanner databases, BuildKit working data and image archives are never
 exported. Nothing is committed. This proves consistency, not trusted identity, timestamp, transparency
 inclusion, registry attachment, approval or a SLSA level.

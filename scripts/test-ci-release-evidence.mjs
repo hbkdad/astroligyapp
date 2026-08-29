@@ -80,7 +80,7 @@ assert.doesNotThrow(() =>
   }),
 );
 assert.equal(envelope.approval.promotionAuthorized, false);
-assert.equal(envelope.artifacts.length, 15);
+assert.equal(envelope.artifacts.length, policy.requiredEvidenceFiles.length);
 assert.equal(envelope.identity.commit, releaseSet.statement.source.commit);
 
 for (const mutate of [

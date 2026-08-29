@@ -20,6 +20,10 @@ import {
   sha256,
   validateReleaseSet,
 } from "./lib/artifact-manifest.mjs";
+import {
+  createLicenseReviewPacket,
+  validateLicenseReviewPacket,
+} from "./lib/license-review-packet.mjs";
 
 const evidence = mkdtempSync(join(tmpdir(), "astroligyapp-release-set-"));
 const cosign =
@@ -181,6 +185,31 @@ try {
     ),
   };
   validateReleaseSet(releaseSet);
+  const evidenceByArtifact = {
+    application: readEvidence("application-license-evidence.json"),
+    "feedback-worker": readEvidence("feedback-worker-license-evidence.json"),
+  };
+  const createdAt = new Date(
+    releaseSet.statement.source.sourceDateEpoch * 1000,
+  ).toISOString();
+  const validUntil = new Date(
+    Date.parse(createdAt) + 30 * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  const reviewPacket = createLicenseReviewPacket({
+    releaseSet,
+    evidenceByArtifact,
+    createdAt,
+    validUntil,
+  });
+  validateLicenseReviewPacket(reviewPacket, {
+    releaseSet,
+    evidenceByArtifact,
+    now: createdAt,
+  });
+  writeFileSync(
+    join(evidence, "license-review-packet.json"),
+    canonicalJson(reviewPacket),
+  );
   writeFileSync(join(evidence, "release-set.json"), canonicalJson(releaseSet));
   assert.doesNotMatch(
     readFileSync(join(evidence, "release-set.json"), "utf8"),
@@ -215,6 +244,7 @@ function exportEvidenceIfRequested() {
     "feedback-worker-license-evidence.json",
     "feedback-worker.spdx.json",
     "local.pub",
+    "license-review-packet.json",
     "provenance-predicate.json",
     "provenance.slsa.json",
     "release-set.json",

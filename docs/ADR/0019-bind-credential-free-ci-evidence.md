@@ -35,7 +35,8 @@ Primary GitHub documentation reviewed on 2026-08-29 establishes these boundaries
 4. Define `astroligyapp.ci-release-evidence` schema 1 under policy `2026-08-29.1`. It binds immutable
    repository IDs, repository/ref/event, source and workflow commit, workflow path/ref/job, run/attempt,
    opaque actor ID, GitHub-hosted runner image, Node/npm/Docker versions, exact permissions, workflow hash,
-   release-set hash and the path/hash/size of all 15 retained files.
+   release-set hash and the path/hash/size of all 15 initially retained files. ADR 0021 extends the
+   allowlist and envelope to 16 files by adding the non-authorizing license-review packet.
 5. The envelope expires with the 14-day artifact retention period and has a unique repository/run/attempt
    replay key. Its approval is fixed to `not-requested`, environment is null, promotion is false, trust is
    `credential-free-internal-candidate`, and a changed workflow/policy/evidence file invalidates it.

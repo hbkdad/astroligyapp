@@ -305,7 +305,10 @@ function runDispositionLedgerTests() {
     now: "2026-08-25T12:00:00.000Z",
   };
   const summaries = validateAndSummarizeDispositionLedger(ledgerInput);
-  assert.equal(summaries.application.dispositionCount, 5);
+  assert.equal(
+    summaries.application.dispositionCount,
+    applicationEvidence.counts.manualReviewCount,
+  );
   const dispositionBoundReleaseSet = applyDispositionLedger(ledgerInput);
   assert.doesNotThrow(() => validateReleaseSet(dispositionBoundReleaseSet));
   assert.throws(() =>
@@ -452,12 +455,19 @@ function runReviewedMaterialTests() {
     baseline.evidence.packages[0].decision.outcome,
     "permitted-with-notice",
   );
+  const nextEnvBindingIndex = materials.bindings.findIndex(
+    (binding) => binding.name === "@next/env",
+  );
+  assert.notEqual(nextEnvBindingIndex, -1);
   for (const mutate of [
-    (copy) => (copy.reviewedMaterials.bindings[4].version = "16.3.1"),
     (copy) =>
-      (copy.reviewedMaterials.bindings[4].licenseExpression = "Apache-2.0"),
+      (copy.reviewedMaterials.bindings[nextEnvBindingIndex].version = "16.3.1"),
     (copy) =>
-      (copy.reviewedMaterials.bindings[4].artifactIntegrity = "sha512-invalid"),
+      (copy.reviewedMaterials.bindings[nextEnvBindingIndex].licenseExpression =
+        "Apache-2.0"),
+    (copy) =>
+      (copy.reviewedMaterials.bindings[nextEnvBindingIndex].artifactIntegrity =
+        "sha512-invalid"),
   ]) {
     const copy = structuredClone(input);
     mutate(copy);
@@ -468,7 +478,9 @@ function runReviewedMaterialTests() {
   }
   for (const mutate of [
     (copy) =>
-      (copy.reviewedMaterials.bindings[4].authoritativeSource =
+      (copy.reviewedMaterials.bindings[
+        nextEnvBindingIndex
+      ].authoritativeSource =
         "https://raw.githubusercontent.com/vercel/next.js/main/license.md"),
     (copy) =>
       (copy.reviewedMaterials.materials["next-mit"].sha256 =

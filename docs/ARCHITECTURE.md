@@ -17,6 +17,11 @@ has read-only repository permission, full-SHA action pins and no environment, OI
 registry or cloud authority. Its expiring schema-1 envelope binds immutable repository IDs, workflow/source
 commit, runner/tool identity and every retained evidence hash while fixing promotion authority to false.
 
+ADR 0021 adds a deterministic review-input boundary between generated license evidence and ADR 0018's
+future accountable ledger. The packet binds the finalized release set and exact manual-record scope, expires
+within 30 days, declares separated review roles and re-review triggers, and is permanently non-authorizing.
+It stores no reviewer identity, decision, contact information, credential, or legal conclusion.
+
 ADR 0020 adds a read-only repository trust-observation boundary and a desired protected-promotion contract.
 Observed, unavailable and unproven controls remain distinct. The checked synthetic envelope binds numeric
 repository identity, active no-bypass branch rules, successful release evidence, split protected-environment

@@ -1,7 +1,11 @@
 {
   "schemaVersion": 1,
-  "materialsVersion": "2026-08-28.1",
+  "materialsVersion": "2026-08-29.2",
   "materials": {
+    "aws-sdk-js-v3-apache-2.0": {
+      "path": "node_modules/@aws-sdk/client-sesv2/LICENSE",
+      "sha256": "sha256:e345c2ee7df4446e739de7b91535f0c10ddcd909b9753889e943ee637b05db8c"
+    },
     "edge-runtime-mit": {
       "path": "node_modules/next/dist/compiled/edge-runtime/LICENSE",
       "sha256": "sha256:e4f76a7a19ef2989dd79339bd3abf8afcf1d6f065e5a10c76c19415ffd727eb3"
@@ -20,6 +24,30 @@
     }
   },
   "bindings": [
+    {
+      "name": "@aws-sdk/credential-provider-http",
+      "version": "3.972.70",
+      "licenseExpression": "Apache-2.0",
+      "artifactIntegrity": "sha512-0yRem2Fs52r/Nn6UAqIlpjexfaYj8ziEozOe9tamtAVT/5bzFLKx8O2r7MaRqgS3hGKHIa1Jij9nKHSsNnb04A==",
+      "material": "aws-sdk-js-v3-apache-2.0",
+      "authoritativeSource": "https://raw.githubusercontent.com/aws/aws-sdk-js-v3/26b0eb790ff86399b7af7b74ce8c188f25512cc6/LICENSE"
+    },
+    {
+      "name": "@aws-sdk/credential-provider-login",
+      "version": "3.972.75",
+      "licenseExpression": "Apache-2.0",
+      "artifactIntegrity": "sha512-jaTESuJlQsoUZ44f/i2puyPt8VlF/dMMJ9HM3cStYtk7eKX4N9UWi83OLixUkoOJH3BwWlPLCq9YIK9nfWhVBg==",
+      "material": "aws-sdk-js-v3-apache-2.0",
+      "authoritativeSource": "https://raw.githubusercontent.com/aws/aws-sdk-js-v3/26b0eb790ff86399b7af7b74ce8c188f25512cc6/LICENSE"
+    },
+    {
+      "name": "@aws-sdk/nested-clients",
+      "version": "3.997.42",
+      "licenseExpression": "Apache-2.0",
+      "artifactIntegrity": "sha512-XWRyon2MTHXD/zMoo0Mbge6Vwf+iE0qQaM/RyGO6NfZ9WukCFiQL27nQVZjYy2JwSIg+iXZxKOX95OBXqlSM4w==",
+      "material": "aws-sdk-js-v3-apache-2.0",
+      "authoritativeSource": "https://raw.githubusercontent.com/aws/aws-sdk-js-v3/26b0eb790ff86399b7af7b74ce8c188f25512cc6/LICENSE"
+    },
     {
       "name": "@edge-runtime/cookies",
       "version": "6.0.0",
@@ -57,6 +85,14 @@
       "version": "16.3.0",
       "licenseExpression": "MIT",
       "artifactIntegrity": "sha512-o9r1S0BNiNreHP9Vs+Qnqd9kviDkJh8xIACY7UFZSmiGbbQRzPBBosvHzAU4TULHOIuOj/18RSsyz2qrREmIFw==",
+      "material": "next-mit",
+      "authoritativeSource": "https://raw.githubusercontent.com/vercel/next.js/d73f5622e226358dcef8cf7a8a373333ff265ae7/license.md"
+    },
+    {
+      "name": "client-only",
+      "version": "0.0.1",
+      "licenseExpression": "MIT",
+      "artifactIntegrity": "sha512-IV3Ou0jSMzZrd3pZ48nLkT9DA7Ag1pnPzaiQhpW7c3RbcqqzvzzVu+L8gfqMp/8IM2MQtSiqaCxrrcfu8I8rMA==",
       "material": "next-mit",
       "authoritativeSource": "https://raw.githubusercontent.com/vercel/next.js/d73f5622e226358dcef8cf7a8a373333ff265ae7/license.md"
     },

@@ -1,5 +1,24 @@
 # Security and privacy audit
 
+### Goal 91 dependency-license review-packet audit
+
+- **Assets and actors.** Protected assets are exact dependency evidence, review scope, future legal
+  dispositions and release authority. Actors are the evidence preparer, independent license reviewer,
+  release authorizer, CI transporter and promotion verifier.
+- **Immutable evidence boundary.** Four missing-text gaps are bound only where exact package version,
+  integrity, declared expression, immutable publisher commit and normalized local text hash agree. This
+  reduces ambiguity without interpreting custom, composite, copyleft, missing, or conflicting terms.
+- **Authorization separation.** The packet binds the finalized release-set hash and exact manual records,
+  requires three distinct accountable roles and all re-review triggers, expires within 30 days, and fixes
+  trust/status/decisions/authorization to review-input-only/not-requested/empty/false. It cannot activate
+  redistribution or replace ADR 0018's accountable ledger.
+- **Privacy and secrets.** Only public package, source and hash metadata is stored. Legal names, actor IDs,
+  contacts, review prose, credentials, private keys and decisions are excluded.
+- **Adversarial result and residual risk.** Tests reject scope/evidence drift, missing/extra records, mutable
+  sources, stale packets, role collision, trigger removal, inserted decisions, trust elevation and secret
+  fields. Sixteen records and two unresolved assertions are expected to remain; external redistribution is
+  still NO-GO and no human legal conclusion exists.
+
 ### Goal 90 GitHub trust-readiness review
 
 - **Assets and actors.** Protected assets are repository identity and ref integrity, required checks,

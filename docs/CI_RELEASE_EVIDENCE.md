@@ -22,9 +22,9 @@ changing either workflow, the policy, evidence filenames, release schemas or CI 
 ## Retained evidence
 
 When `RELEASE_EVIDENCE_EXPORT_DIRECTORY` is set, the dual-artifact gate creates a new destination and copies
-only the 15 filenames allowlisted by policy. They cover both artifact descriptors, SPDX inventories,
+only the 16 filenames allowlisted by policy. They cover both artifact descriptors, SPDX inventories,
 license evidence/notices, dual release set/statement, SLSA document/predicate, and the explicitly untrusted
-local public key/signature/attestation bundles. The ephemeral private key and all secret or mutable working
+local public key/signature/attestation bundles plus the non-authorizing license-review packet. The ephemeral private key and all secret or mutable working
 material remain in the disposable directory and are deleted.
 
 `ci:release:evidence` revalidates the release set and writes `ci-release-evidence.json`. The envelope binds

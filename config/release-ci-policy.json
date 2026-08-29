@@ -48,6 +48,7 @@
     "feedback-worker-artifact.json",
     "feedback-worker-license-evidence.json",
     "feedback-worker.spdx.json",
+    "license-review-packet.json",
     "local.pub",
     "provenance-predicate.json",
     "provenance.slsa.json",

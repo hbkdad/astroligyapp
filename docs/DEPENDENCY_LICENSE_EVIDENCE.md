@@ -15,6 +15,7 @@ compatible or incompatible.
 - `application-license-evidence.json` and `feedback-worker-license-evidence.json`
 - `application-THIRD-PARTY-NOTICES.txt` and `feedback-worker-THIRD-PARTY-NOTICES.txt`
 - the two artifact descriptors and the schema-4 dual release set
+- `license-review-packet.json`, a bounded and permanently non-authorizing manual-review input
 
 The JSON evidence contains the exact observed component, source/integrity trace, normalized expression,
 license-text source, text hash and full captured text when available. The notice indexes identify every
@@ -59,6 +60,11 @@ hash, and an undisposed count equal to their manual-review count. Test data uses
 expiry, exact evidence scope and all mandatory re-review triggers. `synthetic-fixture-only` trust can never
 authorize promotion; the positive accountable contract uses only `.invalid` URLs and is not an approval.
 A future real ledger must use accountable-human trust and immutable review-record URLs; none exists today.
+
+ADR 0021 adds a separate review-input packet after the release set has received its final local-verification
+hashes. It binds all current manual records and requires three separated roles plus explicit re-review
+triggers, but contains no identities or decisions. Its `review-input-only` trust can never satisfy the
+promotion gate. See [DEPENDENCY_LICENSE_REVIEW_PACKET.md](DEPENDENCY_LICENSE_REVIEW_PACKET.md).
 
 ## Tamper and runtime checks
 
