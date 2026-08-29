@@ -56,6 +56,12 @@ generates SPDX 2.3 evidence, constructs a dual-subject SLSA 1.1 statement, and e
 Cosign signature/attestation bundles. The ephemeral local key is deleted and explicitly untrusted: no
 registry artifact, trusted identity, transparency proof, AWS resource, or deployment is created.
 
+ADR 0019's main-only release-candidate workflow can retain the public 15-file evidence allowlist for 14
+days. Its schema-1 envelope binds immutable repository IDs, workflow/source identity, runner/tools and file
+hashes under exact `contents: read` permission. Approval remains `not-requested`; promotion remains false;
+no environment, OIDC token, GitHub attestation, package/registry write, cloud credential or deployment is
+enabled. The retained artifact is an internal review candidate, not a release authorization.
+
 `npm run test:staging-approval` verifies ADR 0016's schema-1 staging review boundary. The checked-in
 fixture generates only `mock-contract-only` preparation evidence. Documentary readiness additionally
 requires a reviewed saved-plan/export digest, safe change counts, current cost limits, and four split

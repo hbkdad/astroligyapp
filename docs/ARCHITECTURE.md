@@ -5,12 +5,17 @@
 ADR 0017 adds a release-only license-evidence boundary outside both runtime images. The raw SPDX inventory
 is correlated with npm lock source/integrity, exact enclosing Next.js package identity, dpkg evidence, the
 digest-pinned Node distribution license, and installed license files. A versioned fail-closed policy produces
-hashed evidence and notice artifacts; schema-3 dual-release evidence binds those hashes and decision counts.
+hashed evidence and notice artifacts; schema-4 dual-release evidence binds those hashes and decision counts.
 Manual or prohibited results block external redistribution without changing application runtime behavior.
 ADR 0018 extends this boundary with exact publisher-material bindings and an outside-image disposition
 ledger. The ledger is authorization evidence, not calculation or runtime state. Schema-4 release evidence
 binds its trust/hash/counts and invalidates review after dependency, policy, evidence, distribution-model,
 or expiry change. Checked-in synthetic trust is permanently promotion-ineligible.
+
+ADR 0019 adds a credential-free CI evidence boundary above the local release set. The main-only workflow
+has read-only repository permission, full-SHA action pins and no environment, OIDC, attestation, package,
+registry or cloud authority. Its expiring schema-1 envelope binds immutable repository IDs, workflow/source
+commit, runner/tool identity and every retained evidence hash while fixing promotion authority to false.
 
 Status: accepted baseline; persistence approach selected and managed providers remain open.
 
@@ -59,7 +64,7 @@ Deterministic fallback   Optional schema-validated AI explanation
 
 The first release uses one Next.js App Router application with internal module boundaries. Extract packages or services only under the triggers recorded in ADR 0002.
 
-Release promotion uses the schema-2 dual-artifact set in ADR 0015. The application and feedback worker
+Release promotion uses the schema-4 dual-artifact set extended through ADRs 0015, 0017 and 0018. The application and feedback worker
 remain independently deployable and independently rollback-capable, but a release set is valid only when
 both immutable images and their SPDX evidence bind the same exact source revision. Local ephemeral
 Cosign evidence is labelled untrusted; a future remote promotion must verify protected workflow identity,

@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "policyVersion": "2026-08-29.1",
+  "repository": "hbkdad/astroligyapp",
+  "repositoryId": "1329276081",
+  "repositoryOwnerId": "93459210",
+  "sourceRepository": "https://github.com/hbkdad/astroligyapp",
+  "workflow": {
+    "path": ".github/workflows/release-candidate.yml",
+    "ref": "refs/heads/main",
+    "job": "release-candidate",
+    "runnerLabel": "ubuntu-24.04",
+    "allowedEvents": ["push", "workflow_dispatch"],
+    "permissions": {
+      "contents": "read"
+    },
+    "actions": {
+      "actions/checkout": {
+        "release": "v6.1.0",
+        "sha": "d23441a48e516b6c34aea4fa41551a30e30af803"
+      },
+      "actions/setup-node": {
+        "release": "v6.5.0",
+        "sha": "249970729cb0ef3589644e2896645e5dc5ba9c38"
+      },
+      "actions/upload-artifact": {
+        "release": "v6.0.0",
+        "sha": "b7c566a772e6b6bfb58ed0dc250532a479d7789f"
+      }
+    },
+    "retentionDays": 14
+  },
+  "toolVersions": {
+    "node": "v24.15.0",
+    "npm": "11.12.1"
+  },
+  "requiredEvidenceFiles": [
+    "application-THIRD-PARTY-NOTICES.txt",
+    "application-artifact.json",
+    "application-license-evidence.json",
+    "application.spdx.json",
+    "attestation.sigstore.json",
+    "feedback-worker-THIRD-PARTY-NOTICES.txt",
+    "feedback-worker-artifact.json",
+    "feedback-worker-license-evidence.json",
+    "feedback-worker.spdx.json",
+    "local.pub",
+    "provenance-predicate.json",
+    "provenance.slsa.json",
+    "release-set.json",
+    "release-statement.json",
+    "signature.sigstore.json"
+  ]
+}

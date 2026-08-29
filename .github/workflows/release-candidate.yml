@@ -1,0 +1,58 @@
+name: Credential-free release candidate
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-candidate-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  release-candidate:
+    if: >-
+      github.repository == 'hbkdad/astroligyapp' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      CI_RUNNER_LABEL: ubuntu-24.04
+      RELEASE_EVIDENCE_EXPORT_DIRECTORY: ${{ github.workspace }}/release-evidence
+
+    steps:
+      - name: Check out immutable source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up pinned Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Verify and export credential-free release evidence
+        run: npm run release:check
+
+      - name: Bind CI identity and evidence hashes
+        run: npm run ci:release:evidence
+
+      - name: Retain internal evidence candidate
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: release-candidate-evidence-${{ github.sha }}
+          path: release-evidence/
+          if-no-files-found: error
+          include-hidden-files: false
+          overwrite: false
+          retention-days: 14

@@ -51,9 +51,25 @@ The combined test produces an in-toto/SLSA 1.1 statement with both image subject
 Cosign keys plus a service-free signing configuration (no Fulcio, Rekor, OIDC, or timestamp authority),
 signs and attests the statement with networking disabled, verifies both bundles, proves a
 tampered statement fails, records only bundle/public-key hashes under `local-ephemeral-untrusted`, and
-deletes the entire evidence directory. Generated SBOMs, manifests, scan databases, BuildKit metadata,
-keys, bundles, and image archives are not committed. This proves local consistency, not trusted identity,
-timestamp, transparency inclusion, registry attachment, or a SLSA level.
+deletes the entire disposable evidence directory. When `RELEASE_EVIDENCE_EXPORT_DIRECTORY` is explicitly
+set, it first copies only ADR 0019's public 15-file allowlist to a newly created destination; the private
+key, password, signing configuration, scanner databases, BuildKit working data and image archives are never
+exported. Nothing is committed. This proves consistency, not trusted identity, timestamp, transparency
+inclusion, registry attachment, approval or a SLSA level.
+
+## Credential-free CI evidence
+
+`.github/workflows/release-candidate.yml` runs only for main push/manual events with `contents: read`, pinned
+official actions and no environment, secrets, OIDC, attestation/package/deployment write, registry or cloud
+step. After the full release gate it exports the allowlist, creates an expiring schema-1 CI envelope, and
+requests 14-day GitHub artifact retention. The envelope binds numeric repository/owner IDs, exact
+source/workflow commit, ref/event/run/attempt, runner/tool versions, workflow/policy hashes, release-set hash,
+and every retained file hash/size. It explicitly records no approval and no promotion authority.
+
+Validate with `npm run test:ci-release-evidence`. Reject mutable actions, fork/repository-ID mismatch,
+pull-request context, non-main ref, mixed commits, excessive permissions, self-hosted runner, missing or
+changed files, expiry, replay or any attempt to turn the artifact into approval. See ADR 0019 and
+`docs/CI_RELEASE_EVIDENCE.md`.
 
 ## Reproducibility limits
 

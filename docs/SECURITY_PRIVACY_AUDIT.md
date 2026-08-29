@@ -1,5 +1,28 @@
 # Security and privacy audit
 
+### Goal 89 credential-free CI evidence review
+
+- **Assets and actors.** Protected assets are the exact source/workflow identity, dual-artifact evidence,
+  release decision and future promotion authority. Actors are untrusted contributors, main-branch writers,
+  manual dispatchers, the GitHub-hosted runner, artifact service, evidence verifier and future promoter.
+- **Trust boundaries.** The workflow runs only in numeric repository ID `1329276081` on main push/manual
+  events. Every action is full-SHA pinned, checkout drops credentials, token permission is exactly
+  `contents: read`, and no environment, secret, OIDC, attestation/package/deployment write, cloud action or
+  registry command is present. The artifact service transports evidence but grants no authority.
+- **Integrity and replay.** Schema 1 binds repository/owner IDs, exact source/workflow SHA, ref/event/job,
+  run/attempt/actor, GitHub-hosted runner image, tools, policy/workflow hashes, release-set hash and all 15
+  file hashes/sizes. Expiry matches 14-day retention; repository/run/attempt is the replay key.
+- **Secrets and privacy.** Only public dependency/build/release metadata is retained. The private Cosign
+  key, password, build secret, saved plan/state, credentials and application user data are excluded. Hidden
+  files are excluded from upload and the generated envelope rejects secret/environment authority claims.
+- **Adversarial result.** Tests reject pull-request escalation, fork/repository mismatch, mutable actions,
+  persisted credentials, mixed commits, excessive permissions, self-hosted runners, missing/tampered
+  evidence, invalid release sets, changed approval, expiry and replay. No critical/high local finding remains.
+- **Residual risk and decision.** GitHub repository settings and an actual hosted run are external evidence;
+  YAML cannot prove environment/branch protection or artifact retention execution. Trust remains
+  `credential-free-internal-candidate`, approval is not requested and promotion is false. External
+  redistribution remains NO-GO due to 20 manual dispositions and two unresolved assertions.
+
 ### Goal 88 publisher-evidence and disposition-ledger review
 
 - **Assets and actors.** Protected assets are release authorization, exact dependency evidence and future

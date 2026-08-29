@@ -1,8 +1,16 @@
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  constants,
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { isAbsolute, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 import {
@@ -174,6 +182,7 @@ try {
     readFileSync(join(evidence, "release-set.json"), "utf8"),
     new RegExp(password, "u"),
   );
+  exportEvidenceIfRequested();
   console.log(
     `dual-artifact release gate passed: ${application.artifact.imageDigest}, ${worker.artifact.imageDigest}`,
   );
@@ -183,6 +192,37 @@ try {
 
 function readEvidence(name) {
   return JSON.parse(readFileSync(join(evidence, name), "utf8"));
+}
+
+function exportEvidenceIfRequested() {
+  const configured = process.env.RELEASE_EVIDENCE_EXPORT_DIRECTORY;
+  if (!configured) return;
+  const target = resolve(configured);
+  assert.ok(isAbsolute(target));
+  mkdirSync(target, { recursive: false });
+  const files = [
+    "application-THIRD-PARTY-NOTICES.txt",
+    "application-artifact.json",
+    "application-license-evidence.json",
+    "application.spdx.json",
+    "attestation.sigstore.json",
+    "feedback-worker-THIRD-PARTY-NOTICES.txt",
+    "feedback-worker-artifact.json",
+    "feedback-worker-license-evidence.json",
+    "feedback-worker.spdx.json",
+    "local.pub",
+    "provenance-predicate.json",
+    "provenance.slsa.json",
+    "release-set.json",
+    "release-statement.json",
+    "signature.sigstore.json",
+  ];
+  for (const file of files)
+    copyFileSync(
+      join(evidence, file),
+      join(target, file),
+      constants.COPYFILE_EXCL,
+    );
 }
 
 function verifyLocal(command, bundle, blob, additional = []) {
