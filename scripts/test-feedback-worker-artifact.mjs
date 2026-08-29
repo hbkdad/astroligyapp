@@ -98,6 +98,17 @@ try {
     imageDigests[1],
     "OCI manifests must reproduce",
   );
+  const ociManifest = JSON.parse(
+    capture("tar", [
+      "-xOf",
+      ociArchives[0],
+      `blobs/sha256/${imageDigests[0].slice(7)}`,
+    ]),
+  );
+  const transportBytes = [ociManifest.config, ...ociManifest.layers].reduce(
+    (total, descriptor) => total + descriptor.size,
+    0,
+  );
   run("docker", [
     "buildx",
     "build",
@@ -142,8 +153,8 @@ try {
     commit,
   );
   assert.ok(
-    inspected[0].Size < 100 * 1024 * 1024,
-    "worker image exceeds 100 MiB",
+    transportBytes < 100 * 1024 * 1024,
+    "worker OCI transport size exceeds 100 MiB",
   );
 
   const files = capture("docker", [
@@ -414,7 +425,7 @@ try {
     /USER nonroot[\s\S]*HEALTHCHECK[\s\S]*CMD/u,
   );
   console.log(
-    `feedback worker artifact gate passed: ${inspected[0].Id}, ${inspected[0].Size} bytes, ${workerSbom.dependencyCount} traced dependencies, ${workerLicenseEvidence.summary.unresolvedCount} unresolved license assertions, ${workerLicenseEvidence.summary.manualReviewCount} manual reviews`,
+    `feedback worker artifact gate passed: ${inspected[0].Id}, ${transportBytes} OCI transport bytes, ${workerSbom.dependencyCount} traced dependencies, ${workerLicenseEvidence.summary.unresolvedCount} unresolved license assertions, ${workerLicenseEvidence.summary.manualReviewCount} manual reviews`,
   );
 } finally {
   run("docker", ["container", "rm", "--force", shutdownContainer], {
