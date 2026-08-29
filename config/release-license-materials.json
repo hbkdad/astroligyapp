@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "materialsVersion": "2026-08-28.1",
+  "materials": {
+    "edge-runtime-mit": {
+      "path": "node_modules/next/dist/compiled/edge-runtime/LICENSE",
+      "sha256": "sha256:e4f76a7a19ef2989dd79339bd3abf8afcf1d6f065e5a10c76c19415ffd727eb3"
+    },
+    "next-mit": {
+      "path": "node_modules/next/license.md",
+      "sha256": "sha256:ee765244e2d59f5234d474f62e0766fa0c8b99af967fdd4c0cb8dcb0c76ea224"
+    },
+    "redis-mit": {
+      "path": "config/license-materials/redis-node-redis-mit.txt",
+      "sha256": "sha256:a57b250a5bf03d7afe55b74063313f2adb7b00d546c0ab149a89398333fe3cc8"
+    },
+    "sharp-apache-2.0": {
+      "path": "node_modules/sharp/LICENSE",
+      "sha256": "sha256:73ba74dfaa520b49a401b5d21459a8523a146f3b7518a833eea5efa85130bf68"
+    }
+  },
+  "bindings": [
+    {
+      "name": "@edge-runtime/cookies",
+      "version": "6.0.0",
+      "licenseExpression": "MIT",
+      "artifactIntegrity": "sha512-NEdGOzH+08eTXMUp9UYkA99Nhi5N6Thrhc1jgFOQgfgnGK/dA2hRwBpXep+exdFQrnwlRf/3Wixyp8lLBUpE2A==",
+      "material": "edge-runtime-mit",
+      "authoritativeSource": "https://raw.githubusercontent.com/vercel/edge-runtime/440c123a37284d6a852ce453af810ad484ecfc01/LICENSE.md"
+    },
+    {
+      "name": "@edge-runtime/ponyfill",
+      "version": "4.0.0",
+      "licenseExpression": "MIT",
+      "artifactIntegrity": "sha512-NEdGOzH+08eTXMUp9UYkA99Nhi5N6Thrhc1jgFOQgfgnGK/dA2hRwBpXep+exdFQrnwlRf/3Wixyp8lLBUpE2A==",
+      "material": "edge-runtime-mit",
+      "authoritativeSource": "https://raw.githubusercontent.com/vercel/edge-runtime/440c123a37284d6a852ce453af810ad484ecfc01/LICENSE.md"
+    },
+    {
+      "name": "@edge-runtime/primitives",
+      "version": "6.0.0",
+      "licenseExpression": "MIT",
+      "artifactIntegrity": "sha512-NEdGOzH+08eTXMUp9UYkA99Nhi5N6Thrhc1jgFOQgfgnGK/dA2hRwBpXep+exdFQrnwlRf/3Wixyp8lLBUpE2A==",
+      "material": "edge-runtime-mit",
+      "authoritativeSource": "https://raw.githubusercontent.com/vercel/edge-runtime/440c123a37284d6a852ce453af810ad484ecfc01/LICENSE.md"
+    },
+    {
+      "name": "@img/sharp-linux-x64",
+      "version": "0.35.3",
+      "licenseExpression": "Apache-2.0",
+      "artifactIntegrity": "sha512-8pqvxubL2PGdhlPy6GLqzDYMUjyRmKAwKHYKixpdJYBUK7PJ0C029XdsnpFIdgRZG68fZiGdHVWcKPvtiPB4cA==",
+      "material": "sharp-apache-2.0",
+      "authoritativeSource": "https://raw.githubusercontent.com/lovell/sharp/1018449164723ba0203c1beffaba0e21f7829c18/LICENSE"
+    },
+    {
+      "name": "@next/env",
+      "version": "16.3.0",
+      "licenseExpression": "MIT",
+      "artifactIntegrity": "sha512-o9r1S0BNiNreHP9Vs+Qnqd9kviDkJh8xIACY7UFZSmiGbbQRzPBBosvHzAU4TULHOIuOj/18RSsyz2qrREmIFw==",
+      "material": "next-mit",
+      "authoritativeSource": "https://raw.githubusercontent.com/vercel/next.js/d73f5622e226358dcef8cf7a8a373333ff265ae7/license.md"
+    },
+    {
+      "name": "@redis/bloom",
+      "version": "6.2.1",
+      "licenseExpression": "MIT",
+      "artifactIntegrity": "sha512-huQgNLaCIZfQ9SeLn4q9124uOUd8HbZDYHwwUzNcRgHqCHiHKl2dDxMqJCeWh8cMqZAoWuHR8XnWbDMIf+o7ag==",
+      "material": "redis-mit",
+      "authoritativeSource": "https://raw.githubusercontent.com/redis/node-redis/10b562539e96b61440b3d7dd394f4db3b5464b6f/LICENSE"
+    },
+    {
+      "name": "@redis/client",
+      "version": "6.2.1",
+      "licenseExpression": "MIT",
+      "artifactIntegrity": "sha512-LzxBY7SIBvvJiyCgcaJZZakE3fJrZZ++i24+EDW9fKpCl68D35uJcKFpZZwCfOoG9WZTbyZlMzMeM0gtOAMU9Q==",
+      "material": "redis-mit",
+      "authoritativeSource": "https://raw.githubusercontent.com/redis/node-redis/ba1b90b9ce00f47af4330a1614c7fac6bcd94384/LICENSE"
+    },
+    {
+      "name": "@redis/json",
+      "version": "6.2.1",
+      "licenseExpression": "MIT",
+      "artifactIntegrity": "sha512-AFIUJ8Gj0DaaSBHYuSt8+O0oYWM+50OK1c0OmodB7XERIA8+BbyV3O4v76f9iccWasd1/7qjfZTpuzexUaZtrQ==",
+      "material": "redis-mit",
+      "authoritativeSource": "https://raw.githubusercontent.com/redis/node-redis/992f068c11f21874204615a30867273d44d6fc86/LICENSE"
+    },
+    {
+      "name": "@redis/search",
+      "version": "6.2.1",
+      "licenseExpression": "MIT",
+      "artifactIntegrity": "sha512-2vfOAOyYFE7UUw3sBBlkqqruBtOUS4HRY5MtW4hp83llrwvtrTE4r22CEqXddlV+54zkLxBE4nmsIJ/dpezQrQ==",
+      "material": "redis-mit",
+      "authoritativeSource": "https://raw.githubusercontent.com/redis/node-redis/85d70384c7a418d9e85c0668ab7f32e33d0b8d79/LICENSE"
+    },
+    {
+      "name": "@redis/time-series",
+      "version": "6.2.1",
+      "licenseExpression": "MIT",
+      "artifactIntegrity": "sha512-kiYniph04dJOole+L359B6C9E+jYS2uDP7hca6Onj0xF38ZIpyxARO0Iq0W4ZRn1e8Q6vqW00QFZVSMRA/2Ijw==",
+      "material": "redis-mit",
+      "authoritativeSource": "https://raw.githubusercontent.com/redis/node-redis/7565ac675993e744c9cc1f9eaf55cedf4cc2a236/LICENSE"
+    },
+    {
+      "name": "redis",
+      "version": "6.2.1",
+      "licenseExpression": "MIT",
+      "artifactIntegrity": "sha512-Z9VHtgYs48PiQC77X9O2Er8Hj4T+5BtFjT91/vi5Is1D04N72cA946ZslM1ImJw8ZctFBZWAVjM7S5wJNeHMpg==",
+      "material": "redis-mit",
+      "authoritativeSource": "https://raw.githubusercontent.com/redis/node-redis/9d522569db428322b10afeb7757c95bdb4d13a9b/LICENSE"
+    }
+  ]
+}

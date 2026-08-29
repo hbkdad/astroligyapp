@@ -8,7 +8,7 @@ const TREE = /^[a-f0-9]{40}$/u;
 export function validateArtifactManifest(manifest, expected = {}) {
   assert.equal(
     manifest.schemaVersion,
-    2,
+    3,
     "unsupported artifact manifest schema",
   );
   assert.equal(
@@ -52,6 +52,10 @@ export function validateArtifactManifest(manifest, expected = {}) {
     "application license declaration drifted",
   );
   assertLicenseSummary(manifest.licenses);
+  assertLicenseDispositionSummary(
+    manifest.licenseDispositions,
+    manifest.licenses.manualReviewCount,
+  );
   assert.deepEqual(
     manifest.scans,
     { gitSecrets: "pass", imageSecrets: "pass", imageVulnerabilities: "pass" },
@@ -149,7 +153,7 @@ export function validateReleaseSet(envelope, expected = {}) {
     ["kind", "localVerification", "schemaVersion", "statement"],
     "release-set envelope fields drifted",
   );
-  assert.equal(envelope.schemaVersion, 3, "unsupported release-set schema");
+  assert.equal(envelope.schemaVersion, 4, "unsupported release-set schema");
   assert.equal(
     envelope.kind,
     "astroligyapp.release-set",
@@ -183,6 +187,7 @@ export function validateReleaseSet(envelope, expected = {}) {
         "dockerfileSha256",
         "imageDigest",
         "imageId",
+        "licenseDispositions",
         "licenses",
         "name",
         "platform",
@@ -206,6 +211,10 @@ export function validateReleaseSet(envelope, expected = {}) {
     assert.equal(artifact.platform, "linux/amd64");
     assert.equal(artifact.reproducibleBuilds, 2);
     assertLicenseSummary(artifact.licenses);
+    assertLicenseDispositionSummary(
+      artifact.licenseDispositions,
+      artifact.licenses.manualReviewCount,
+    );
     assert.equal(
       artifact.licenses.packageCount,
       artifact.sbom.packageCount,
@@ -299,7 +308,11 @@ export function validateReleaseSet(envelope, expected = {}) {
   return envelope;
 }
 
-export function assertReleaseSetPromotionReferences(envelope, references) {
+export function assertReleaseSetPromotionReferences(
+  envelope,
+  references,
+  verifiedDispositionLedgerHashes = {},
+) {
   validateReleaseSet(envelope);
   assert.deepEqual(Object.keys(references).sort(), [
     "application",
@@ -312,15 +325,37 @@ export function assertReleaseSetPromotionReferences(envelope, references) {
       `${artifact.name} has unresolved license assertions`,
     );
     assert.equal(
-      artifact.licenses.manualReviewCount,
-      0,
-      `${artifact.name} requires manual license review`,
-    );
-    assert.equal(
       artifact.licenses.prohibitedCount,
       0,
       `${artifact.name} is prohibited from redistribution`,
     );
+    if (artifact.licenses.manualReviewCount > 0) {
+      assert.equal(
+        artifact.licenseDispositions.trust,
+        "accountable-human",
+        `${artifact.name} lacks accountable license dispositions`,
+      );
+      assert.equal(
+        artifact.licenseDispositions.undisposedCount,
+        0,
+        `${artifact.name} has undisposed license reviews`,
+      );
+      assert.equal(
+        artifact.licenseDispositions.rejectedCount,
+        0,
+        `${artifact.name} has rejected license dispositions`,
+      );
+      assert.equal(
+        artifact.licenseDispositions.needsRemediationCount,
+        0,
+        `${artifact.name} has license remediation outstanding`,
+      );
+      assert.equal(
+        verifiedDispositionLedgerHashes[artifact.name],
+        artifact.licenseDispositions.ledgerSha256,
+        `${artifact.name} disposition ledger was not verified with its evidence`,
+      );
+    }
     const reference = references[artifact.name];
     assertImmutablePromotionReference(reference);
     assert.match(
@@ -436,6 +471,8 @@ function assertLicenseSummary(summary) {
     "evidenceSha256",
     "firstPartyCount",
     "manualReviewCount",
+    "materialsSha256",
+    "materialsVersion",
     "noticeSha256",
     "packageCount",
     "permittedWithNoticeCount",
@@ -445,6 +482,14 @@ function assertLicenseSummary(summary) {
     "unresolvedCount",
   ]);
   assert.match(summary.policyVersion, /^\d{4}-\d{2}-\d{2}\.\d+$/u);
+  if (summary.materialsVersion !== null)
+    assert.match(summary.materialsVersion, /^\d{4}-\d{2}-\d{2}\.\d+$/u);
+  if (summary.materialsSha256 !== null)
+    assert.match(summary.materialsSha256, SHA256);
+  assert.equal(
+    summary.materialsVersion === null,
+    summary.materialsSha256 === null,
+  );
   for (const field of ["evidenceSha256", "noticeSha256", "policySha256"])
     assert.match(summary[field], SHA256);
   for (const field of [
@@ -463,4 +508,46 @@ function assertLicenseSummary(summary) {
       summary.prohibitedCount +
       summary.firstPartyCount,
   );
+}
+
+function assertLicenseDispositionSummary(summary, manualReviewCount) {
+  assert.deepEqual(Object.keys(summary).sort(), [
+    "approvedCount",
+    "dispositionCount",
+    "ledgerSha256",
+    "needsRemediationCount",
+    "rejectedCount",
+    "trust",
+    "undisposedCount",
+  ]);
+  assert.ok(
+    ["none", "synthetic-fixture-only", "accountable-human"].includes(
+      summary.trust,
+    ),
+  );
+  assert.ok(summary.ledgerSha256 === null || SHA256.test(summary.ledgerSha256));
+  for (const field of [
+    "dispositionCount",
+    "approvedCount",
+    "rejectedCount",
+    "needsRemediationCount",
+    "undisposedCount",
+  ])
+    assert.ok(Number.isSafeInteger(summary[field]) && summary[field] >= 0);
+  assert.equal(
+    summary.dispositionCount,
+    summary.approvedCount +
+      summary.rejectedCount +
+      summary.needsRemediationCount,
+  );
+  assert.equal(
+    summary.dispositionCount + summary.undisposedCount,
+    manualReviewCount,
+  );
+  if (summary.trust === "none") assert.equal(summary.ledgerSha256, null);
+  else assert.match(summary.ledgerSha256, SHA256);
+  if (manualReviewCount === 0) {
+    assert.equal(summary.trust, "none");
+    assert.equal(summary.dispositionCount, 0);
+  }
 }

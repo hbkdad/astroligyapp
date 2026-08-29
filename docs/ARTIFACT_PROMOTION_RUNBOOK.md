@@ -2,11 +2,18 @@
 
 ## Dependency-license precondition
 
-Before any external image redistribution, validate the evidence/notice/policy bundle for both artifacts and
-require zero `unresolvedCount`, `manualReviewCount` and `prohibitedCount`. A successful local artifact build
-or immutable registry digest is not sufficient. Preserve the generated SPDX, license-evidence JSON and notice
+Before any external image redistribution, validate the evidence/notice/policy/materials bundle for both
+artifacts and require zero `unresolvedCount` and `prohibitedCount`. A successful local artifact build or
+immutable registry digest is not sufficient. Preserve the generated SPDX, license-evidence JSON and notice
 index outside the runtime image and attach them to the same immutable release subject. Do not publish while
-either artifact remains in manual review.
+any manual record lacks a current accountable disposition.
+
+If manual records have accountable dispositions, require an unexpired `accountable-human` ledger bound to
+the exact source commit and both evidence/policy hashes. Reject `none` or `synthetic-fixture-only` trust,
+self-review, missing or extra package dispositions, stale scope, rejected/remediation outcomes, and any
+undisposed record. Dependency, evidence, policy, distribution-model, or expiry change requires a new review.
+The promotion call must receive the ledger hash returned by validation against the exact evidence documents;
+a matching hash asserted only inside the release set is not sufficient.
 
 ## Local evidence gate
 
@@ -15,7 +22,7 @@ application and worker evidence gates against the same exact `HEAD`. Each gate a
 performs two independent uncached `linux/amd64` builds with rewritten timestamps, and requires both
 matching image-configuration IDs and matching OCI manifest digests. The worker gate also
 exports its bundle/metafile from the non-runtime `evidence` target. The command then validates the
-combined schema-2 release set.
+combined schema-4 release set.
 
 The application gate uses one random in-memory Server Actions key for
 both builds and derives Next preview metadata from that key with separate HMAC contexts. The key and

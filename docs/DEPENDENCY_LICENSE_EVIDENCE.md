@@ -14,12 +14,16 @@ compatible or incompatible.
 - `application.spdx.json` and `feedback-worker.spdx.json`
 - `application-license-evidence.json` and `feedback-worker-license-evidence.json`
 - `application-THIRD-PARTY-NOTICES.txt` and `feedback-worker-THIRD-PARTY-NOTICES.txt`
-- the two artifact descriptors and the schema-3 dual release set
+- the two artifact descriptors and the schema-4 dual release set
 
 The JSON evidence contains the exact observed component, source/integrity trace, normalized expression,
 license-text source, text hash and full captured text when available. The notice indexes identify every
 third-party result and call out unavailable text. Neither generated artifact is copied into the application
 or worker runtime filesystem.
+
+License-evidence schema 2 and each artifact license summary bind the reviewed-materials version and canonical
+configuration hash. A change to any package binding, source commit, local material path or expected text hash
+therefore invalidates the evidence and the dual release set even when the resulting notice text is unchanged.
 
 ## Review outcomes
 
@@ -42,6 +46,19 @@ component identity are the trace instead.
 If a package lacks bundled text, obtain authoritative version-matched terms from the publisher, capture the
 source and immutable hash, and update the generator or package evidence. Do not paste unverified web text or
 silently reinterpret a custom expression.
+
+## Publisher materials and human dispositions
+
+ADR 0018 adds versioned publisher material bindings. Each binding must match the observed package name,
+version, locked integrity, declared expression, immutable source commit, local text, and normalized text
+hash. These bindings can satisfy missing-text evidence only; they never replace a missing assertion or
+override a custom, copyleft, composite, conflicting, or prohibited expression.
+
+The schema-4 release set also binds a disposition summary. Current artifacts use `trust: none`, a null ledger
+hash, and an undisposed count equal to their manual-review count. Test data uses separate opaque actors,
+expiry, exact evidence scope and all mandatory re-review triggers. `synthetic-fixture-only` trust can never
+authorize promotion; the positive accountable contract uses only `.invalid` URLs and is not an approval.
+A future real ledger must use accountable-human trust and immutable review-record URLs; none exists today.
 
 ## Tamper and runtime checks
 

@@ -7,6 +7,10 @@ is correlated with npm lock source/integrity, exact enclosing Next.js package id
 digest-pinned Node distribution license, and installed license files. A versioned fail-closed policy produces
 hashed evidence and notice artifacts; schema-3 dual-release evidence binds those hashes and decision counts.
 Manual or prohibited results block external redistribution without changing application runtime behavior.
+ADR 0018 extends this boundary with exact publisher-material bindings and an outside-image disposition
+ledger. The ledger is authorization evidence, not calculation or runtime state. Schema-4 release evidence
+binds its trust/hash/counts and invalidates review after dependency, policy, evidence, distribution-model,
+or expiry change. Checked-in synthetic trust is permanently promotion-ineligible.
 
 Status: accepted baseline; persistence approach selected and managed providers remain open.
 

@@ -3,10 +3,18 @@
 ## License evidence binding
 
 Dual release-set schema 3 adds an exact `licenses` summary to each artifact. It binds the policy version/hash,
-evidence hash, notice hash, package count, permitted-with-notice count, manual-review count, prohibited count,
-first-party count and unresolved count. The license package/unresolved counts must match the artifact SBOM.
-See `docs/DEPENDENCY_LICENSE_EVIDENCE.md` and ADR 0017. External redistribution additionally requires all
-unresolved, manual-review and prohibited counts to be zero.
+reviewed-materials version/hash, evidence hash, notice hash, package count, permitted-with-notice count,
+manual-review count, prohibited count, first-party count and unresolved count. The license package/unresolved
+counts must match the artifact SBOM.
+See `docs/DEPENDENCY_LICENSE_EVIDENCE.md` and ADR 0017. External redistribution requires unresolved and
+prohibited counts to be zero; manual records additionally require current, independently verified,
+accountable dispositions under ADR 0018.
+
+ADR 0018 upgrades the dual release set to schema 4 and the application artifact manifest to schema 3. Each
+artifact now also carries `licenseDispositions`: ledger trust/hash and approved, rejected, remediation,
+undisposed, and total counts. A null ledger preserves every manual record as undisposed. Synthetic trust is
+test-only and cannot pass promotion. Accountable dispositions must match the exact schema-4 source and
+evidence scope and remain unexpired.
 
 - Manifest version: 2.0.0
 - Candidate: `0.1.0-rc.1`

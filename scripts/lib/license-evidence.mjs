@@ -17,22 +17,27 @@ export function concludeLicenseEvidence({
   lockfile,
   runtimeTexts = {},
   proprietaryText,
+  reviewedMaterials = null,
 }) {
   validatePolicy(policy);
+  if (reviewedMaterials) validateReviewedMaterials(reviewedMaterials);
   assert.ok(Array.isArray(spdx.packages) && spdx.packages.length > 0);
   const packageRecords = spdx.packages.map((package_) => {
     const provenance = packageProvenance(package_, lockfile);
-    const material = findLicenseMaterial({
-      package_,
-      sourceRoot,
-      runtimeTexts,
-      proprietaryText,
-    });
     const declared = normalizeExpression(
       isFirstParty(package_, artifact)
         ? "LicenseRef-Proprietary"
         : package_.licenseDeclared,
     );
+    const material = findLicenseMaterial({
+      package_,
+      provenance,
+      declared,
+      sourceRoot,
+      runtimeTexts,
+      proprietaryText,
+      reviewedMaterials,
+    });
     const decision = decide({
       declared,
       material,
@@ -61,12 +66,18 @@ export function concludeLicenseEvidence({
     };
   });
   const counts = countDecisions(packageRecords);
+  const materialsVersion = reviewedMaterials?.materialsVersion ?? null;
+  const materialsSha256 = reviewedMaterials
+    ? sha256(canonicalJson(reviewedMaterials))
+    : null;
   const evidence = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     kind: "astroligyapp.license-evidence",
     artifact,
     policyVersion: policy.policyVersion,
     policySha256: sha256(canonicalJson(policy)),
+    materialsVersion,
+    materialsSha256,
     counts,
     packages: packageRecords,
   };
@@ -79,6 +90,8 @@ export function concludeLicenseEvidence({
       ...counts,
       policyVersion: policy.policyVersion,
       policySha256: evidence.policySha256,
+      materialsVersion,
+      materialsSha256,
       evidenceSha256: sha256(canonicalJson(evidence)),
       noticeSha256: sha256(notice),
     },
@@ -113,14 +126,24 @@ export function validateLicenseEvidenceBundle({
   evidence,
   notice,
   policy,
+  reviewedMaterials = null,
   summary,
 }) {
   validatePolicy(policy);
+  if (reviewedMaterials) validateReviewedMaterials(reviewedMaterials);
   validateSummary(summary);
-  assert.equal(evidence.schemaVersion, 1);
+  assert.equal(evidence.schemaVersion, 2);
   assert.equal(evidence.kind, "astroligyapp.license-evidence");
   assert.equal(evidence.policyVersion, policy.policyVersion);
   assert.equal(evidence.policySha256, sha256(canonicalJson(policy)));
+  assert.equal(
+    evidence.materialsVersion,
+    reviewedMaterials?.materialsVersion ?? null,
+  );
+  assert.equal(
+    evidence.materialsSha256,
+    reviewedMaterials ? sha256(canonicalJson(reviewedMaterials)) : null,
+  );
   assert.deepEqual(evidence.counts, countDecisions(evidence.packages));
   for (const package_ of evidence.packages) {
     if (package_.licenseText)
@@ -131,6 +154,8 @@ export function validateLicenseEvidenceBundle({
       );
   }
   assert.equal(summary.policySha256, sha256(canonicalJson(policy)));
+  assert.equal(summary.materialsVersion, evidence.materialsVersion);
+  assert.equal(summary.materialsSha256, evidence.materialsSha256);
   assert.equal(summary.evidenceSha256, sha256(canonicalJson(evidence)));
   assert.equal(summary.noticeSha256, sha256(notice));
   assert.deepEqual(
@@ -232,6 +257,9 @@ function findLicenseMaterial({
   sourceRoot,
   runtimeTexts,
   proprietaryText,
+  provenance,
+  declared,
+  reviewedMaterials,
 }) {
   if (
     isFirstParty(package_, "application") ||
@@ -240,25 +268,80 @@ function findLicenseMaterial({
     return { source: "repository LICENSE", text: proprietaryText };
   if (runtimeTexts[package_.SPDXID]) return runtimeTexts[package_.SPDXID];
   const sourcePath = package_.sourceInfo?.match(/manifest file: (\S+)/u)?.[1];
-  if (!sourcePath?.startsWith("/app/")) return null;
-  const localManifest = join(sourceRoot, sourcePath.slice("/app/".length));
-  if (!existsSync(localManifest)) return null;
-  const directory = dirname(localManifest);
-  const candidates = readdirSync(directory)
-    .filter(
-      (name) =>
-        TEXT_NAMES.test(name) && statSync(join(directory, name)).isFile(),
-    )
-    .sort();
-  if (candidates.length === 0) return null;
-  const text = candidates
-    .map(
-      (name) =>
-        `===== ${name} =====\n${readFileSync(join(directory, name), "utf8").trim()}\n`,
-    )
-    .join("\n");
+  if (sourcePath?.startsWith("/app/")) {
+    const localManifest = join(sourceRoot, sourcePath.slice("/app/".length));
+    if (existsSync(localManifest)) {
+      const directory = dirname(localManifest);
+      const candidates = readdirSync(directory)
+        .filter(
+          (name) =>
+            TEXT_NAMES.test(name) && statSync(join(directory, name)).isFile(),
+        )
+        .sort();
+      if (candidates.length > 0) {
+        const text = candidates
+          .map(
+            (name) =>
+              `===== ${name} =====\n${readFileSync(join(directory, name), "utf8").trim()}\n`,
+          )
+          .join("\n");
+        return {
+          source: `installed ${relative(sourceRoot, directory).replaceAll("\\", "/")}/${candidates.join("+")}`,
+          text,
+        };
+      }
+    }
+  }
+  return findReviewedMaterial({
+    package_,
+    provenance,
+    declared,
+    sourceRoot,
+    reviewedMaterials,
+  });
+}
+
+function findReviewedMaterial({
+  package_,
+  provenance,
+  declared,
+  sourceRoot,
+  reviewedMaterials,
+}) {
+  if (!reviewedMaterials) return null;
+  const matches = reviewedMaterials.bindings.filter(
+    (binding) =>
+      binding.name === package_.name &&
+      binding.version === (package_.versionInfo ?? "UNKNOWN") &&
+      binding.licenseExpression === declared &&
+      binding.artifactIntegrity === provenance.integrity,
+  );
+  assert.ok(
+    matches.length <= 1,
+    `ambiguous reviewed material: ${package_.name}`,
+  );
+  if (matches.length === 0) return null;
+  const binding = matches[0];
+  const descriptor = reviewedMaterials.materials[binding.material];
+  assert.ok(descriptor, `missing reviewed material: ${binding.material}`);
+  const absolute = join(sourceRoot, descriptor.path);
+  const normalizedRoot = `${sourceRoot.replaceAll("\\", "/").replace(/\/$/u, "")}/`;
+  assert.ok(
+    absolute.replaceAll("\\", "/").startsWith(normalizedRoot),
+    "reviewed material path escaped source root",
+  );
+  assert.ok(
+    existsSync(absolute),
+    `reviewed material file missing: ${descriptor.path}`,
+  );
+  const text = normalizeText(readFileSync(absolute, "utf8"));
+  assert.equal(
+    sha256(text),
+    descriptor.sha256,
+    `reviewed material hash drifted: ${binding.material}`,
+  );
   return {
-    source: `installed ${relative(sourceRoot, directory).replaceAll("\\", "/")}/${candidates.join("+")}`,
+    source: `reviewed ${binding.authoritativeSource} (${reviewedMaterials.materialsVersion})`,
     text,
   };
 }
@@ -346,8 +429,48 @@ function validatePolicy(policy) {
     assert.ok(Array.isArray(policy[field]));
 }
 
+function validateReviewedMaterials(materials) {
+  assert.equal(materials.schemaVersion, 1);
+  assert.match(materials.materialsVersion, /^\d{4}-\d{2}-\d{2}\.\d+$/u);
+  assert.ok(materials.materials && typeof materials.materials === "object");
+  assert.ok(Array.isArray(materials.bindings));
+  const identities = new Set();
+  for (const [id, descriptor] of Object.entries(materials.materials)) {
+    assert.match(id, /^[a-z0-9][a-z0-9.-]+$/u);
+    assert.match(descriptor.path, /^(?:config|node_modules)\//u);
+    assert.match(descriptor.sha256, /^sha256:[a-f0-9]{64}$/u);
+  }
+  for (const binding of materials.bindings) {
+    assert.ok(materials.materials[binding.material]);
+    assert.match(binding.version, /^(?:UNKNOWN|\d+\.\d+\.\d+)/u);
+    assert.match(binding.artifactIntegrity, /^sha512-/u);
+    assert.match(
+      binding.authoritativeSource,
+      /^https:\/\/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[a-f0-9]{40}\//u,
+    );
+    const identity = `${binding.name}@${binding.version}|${binding.artifactIntegrity}`;
+    assert.ok(
+      !identities.has(identity),
+      `duplicate reviewed material binding: ${identity}`,
+    );
+    identities.add(identity);
+  }
+}
+
+function normalizeText(text) {
+  return text.replace(/\r\n/gu, "\n");
+}
+
 function validateSummary(summary) {
   assert.match(summary.policyVersion, /^\d{4}-\d{2}-\d{2}\.\d+$/u);
+  if (summary.materialsVersion !== null)
+    assert.match(summary.materialsVersion, /^\d{4}-\d{2}-\d{2}\.\d+$/u);
+  if (summary.materialsSha256 !== null)
+    assert.match(summary.materialsSha256, /^sha256:[a-f0-9]{64}$/u);
+  assert.equal(
+    summary.materialsVersion === null,
+    summary.materialsSha256 === null,
+  );
   for (const field of ["policySha256", "evidenceSha256", "noticeSha256"])
     assert.match(summary[field], /^sha256:[a-f0-9]{64}$/u);
   for (const field of [

@@ -27,6 +27,7 @@ import {
   concludeLicenseEvidence,
   validateLicenseEvidenceBundle,
 } from "./lib/license-evidence.mjs";
+import { emptyDispositionSummary } from "./lib/license-disposition.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const temporaryRoot = mkdtempSync(join(tmpdir(), "astroligyapp-artifact-"));
@@ -210,6 +211,12 @@ try {
   const policy = JSON.parse(
     readFileSync(join(root, "config", "release-license-policy.json"), "utf8"),
   );
+  const reviewedMaterials = JSON.parse(
+    readFileSync(
+      join(root, "config", "release-license-materials.json"),
+      "utf8",
+    ),
+  );
   const licenseEvidence = concludeLicenseEvidence({
     artifact: "application",
     spdx: normalized,
@@ -218,11 +225,13 @@ try {
     lockfile: JSON.parse(readFileSync(join(root, "package-lock.json"), "utf8")),
     runtimeTexts,
     proprietaryText: readFileSync(join(root, "LICENSE"), "utf8"),
+    reviewedMaterials,
   });
   validateLicenseEvidenceBundle({
     evidence: licenseEvidence.evidence,
     notice: licenseEvidence.notice,
     policy,
+    reviewedMaterials,
     summary: licenseEvidence.summary,
   });
   const runtimeEvidenceFiles = capture("docker", [
@@ -244,7 +253,7 @@ try {
   const unresolvedLicenseCount = licenseEvidence.summary.unresolvedCount;
 
   const manifest = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     kind: "astroligyapp.release-evidence",
     source: {
       repository: "https://github.com/hbkdad/astroligyapp",
@@ -266,6 +275,9 @@ try {
       unresolvedLicenseCount,
     },
     licenses: licenseEvidence.summary,
+    licenseDispositions: emptyDispositionSummary(
+      licenseEvidence.summary.manualReviewCount,
+    ),
     scans: {
       gitSecrets: "pass",
       imageSecrets: "pass",
@@ -299,6 +311,7 @@ try {
           reproducibleBuilds: 2,
           sbom: { ...manifest.sbom },
           licenses: { ...manifest.licenses },
+          licenseDispositions: { ...manifest.licenseDispositions },
           scans: {
             imageSecrets: "pass",
             imageVulnerabilities: "pass",

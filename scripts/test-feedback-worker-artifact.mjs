@@ -22,6 +22,7 @@ import {
   concludeLicenseEvidence,
   validateLicenseEvidenceBundle,
 } from "./lib/license-evidence.mjs";
+import { emptyDispositionSummary } from "./lib/license-disposition.mjs";
 
 const temporary = mkdtempSync(join(tmpdir(), "astroligyapp-worker-artifact-"));
 const archive = join(temporary, "source.tar");
@@ -218,6 +219,12 @@ try {
   });
   assert.equal(workerSbom.packageCount, 37);
   assert.equal(workerSbom.dependencyCount, 36);
+  const reviewedMaterials = JSON.parse(
+    readFileSync(
+      join(sources[0], "config", "release-license-materials.json"),
+      "utf8",
+    ),
+  );
   const workerLicenseEvidence = concludeLicenseEvidence({
     artifact: "feedback-worker",
     spdx: workerSbom.document,
@@ -232,6 +239,7 @@ try {
       readFileSync(join(sources[0], "package-lock.json"), "utf8"),
     ),
     proprietaryText: readFileSync(join(sources[0], "LICENSE"), "utf8"),
+    reviewedMaterials,
   });
   validateLicenseEvidenceBundle({
     evidence: workerLicenseEvidence.evidence,
@@ -242,6 +250,7 @@ try {
         "utf8",
       ),
     ),
+    reviewedMaterials,
     summary: workerLicenseEvidence.summary,
   });
   const workerSbomJson = canonicalJson(workerSbom.document);
@@ -362,6 +371,9 @@ try {
             unresolvedLicenseCount: 0,
           },
           licenses: { ...workerLicenseEvidence.summary },
+          licenseDispositions: emptyDispositionSummary(
+            workerLicenseEvidence.summary.manualReviewCount,
+          ),
           scans: {
             imageSecrets: "pass",
             imageVulnerabilities: "pass",

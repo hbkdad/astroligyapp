@@ -1,5 +1,22 @@
 # Security and privacy audit
 
+### Goal 88 publisher-evidence and disposition-ledger review
+
+- **Assets and actors.** Protected assets are release authorization, exact dependency evidence and future
+  accountable review records. Actors are the evidence generator, independent preparer/reviewer, release
+  verifier and promotion operator. No browser or application user participates.
+- **Trust boundaries.** Publisher material is accepted only from an immutable Git commit and must match
+  exact package version/integrity/expression plus checked text hash. Synthetic ledgers are explicitly
+  untrusted and promotion-ineligible.
+- **Authorization.** Manual records require independent opaque actors, exact dual-artifact scope, current
+  expiry, complete one-to-one dispositions and zero rejected/remediation/undisposed outcomes. Policy,
+  evidence, dependency or distribution changes force re-review.
+- **Privacy and secrets.** Evidence contains public package/license metadata and opaque actor identifiers;
+  no birth data, relationship data, credentials, private keys, legal names, emails, or review prose enters
+  runtime images or routine logs.
+- **Residual risk.** Twenty records remain manual and no accountable-human ledger exists. External
+  redistribution, staging apply and production therefore remain NO-GO.
+
 ### Goal 87 dependency-license evidence review
 
 - **Scope.** Release evidence and promotion authorization only; no authentication, user data, production

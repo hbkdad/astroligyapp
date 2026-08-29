@@ -14,6 +14,11 @@ import {
   concludeLicenseEvidence,
   validateLicenseEvidenceBundle,
 } from "./lib/license-evidence.mjs";
+import {
+  applyDispositionLedger,
+  emptyDispositionSummary,
+  validateAndSummarizeDispositionLedger,
+} from "./lib/license-disposition.mjs";
 
 const commit = "a".repeat(40);
 const tree = "b".repeat(40);
@@ -37,6 +42,9 @@ const workerSbom = createWorkerSpdx({
 const policy = JSON.parse(
   readFileSync("config/release-license-policy.json", "utf8"),
 );
+const reviewedMaterials = JSON.parse(
+  readFileSync("config/release-license-materials.json", "utf8"),
+);
 const workerLicenseEvidence = concludeLicenseEvidence({
   artifact: "feedback-worker",
   spdx: workerSbom.document,
@@ -44,12 +52,14 @@ const workerLicenseEvidence = concludeLicenseEvidence({
   sourceRoot: process.cwd(),
   lockfile: JSON.parse(readFileSync("package-lock.json", "utf8")),
   proprietaryText: readFileSync("LICENSE", "utf8"),
+  reviewedMaterials,
 });
 assert.doesNotThrow(() =>
   validateLicenseEvidenceBundle({
     evidence: workerLicenseEvidence.evidence,
     notice: workerLicenseEvidence.notice,
     policy,
+    reviewedMaterials,
     summary: workerLicenseEvidence.summary,
   }),
 );
@@ -67,6 +77,7 @@ for (const mutate of [
     evidence: structuredClone(workerLicenseEvidence.evidence),
     notice: workerLicenseEvidence.notice,
     policy: structuredClone(policy),
+    reviewedMaterials: structuredClone(reviewedMaterials),
     summary: structuredClone(workerLicenseEvidence.summary),
   };
   mutate(copy);
@@ -95,7 +106,7 @@ assert.doesNotMatch(
 );
 
 const releaseSet = {
-  schemaVersion: 3,
+  schemaVersion: 4,
   kind: "astroligyapp.release-set",
   statement: {
     source: {
@@ -154,6 +165,7 @@ for (const artifact_ of licenseReadyReleaseSet.statement.artifacts) {
   artifact_.licenses.prohibitedCount = 0;
   artifact_.licenses.unresolvedCount = 0;
   artifact_.sbom.unresolvedLicenseCount = 0;
+  artifact_.licenseDispositions = emptyDispositionSummary(0);
 }
 assert.doesNotThrow(() =>
   assertReleaseSetPromotionReferences(
@@ -161,6 +173,8 @@ assert.doesNotThrow(() =>
     promotionReferences,
   ),
 );
+runDispositionLedgerTests();
+runReviewedMaterialTests();
 assert.throws(() =>
   assertExternalRedistributionReady(workerLicenseEvidence.summary),
 );
@@ -195,6 +209,8 @@ for (const mutate of [
   (copy) => (copy.statement.source.commit = "mixed-revision"),
   (copy) => (copy.localVerification = { trust: "production" }),
   (copy) => (copy.statement.artifacts[0].licenses.noticeSha256 = "tampered"),
+  (copy) =>
+    (copy.statement.artifacts[0].licenseDispositions.undisposedCount = 0),
 ]) {
   const copy = structuredClone(releaseSet);
   mutate(copy);
@@ -251,7 +267,218 @@ function artifact(name, imageId, imageDigest, dockerfileSha256, packageCount) {
             firstPartyCount: 1,
             unresolvedCount: 101,
           },
+    licenseDispositions: emptyDispositionSummary(
+      name === "application"
+        ? 10
+        : workerLicenseEvidence.summary.manualReviewCount,
+    ),
     scans: { imageSecrets: "pass", imageVulnerabilities: "pass" },
     rollbackPredecessor: null,
   };
+}
+
+function runDispositionLedgerTests() {
+  const dispositionReleaseSet = structuredClone(releaseSet);
+  const applicationEvidence = structuredClone(workerLicenseEvidence.evidence);
+  applicationEvidence.artifact = "application";
+  const evidences = {
+    application: applicationEvidence,
+    "feedback-worker": workerLicenseEvidence.evidence,
+  };
+  for (const artifact_ of dispositionReleaseSet.statement.artifacts) {
+    const evidence = evidences[artifact_.name];
+    artifact_.sbom.packageCount = evidence.counts.packageCount;
+    artifact_.sbom.unresolvedLicenseCount = evidence.counts.unresolvedCount;
+    artifact_.licenses = {
+      ...workerLicenseEvidence.summary,
+      evidenceSha256: sha256(canonicalJson(evidence)),
+    };
+    artifact_.licenseDispositions = emptyDispositionSummary(
+      evidence.counts.manualReviewCount,
+    );
+  }
+  const ledger = syntheticLedger(dispositionReleaseSet, evidences);
+  const ledgerInput = {
+    ledger,
+    releaseSet: dispositionReleaseSet,
+    evidenceByArtifact: evidences,
+    now: "2026-08-25T12:00:00.000Z",
+  };
+  const summaries = validateAndSummarizeDispositionLedger(ledgerInput);
+  assert.equal(summaries.application.dispositionCount, 5);
+  const dispositionBoundReleaseSet = applyDispositionLedger(ledgerInput);
+  assert.doesNotThrow(() => validateReleaseSet(dispositionBoundReleaseSet));
+  assert.throws(() =>
+    assertReleaseSetPromotionReferences(
+      dispositionBoundReleaseSet,
+      promotionReferences,
+    ),
+  );
+  const accountableLedger = structuredClone(ledger);
+  accountableLedger.trust = "accountable-human";
+  accountableLedger.ledgerId = `ledger_${"4".repeat(24)}`;
+  for (const disposition of accountableLedger.dispositions) {
+    const digest = sha256(
+      `${disposition.artifact}|${disposition.spdxId}|accountable-fixture`,
+    ).slice(7);
+    disposition.evidenceSource = `https://reviews.example.invalid/records/${digest}`;
+    disposition.noteRef = `review-note-${digest.slice(0, 24)}`;
+  }
+  const accountableInput = {
+    ...ledgerInput,
+    ledger: accountableLedger,
+  };
+  const accountableReleaseSet = applyDispositionLedger(accountableInput);
+  const accountableSummaries =
+    validateAndSummarizeDispositionLedger(accountableInput);
+  assert.doesNotThrow(() =>
+    assertReleaseSetPromotionReferences(
+      accountableReleaseSet,
+      promotionReferences,
+      Object.fromEntries(
+        Object.entries(accountableSummaries).map(([name, summary]) => [
+          name,
+          summary.ledgerSha256,
+        ]),
+      ),
+    ),
+  );
+  for (const mutate of [
+    (copy) => (copy.ledger.expiresAt = "2026-08-25T11:00:00.000Z"),
+    (copy) => (copy.ledger.reviewedBy = copy.ledger.preparedBy),
+    (copy) => (copy.ledger.scope.commit = "b".repeat(40)),
+    (copy) =>
+      (copy.ledger.scope.artifacts.application.evidenceSha256 = `sha256:${"f".repeat(64)}`),
+    (copy) => copy.ledger.dispositions.pop(),
+    (copy) =>
+      (copy.ledger.dispositions[0].packageSource = "https://example.invalid"),
+    (copy) =>
+      (copy.ledger.dispositions[0].licenseExpression = "MIT OR AGPL-3.0-only"),
+    (copy) => (copy.ledger.dispositions[0].outcome = "waived"),
+    (copy) => copy.ledger.reviewTriggers.pop(),
+    (copy) => (copy.ledger.trust = "accountable-human"),
+  ]) {
+    const copy = {
+      ledger: structuredClone(ledger),
+      releaseSet: dispositionReleaseSet,
+      evidenceByArtifact: evidences,
+      now: "2026-08-25T12:00:00.000Z",
+    };
+    mutate(copy);
+    assert.throws(() => validateAndSummarizeDispositionLedger(copy));
+  }
+}
+
+function syntheticLedger(dispositionReleaseSet, evidences) {
+  const dispositions = [];
+  for (const [artifactName, evidence] of Object.entries(evidences)) {
+    for (const package_ of evidence.packages.filter(
+      (entry) => entry.decision.outcome === "manual-review",
+    )) {
+      const suffix = sha256(`${artifactName}|${package_.spdxId}`).slice(7, 19);
+      dispositions.push({
+        artifact: artifactName,
+        spdxId: package_.spdxId,
+        licenseExpression: package_.licenseExpression,
+        packageSource: package_.source,
+        packageIntegrity: package_.integrity,
+        licenseTextSha256: package_.licenseText?.sha256 ?? null,
+        outcome: "approved",
+        evidenceSource: `urn:synthetic:license-review:${suffix.padEnd(24, "0")}`,
+        noteRef: `synthetic-note-${suffix}`,
+      });
+    }
+  }
+  return {
+    schemaVersion: 1,
+    kind: "astroligyapp.license-disposition-ledger",
+    trust: "synthetic-fixture-only",
+    ledgerId: `synthetic_${"1".repeat(24)}`,
+    preparedBy: `actor_${"2".repeat(24)}`,
+    reviewedBy: `actor_${"3".repeat(24)}`,
+    reviewedAt: "2026-08-25T10:00:00.000Z",
+    expiresAt: "2026-09-24T10:00:00.000Z",
+    reviewTriggers: [
+      "dependency-change",
+      "distribution-model-change",
+      "evidence-change",
+      "policy-change",
+    ],
+    scope: {
+      repository: dispositionReleaseSet.statement.source.repository,
+      commit: dispositionReleaseSet.statement.source.commit,
+      artifacts: Object.fromEntries(
+        dispositionReleaseSet.statement.artifacts.map((artifact_) => [
+          artifact_.name,
+          {
+            policySha256: artifact_.licenses.policySha256,
+            evidenceSha256: artifact_.licenses.evidenceSha256,
+          },
+        ]),
+      ),
+    },
+    dispositions,
+  };
+}
+
+function runReviewedMaterialTests() {
+  const materials = JSON.parse(
+    readFileSync("config/release-license-materials.json", "utf8"),
+  );
+  const spdx = {
+    packages: [
+      {
+        SPDXID: "SPDXRef-Package-next-env",
+        name: "@next/env",
+        versionInfo: "16.3.0",
+        sourceInfo:
+          "acquired package info from installed node module manifest file: /app/node_modules/@next/env/package.json",
+        licenseDeclared: "MIT",
+        licenseConcluded: "NOASSERTION",
+      },
+    ],
+  };
+  const input = {
+    artifact: "application",
+    spdx,
+    policy,
+    sourceRoot: process.cwd(),
+    lockfile: JSON.parse(readFileSync("package-lock.json", "utf8")),
+    proprietaryText: readFileSync("LICENSE", "utf8"),
+    reviewedMaterials: materials,
+  };
+  const baseline = concludeLicenseEvidence(structuredClone(input));
+  assert.equal(
+    baseline.evidence.packages[0].decision.outcome,
+    "permitted-with-notice",
+  );
+  for (const mutate of [
+    (copy) => (copy.reviewedMaterials.bindings[4].version = "16.3.1"),
+    (copy) =>
+      (copy.reviewedMaterials.bindings[4].licenseExpression = "Apache-2.0"),
+    (copy) =>
+      (copy.reviewedMaterials.bindings[4].artifactIntegrity = "sha512-invalid"),
+  ]) {
+    const copy = structuredClone(input);
+    mutate(copy);
+    assert.equal(
+      concludeLicenseEvidence(copy).evidence.packages[0].decision.outcome,
+      "manual-review",
+    );
+  }
+  for (const mutate of [
+    (copy) =>
+      (copy.reviewedMaterials.bindings[4].authoritativeSource =
+        "https://raw.githubusercontent.com/vercel/next.js/main/license.md"),
+    (copy) =>
+      (copy.reviewedMaterials.materials["next-mit"].sha256 =
+        `sha256:${"0".repeat(64)}`),
+    (copy) =>
+      (copy.reviewedMaterials.materials["next-mit"].path =
+        "config/../../LICENSE"),
+  ]) {
+    const copy = structuredClone(input);
+    mutate(copy);
+    assert.throws(() => concludeLicenseEvidence(copy));
+  }
 }
