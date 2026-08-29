@@ -1,18 +1,19 @@
 # Project status
 
-Last updated: 2026-08-25
+Last updated: 2026-08-29
 
 ## Current position
 
-Status: Goal 87 complete; both runtime artifacts now generate deterministic outside-image SPDX, full
-license-text evidence, notice indexes, and schema-3 release bindings under versioned fail-closed policy
-`2026-08-25.1`. The exact 101-package application result is 72 permitted-with-notice, 27 manual review,
-0 prohibited, 2 first-party, and 2 unresolved; the 37-package worker result is 31 permitted-with-notice,
-5 manual review, 0 prohibited, 1 first-party, and 0 unresolved. Immutable promotion references now fail
-while any unresolved/manual/prohibited result exists. Commit `64ecba5` is GO as an internal evidence
-candidate and NO-GO for external redistribution, AWS staging/apply, or production. No image was published
-and no legal approval, licensing acceptance, registry, cloud, credential, purchase, or production change
-was made.
+Status: Goal 88 complete; exact version/integrity/commit-addressed publisher materials reduce the application
+manual set from 27 to 15 without changing the worker's 5 honest manual records. The exact 101-package
+application result is now 84 permitted-with-notice, 15 manual review, 0 prohibited, 2 first-party, and 2
+unresolved; the 37-package worker remains 31 permitted-with-notice, 5 manual review, 0 prohibited, 1
+first-party, and 0 unresolved. License-evidence schema 2 binds the publisher-material configuration;
+artifact-manifest schema 3 and dual release-set schema 4 bind a fail-closed disposition summary. Current
+artifacts use `trust: none`, so all 20 manual records remain undisposed and external promotion is blocked.
+Commit `5a844c4` reproduced both local images and is GO only as an internal evidence candidate. No image was
+published and no real review, legal approval, licensing acceptance, registry, cloud, credential, purchase,
+or production change was made.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -35,6 +36,31 @@ SDK/adapter, authenticated feedback worker, and suppression seam, but no account
 provisioned AWS infrastructure, live queue polling, or live delivery.
 
 ## Completed
+
+- [x] Goal 88: enumerate all 27 application and 5 worker manual records and accept ADR 0018, which permits
+      version-matched publisher material only for already-permitted expressions with exact package,
+      version, lock integrity, immutable 40-character commit source, local path, and normalized text hash.
+- [x] Bind Edge Runtime, Sharp, Next.js, and Node Redis material under version `2026-08-28.1`. Application
+      permitted-with-notice records rise from 72 to 84 and manual records fall from 27 to 15. Custom Debian
+      terms, libvips composites, WASM copyleft terms, missing Node/busboy assertions, and unsupported source
+      provenance remain manual; the worker's five missing-text/provenance records remain manual.
+- [x] Add license-evidence schema 2 with the canonical publisher-material version/hash, application artifact
+      schema 3, dual release-set schema 4, and a versioned disposition ledger requiring separate opaque
+      preparer/reviewer identities, exact repository/commit/policy/evidence/package scope, immutable review
+      evidence, explicit outcome, expiry, and all four mandatory re-review triggers.
+- [x] Reject version/integrity/expression/source/path/text drift, mutable publisher URLs, expired or future
+      review, self-review, mixed source/evidence, missing or extra dispositions, changed package scope,
+      rejected/remediation outcomes, synthetic trust, and promotion without the validator-returned ledger
+      hash. All repository test data remains synthetic; no ledger or approval is checked in.
+- [x] Exact clean dual-artifact check at commit `5a844c4` reproduced application image
+      `sha256:a9ebc6defc53ae706abd89b93e8b656585e0c0c45d0e88be8c24ccfdb8413686` and worker image
+      `sha256:2af37039dbf35fda670855bbf1fe119fd9a7ecec5de5718a50aa0d3ffbc5fa19`. Gitleaks found no
+      repository/source leaks; runtime scans found zero tested vulnerabilities/secrets; generated evidence
+      stayed outside the images; disposable images, keys, and evidence were removed.
+- [x] Apply `security-audit`: fail-closed hashing and exact scope protect the public dependency/license
+      evidence; no private user data, actor identity, credential, external review record, network service,
+      registry, or production system was introduced. Residual risk is 20 undisposed manual records plus 2
+      unresolved application assertions, so external redistribution remains NO-GO.
 
 - [x] Goal 87: accept ADR 0017 and policy `2026-08-25.1`, separating the proprietary application from
       third-party terms and defining explicit permitted-with-notice, manual-review, prohibited, and
@@ -933,24 +959,23 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 88 — reduce the 32 manual dependency-license cases to the smallest honest review set and create an
-accountable, immutable human disposition ledger without publishing an image or making legal commitments.
+Goal 89 — establish a credential-free trusted CI release-candidate workflow contract without configuring a
+registry, cloud account, protected environment, or production deployment.
 
 Deliverables:
 
-1. Enumerate the exact 27 application and 5 worker manual-review records from generated evidence. For each
-   missing-text or missing-assertion case, locate version-matched authoritative publisher material and bind
-   its immutable source/hash; never substitute generic license text or infer an expression.
-2. Keep custom, composite, copyleft, exception, ambiguous, or conflicting cases manual. Add a versioned
-   disposition-ledger schema that requires an opaque accountable reviewer, exact policy/evidence hashes,
-   decision scope, evidence source, expiry/re-review trigger, and explicit outcome; provide only synthetic
-   fixtures and no fabricated approval.
-3. Bind the disposition-ledger hash and remaining counts into the dual release set. Reject stale, mixed,
-   expired, self-approved, scope-mismatched, missing-evidence, or tampered dispositions. External promotion
-   must remain blocked unless every required disposition is present and current.
-4. Update documentation, exercise adversarial cases, and apply `security-audit` plus `release-check`. Do not
-   publish, contact maintainers/counsel, accept terms, record a real legal decision, configure a registry or
-   cloud account, use credentials, purchase services, or mutate production.
+1. Research current GitHub Actions artifact attestations, OIDC subject claims, environment protection,
+   permissions, action pinning, and retention from primary documentation; record the accepted trust boundary
+   and threat model in an ADR without claiming that repository settings exist.
+2. Add a least-privilege workflow/validator that builds the existing dual release candidate on an immutable
+   commit, preserves SPDX/license/scan/provenance evidence, pins third-party actions by commit, and defaults
+   to no registry push, no cloud credential, no staging apply, and no production mutation.
+3. Bind workflow identity, source/ref/event, runner/tool versions, artifact hashes, and approval state into a
+   synthetic CI evidence envelope. Reject pull-request escalation, fork/untrusted contexts, mutable action
+   references, mixed commits, missing evidence, excessive permissions, expired artifacts, and replay.
+4. Exercise adversarial fixtures, update runbooks/status, and apply `security-audit` plus `release-check`.
+   Keep external redistribution blocked by the 20 real manual dispositions and 2 unresolved assertions; do
+   not enable environments, secrets, OIDC trust, a registry, AWS, publishing, or deployment.
 
 ## Phase queue
 

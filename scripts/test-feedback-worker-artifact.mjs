@@ -417,7 +417,7 @@ try {
     /USER nonroot[\s\S]*HEALTHCHECK[\s\S]*CMD/u,
   );
   console.log(
-    `feedback worker artifact gate passed: ${inspected[0].Id}, ${inspected[0].Size} bytes, ${workerSbom.dependencyCount} traced dependencies`,
+    `feedback worker artifact gate passed: ${inspected[0].Id}, ${inspected[0].Size} bytes, ${workerSbom.dependencyCount} traced dependencies, ${workerLicenseEvidence.summary.unresolvedCount} unresolved license assertions, ${workerLicenseEvidence.summary.manualReviewCount} manual reviews`,
   );
 } finally {
   run("docker", ["container", "rm", "--force", shutdownContainer], {
