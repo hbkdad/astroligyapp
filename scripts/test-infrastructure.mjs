@@ -27,6 +27,7 @@ try {
   run("docker", [
     "run",
     "--rm",
+    ...containerUserArguments(),
     "-e",
     `TF_ENCRYPTION=${encryption}`,
     "-v",
@@ -42,6 +43,7 @@ try {
   run("docker", [
     "run",
     "--rm",
+    ...containerUserArguments(),
     "-e",
     `TF_ENCRYPTION=${encryption}`,
     "-v",
@@ -58,6 +60,7 @@ try {
   run("docker", [
     "run",
     "--rm",
+    ...containerUserArguments(),
     "-e",
     `TF_ENCRYPTION=${encryption}`,
     "-v",
@@ -71,6 +74,7 @@ try {
   run("docker", [
     "run",
     "--rm",
+    ...containerUserArguments(),
     "-e",
     `TF_ENCRYPTION=${encryption}`,
     "-v",
@@ -199,4 +203,11 @@ function sanitizedEnvironment() {
       ([name]) => !name.startsWith("AWS_") && name !== "TF_ENCRYPTION",
     ),
   );
+}
+
+function containerUserArguments() {
+  return typeof process.getuid === "function" &&
+    typeof process.getgid === "function"
+    ? ["--user", `${process.getuid()}:${process.getgid()}`]
+    : [];
 }
