@@ -126,6 +126,15 @@ for (const mutateWorkflow of [
   (text) => `${text}\n    permissions:\n      id-token: write\n`,
   (text) => `${text}\n    permissions: write-all\n`,
   (text) => `${text}\n      - run: docker push example.invalid/image\n`,
+  (text) =>
+    text.replace(
+      "--driver docker-container --name astroligyapp-release --use",
+      "--driver docker --name astroligyapp-release --use",
+    ),
+  (text) => text.replace("docker buildx inspect --bootstrap", "docker info"),
+  (text) => text.replace("if: always()", "if: success()"),
+  (text) =>
+    text.replace("docker buildx rm astroligyapp-release", "docker info"),
 ])
   assert.throws(() =>
     validateWorkflowContract(mutateWorkflow(workflowText), policy),

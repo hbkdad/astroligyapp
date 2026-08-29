@@ -41,6 +41,11 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
+      - name: Initialize isolated OCI-capable builder
+        run: |
+          docker buildx create --driver docker-container --name astroligyapp-release --use
+          docker buildx inspect --bootstrap
+
       - name: Verify and export credential-free release evidence
         run: npm run release:check
 
@@ -56,3 +61,7 @@ jobs:
           include-hidden-files: false
           overwrite: false
           retention-days: 14
+
+      - name: Remove isolated builder
+        if: always()
+        run: docker buildx rm astroligyapp-release

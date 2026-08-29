@@ -10,6 +10,10 @@
     "ref": "refs/heads/main",
     "job": "release-candidate",
     "runnerLabel": "ubuntu-24.04",
+    "builder": {
+      "driver": "docker-container",
+      "name": "astroligyapp-release"
+    },
     "allowedEvents": ["push", "workflow_dispatch"],
     "permissions": {
       "contents": "read"

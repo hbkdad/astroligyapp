@@ -234,6 +234,13 @@ export function validateWorkflowContract(workflowText, policy) {
   assert.match(workflow, /^\s{4}timeout-minutes: 90$/mu);
   assert.match(workflow, /persist-credentials: false/u);
   assert.match(workflow, /fetch-depth: 0/u);
+  assert.match(
+    workflow,
+    /docker buildx create --driver docker-container --name astroligyapp-release --use/u,
+  );
+  assert.match(workflow, /docker buildx inspect --bootstrap/u);
+  assert.match(workflow, /if: always\(\)/u);
+  assert.match(workflow, /docker buildx rm astroligyapp-release/u);
   assert.match(workflow, /npm run release:check/u);
   assert.match(workflow, /npm run ci:release:evidence/u);
   assert.match(workflow, /if-no-files-found: error/u);
@@ -248,8 +255,15 @@ export function validateWorkflowContract(workflowText, policy) {
   assert.match(workflow, /github\.event_name == 'push'/u);
   assert.match(workflow, /github\.event_name == 'workflow_dispatch'/u);
   assert.deepEqual(
-    [...workflow.matchAll(/^\s*run:\s*(.+)$/gmu)].map((match) => match[1]),
-    ["npm ci", "npm run release:check", "npm run ci:release:evidence"],
+    [...workflow.matchAll(/^\s*run:\s+([^\s|].+)$/gmu)].map(
+      (match) => match[1],
+    ),
+    [
+      "npm ci",
+      "npm run release:check",
+      "npm run ci:release:evidence",
+      "docker buildx rm astroligyapp-release",
+    ],
   );
   const uses = [
     ...workflow.matchAll(
@@ -287,6 +301,10 @@ export function validateCiReleasePolicy(policy) {
   assert.equal(policy.workflow.ref, "refs/heads/main");
   assert.equal(policy.workflow.job, "release-candidate");
   assert.equal(policy.workflow.runnerLabel, "ubuntu-24.04");
+  assert.deepEqual(policy.workflow.builder, {
+    driver: "docker-container",
+    name: "astroligyapp-release",
+  });
   assert.deepEqual(policy.workflow.permissions, { contents: "read" });
   assert.equal(policy.workflow.retentionDays, 14);
   assert.deepEqual(Object.keys(policy.workflow.actions).sort(), [
