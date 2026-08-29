@@ -11,9 +11,9 @@ unresolved; the 37-package worker remains 31 permitted-with-notice, 5 manual rev
 first-party, and 0 unresolved. License-evidence schema 2 binds the publisher-material configuration;
 artifact-manifest schema 3 and dual release-set schema 4 bind a fail-closed disposition summary. Current
 artifacts use `trust: none`, so all 20 manual records remain undisposed and external promotion is blocked.
-Commit `5a844c4` reproduced both local images and is GO only as an internal evidence candidate. No image was
-published and no real review, legal approval, licensing acceptance, registry, cloud, credential, purchase,
-or production change was made.
+Commit `f0fb5e1` passed the complete release gate and is GO only as an internal evidence candidate. No image
+was published and no real review, legal approval, licensing acceptance, registry, cloud, credential,
+purchase, or production change was made.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -61,6 +61,16 @@ provisioned AWS infrastructure, live queue polling, or live delivery.
       evidence; no private user data, actor identity, credential, external review record, network service,
       registry, or production system was introduced. Residual risk is 20 undisposed manual records plus 2
       unresolved application assertions, so external redistribution remains NO-GO.
+- [x] Apply `release-check` to exact commit `f0fb5e1`: formatting, ESLint, strict TypeScript, two runs of
+      108 files / 1,342 tests, the 33-page production build, 89.57% statements / 87.43% branches / 96.28%
+      functions / 91.86% lines coverage, Drizzle consistency, legacy/latest migrations plus all 71
+      PostgreSQL tests, the high/critical production dependency threshold, 8 mocked plans, 304 policy
+      checks, all 8 IaC unsafe fixtures, zero IaC scanner findings, all 39 staging-approval unsafe cases,
+      and the adversarial release/disposition contracts passed. The application reproduced as
+      `sha256:d7eab8a385d8acf0f75d61c313d2812096ef88ca490d3373215bc672d0e31d33`; the 52,079,296-byte worker
+      reproduced as `sha256:1be1b855b1a38cdedd02a04ff2e6a18e33fac49d2a32de6197e76f6cd4651241`.
+      Offline signatures and dual-subject attestation verified only as `local-ephemeral-untrusted`; the
+      transparency service was unavailable and intentionally not treated as trusted evidence.
 
 - [x] Goal 87: accept ADR 0017 and policy `2026-08-25.1`, separating the proprietary application from
       third-party terms and defining explicit permitted-with-notice, manual-review, prohibited, and
