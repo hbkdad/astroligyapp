@@ -28,6 +28,7 @@ import {
   validateLicenseEvidenceBundle,
 } from "./lib/license-evidence.mjs";
 import { emptyDispositionSummary } from "./lib/license-disposition.mjs";
+import { summarizePublicStaticContentDiff } from "./lib/reproducibility-diagnostic.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const temporaryRoot = mkdtempSync(join(tmpdir(), "astroligyapp-artifact-"));
@@ -435,17 +436,31 @@ function compareOciLayers(layoutA, layoutB) {
     const digestA = layoutA.layers[index];
     const digestB = layoutB.layers[index];
     if (digestA === digestB) continue;
-    const filesA = extractAndHashLayer(layoutA, digestA, `a-${index}`);
-    const filesB = extractAndHashLayer(layoutB, digestB, `b-${index}`);
-    const paths = [...new Set([...filesA.keys(), ...filesB.keys()])].sort();
+    const extractedA = extractAndHashLayer(layoutA, digestA, `a-${index}`);
+    const extractedB = extractAndHashLayer(layoutB, digestB, `b-${index}`);
+    const paths = [
+      ...new Set([...extractedA.hashes.keys(), ...extractedB.hashes.keys()]),
+    ].sort();
     drift.push({
       index,
       digestA,
       digestB,
       changedFiles: paths
-        .filter((path) => filesA.get(path) !== filesB.get(path))
+        .filter(
+          (path) => extractedA.hashes.get(path) !== extractedB.hashes.get(path),
+        )
         .slice(0, 100)
-        .map((path) => ({ path, a: filesA.get(path), b: filesB.get(path) })),
+        .map((path) => ({
+          path,
+          a: extractedA.hashes.get(path),
+          b: extractedB.hashes.get(path),
+          ...summarizePublicStaticContentDiff({
+            path,
+            pathA: join(extractedA.directory, path),
+            pathB: join(extractedB.directory, path),
+            secret,
+          }),
+        })),
     });
   }
   return drift;
@@ -461,7 +476,7 @@ function extractAndHashLayer(layout, digest, suffix) {
     "-C",
     directory,
   ]);
-  return hashTree(directory);
+  return { directory, hashes: hashTree(directory) };
 }
 
 function hashTree(directory, relative = "", result = new Map()) {
