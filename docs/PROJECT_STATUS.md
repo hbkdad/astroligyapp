@@ -1,22 +1,20 @@
 # Project status
 
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 
 ## Current position
 
-Status: Goal 91 complete; accepted ADR 0021 adds immutable publisher-material bindings and a deterministic,
-non-authorizing dependency-license review packet. Exact locked evidence resolved `client-only` plus three AWS
-SDK missing-text gaps, reducing application manual reviews from 15 to 14 and worker reviews from 5 to 2;
-the two application assertions remain unresolved. The packet binds the finalized release set, exact source,
-policy/material/evidence/notice hashes, every remaining record, three separated roles, 30-day maximum expiry,
-and mandatory re-review triggers while fixing trust/status/decisions/authorization to
-`review-input-only`/`not-requested`/empty/false. Exact commit `38f96e3` passed the complete local release gate
-and credential-free release-candidate run `33266047163`; its downloaded 16-file evidence plus envelope passed
-the strict verifier. CI run `33266047047` failed its first attempt on intermittent Next.js static-output
-reproducibility, then passed an unchanged exact-commit rerun. No legal conclusion, terms acceptance, reviewer
-identity, approval, purchase, publication, deployment, setting, cloud resource, production system or user data
-was created or changed. External redistribution remains NO-GO with 16 manual reviews and 2 unresolved
-assertions; Goal 92 owns the observed reproducibility flake.
+Status: Goal 92 complete. ADR 0022 separates the ordinary Next.js 16.3 Turbopack check from an explicit
+Webpack release compiler. Secret-safe OCI diagnostics proved that the original intermittent root/timeline
+static drift was a framework build-order defect, then exposed unordered app-route and client/server-reference
+maps serialized directly from compiler completion/traversal order. The post-build boundary canonicalizes keys
+only in those exact semantically unordered records and their JavaScript projections, requires matching root
+and standalone per-route sets, and leaves values, static HTML/RSC, bundles and unknown output untouched. The
+two-independent-uncached-build byte/config/manifest equality gate remains unchanged and fail-closed. Exact
+commit `586f526` passed the complete local release gate and first-attempt hosted CI `33334297978` plus
+credential-free release candidate `33334297928`. No retry acceptance, secret export, publication, deployment,
+setting, cloud resource, production system or user data was created or changed. External redistribution
+remains NO-GO with 16 manual reviews and 2 unresolved assertions.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -39,6 +37,21 @@ SDK/adapter, authenticated feedback worker, and suppression seam, but no account
 provisioned AWS infrastructure, live queue polling, or live delivery.
 
 ## Completed
+
+- [x] Goal 92: preserve the Goal 91 failure, add secret-safe changed-layer/file diagnostics, and reject any
+      attempt to weaken clean-tree, two-build, image-ID or OCI-manifest equality.
+- [x] Select explicit `next build --webpack` only for release images while retaining default Turbopack in
+      `npm run build`; remove a timeline demo wall-clock read in favor of validated aggregate provenance.
+- [x] Trace remaining drift through hosted/local failures to Next 16.3 `PagesManifestPlugin`,
+      `FlightClientEntryPlugin` and `FlightManifestPlugin` insertion order. Canonicalize only exact app-route
+      and client/server-reference map keys/projections; fail on unexpected wrappers or root/standalone sets.
+- [x] Apply `security-audit` and `release-check`: exact commit `586f526` passed 108 files/1,342 tests twice,
+      33-route Turbopack build, coverage, Drizzle, 71 PostgreSQL tests, dependency threshold, 8 OpenTofu tests,
+      304 policies, staging/CI/trust/license/reproducibility contracts, exact dual application/worker builds,
+      Gitleaks, Trivy, SBOM, offline signature and attestation. Local digests are application
+      `sha256:7e0f70…730532` and worker `sha256:d6aa0d…1b98b2`.
+- [x] Verify first-attempt hosted CI run `33334297978` and credential-free release-candidate run
+      `33334297928` for exact commit `586f526`; no rerun was needed or used as acceptance evidence.
 
 - [x] Goal 91: enumerate the exact 15 application/5 worker starting records and two unresolved assertions;
       group missing assertion/text, custom/composite, and review-only cases without inferred metadata.
@@ -1066,22 +1079,20 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 92 — reproduce, explain, and eliminate the intermittent Next.js static-output drift observed in Goal 91
-CI without weakening the byte-for-byte release gate or normalizing unexplained content differences.
+Goal 93 — establish a production-database recovery contract and execute a credential-free disposable
+backup/restore drill without selecting or mutating a managed provider.
 
 Deliverables:
 
-1. Preserve and classify the exact failed attempt's evidence: only application layer 19 drifted, with
-   `/app/.next/server/app/index` and `/timeline` HTML/RSC/segment outputs changing while all earlier layers
-   matched. Do not treat a successful rerun as proof of determinism.
-2. Create a bounded Linux/BuildKit reproduction harness that retains two disposable OCI layouts on mismatch,
-   compares changed file bytes safely, and never exports build secrets or weakens clean-tree/two-build checks.
-3. Identify the actual framework/application nondeterministic input from exact byte differences and current
-   Next.js 16.3 local documentation/source. Fix or explicitly bind that input; do not blanket-rewrite generated
-   content, ignore layers, retry until green, or accept different manifests/config IDs.
-4. Add regression/adversarial coverage, document reproducibility limits, apply `security-audit` and
-   `release-check`, and require repeated local plus hosted exact-commit evidence before completion. Do not
-   publish, deploy, mutate GitHub/AWS settings, or expose secrets.
+1. Research PostgreSQL 18 backup/restore, role/RLS ownership, checksums and recovery verification from current
+   primary documentation; record provider-neutral RPO/RTO assumptions and failure boundaries in an ADR.
+2. Add a credential-free disposable drill that migrates a source database, seeds synthetic tenant/auth data,
+   creates a logical backup with required globals/role metadata separated safely, restores into a fresh
+   PostgreSQL 18 instance, and proves schema/migration/data/ownership/RLS invariants.
+3. Reject incomplete, mixed-version, tampered, over-privileged and cross-tenant restore cases; keep secrets,
+   private user data, production endpoints and backup archives out of Git and routine logs.
+4. Apply `database-migration`, `security-audit` and `release-check`; document operational restore ordering,
+   verification and external managed-provider gaps. Do not provision cloud resources or touch production.
 
 ## Phase queue
 
@@ -1164,15 +1175,17 @@ Deliverables:
   four findings in `--omit=dev` audit accounting even though `npm explain` locates the
   vulnerable esbuild only beneath the migration CLI loader. There are no high/critical
   findings; never expose Drizzle Kit as a network service and recheck each update.
-- Goal 91 CI attempt 1 produced different static root/timeline HTML and RSC bytes across two otherwise
-  identical uncached builds; the unchanged rerun passed. This remains a release-reproducibility risk until
-  Goal 92 identifies and removes the input rather than relying on retries.
+- Next.js upgrades may change generated manifest wrappers or serialization. The release normalizer fails on
+  unknown client-reference wrappers/set drift, and any compiler/version change requires repeated exact-build
+  evidence plus ADR review rather than expanding normalization speculatively.
 - Product name, branding, final plans, and pricing are not implementation blockers for the deterministic foundation.
 
 ## Evidence log
 
 | Date       | Evidence                                           | Result                                                                                        |
 | ---------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 2026-08-30 | Goal 92 exact-commit local release gate            | App `7e0f70…730532`; worker `d6aa0d…1b98b2`; exact dual builds and all gates passed           |
+| 2026-08-30 | Goal 92 hosted CI and release candidate            | First-attempt runs `33334297978` and `33334297928` passed exact commit `586f526`              |
 | 2026-08-29 | Goal 91 exact-commit release gate                  | App 14 manual/2 unresolved; worker 2 manual/0 unresolved; reproduction and scans passed       |
 | 2026-08-29 | Goal 91 dual OCI release set                       | Local app `5d0ee4…1ad8f`; worker `ea886d…791ea`; exact `38f96e3` source reproduced            |
 | 2026-08-29 | Goal 91 hosted evidence                            | Run `33266047163`; 16 retained files plus envelope downloaded and strictly verified           |
