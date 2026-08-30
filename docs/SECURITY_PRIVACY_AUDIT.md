@@ -8,9 +8,10 @@
 - **Fail-closed compiler boundary.** The release Dockerfile uses the explicit Next.js 16.3 Webpack command;
   the gate rejects script/Dockerfile drift and still requires identical configuration IDs and OCI manifests
   from two uncached builds. No retry, ignored layer or relaxed comparison is introduced. Hosted failure
-  evidence and installed framework source identified nondeterministic insertion order in two semantically
-  unordered app route maps; the boundary sorts only their keys in root and standalone output, leaving route
-  values, payloads, static content and unknown manifests untouched.
+  evidence and installed framework source identified nondeterministic insertion order in semantically
+  unordered app route and Server Action maps; the boundary sorts only their keys and the corresponding edge
+  JavaScript projection in root and standalone output, leaving values, payloads, static content and unknown
+  manifests untouched.
 - **Diagnostic disclosure.** Raw OCI layouts remain disposable. Byte excerpts are limited to six public
   root/timeline HTML/RSC files, reject the exact build secret and secret-like text, and replace long opaque
   tokens with short hashes. Other files retain hash/path diagnostics only.

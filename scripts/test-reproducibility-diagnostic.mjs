@@ -4,7 +4,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { summarizePublicStaticContentDiff } from "./lib/reproducibility-diagnostic.mjs";
-import { sortManifestRecord } from "./lib/next-build-normalization.mjs";
+import {
+  serializeEdgeServerReferenceManifest,
+  sortManifestRecord,
+  sortManifestValue,
+} from "./lib/next-build-normalization.mjs";
 
 const root = mkdtempSync(join(tmpdir(), "astroligyapp-repro-diagnostic-"));
 const pathA = join(root, "a");
@@ -32,11 +36,40 @@ try {
     ["/account/page", "/page", "/timeline/page"],
   );
   assert.throws(() => sortManifestRecord([]));
+  assert.deepEqual(
+    sortManifestValue({ workers: { timeline: "2", account: "1" }, id: "x" }),
+    { id: "x", workers: { account: "1", timeline: "2" } },
+  );
+  const edgeProjection = serializeEdgeServerReferenceManifest({
+    node: { actionB: { workers: { timeline: "2", account: "1" } } },
+    edge: {},
+    encryptionKey: "private-build-key",
+  });
+  const edgeManifest = JSON.parse(
+    JSON.parse(edgeProjection.slice("self.__RSC_SERVER_MANIFEST=".length)),
+  );
+  assert.deepEqual(edgeManifest, {
+    edge: {},
+    encryptionKey: "process.env.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY",
+    node: { actionB: { workers: { account: "1", timeline: "2" } } },
+  });
+  assert.doesNotMatch(edgeProjection, /private-build-key/u);
   for (const path of [
     ".next/app-path-routes-manifest.json",
     ".next/server/app-paths-manifest.json",
     ".next/standalone/.next/app-path-routes-manifest.json",
     ".next/standalone/.next/server/app-paths-manifest.json",
+  ]) {
+    assert.match(
+      normalizer,
+      new RegExp(path.replaceAll(".", String.raw`\.`), "u"),
+    );
+  }
+  for (const path of [
+    ".next/server",
+    ".next/standalone/.next/server",
+    "server-reference-manifest.json",
+    "server-reference-manifest.js",
   ]) {
     assert.match(
       normalizer,

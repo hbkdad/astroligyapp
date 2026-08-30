@@ -37,10 +37,10 @@ The ordinary `npm run build` keeps Next.js 16.3's default Turbopack coverage. Re
 `npm run build:release` Webpack boundary selected in ADR 0022 after intermittent Turbopack prerender drift.
 Never replace the two-build comparison with retries. If manifests differ, the gate compares changed layers
 and may print only secret-screened, token-redacted excerpts for the public root/timeline static outputs.
-The post-build step derives preview metadata from the protected build key and sorts only the keys of
-`app-paths-manifest.json` and `app-path-routes-manifest.json` in root and standalone output. Next 16.3 writes
-those semantically unordered records in compiler-completion order; no route value or other build output is
-normalized.
+The post-build step derives preview metadata from the protected build key and sorts only the keys of the app
+route maps and Server Action maps (including the JavaScript edge projection) in root and standalone output.
+Next 16.3 writes these semantically unordered records in compiler-completion/traversal order; no map value,
+static payload or other build output is normalized.
 
 The gate then:
 

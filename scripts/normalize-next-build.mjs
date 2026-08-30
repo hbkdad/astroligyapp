@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { sortManifestRecord } from "./lib/next-build-normalization.mjs";
+import {
+  serializeEdgeServerReferenceManifest,
+  sortManifestRecord,
+} from "./lib/next-build-normalization.mjs";
 
 const keyPath = process.argv[2];
 assert.ok(keyPath, "a BuildKit secret path is required");
@@ -40,6 +43,21 @@ for (const path of [
   const manifestPath = resolve(path);
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
   writeFileSync(manifestPath, JSON.stringify(sortManifestRecord(manifest)));
+}
+
+// The same plugin records Server Action maps from traversal/plugin-state order.
+// Canonicalize the exact JSON record and its JavaScript edge-runtime projection.
+for (const directory of [".next/server", ".next/standalone/.next/server"]) {
+  const jsonPath = resolve(directory, "server-reference-manifest.json");
+  const manifest = sortManifestRecord(
+    JSON.parse(readFileSync(jsonPath, "utf8")),
+  );
+  writeFileSync(jsonPath, JSON.stringify(manifest));
+
+  writeFileSync(
+    resolve(directory, "server-reference-manifest.js"),
+    serializeEdgeServerReferenceManifest(manifest),
+  );
 }
 
 function derive(context, bytes) {
