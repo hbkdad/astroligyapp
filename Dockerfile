@@ -19,7 +19,7 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 RUN --mount=type=secret,id=next_server_actions_encryption_key,required=true \
   export NEXT_SERVER_ACTIONS_ENCRYPTION_KEY="$(head -c 64 /run/secrets/next_server_actions_encryption_key)" && \
-  npm run build && \
+  npm run build:release && \
   node scripts/normalize-next-build.mjs /run/secrets/next_server_actions_encryption_key
 
 FROM ${RUNTIME_IMAGE} AS runtime

@@ -12,6 +12,7 @@ describe("timeline interpretation boundary", () => {
 
   it("renders only supported versioned tradition templates", () => {
     const output = interpretTimelineFacts(result);
+    expect(output.preparedAt).toBe(result.metadata.composedAt);
     expect(output.items.length).toBeGreaterThan(0);
     expect(output.items.every((item) => item.status === "rendered")).toBe(true);
     expect(

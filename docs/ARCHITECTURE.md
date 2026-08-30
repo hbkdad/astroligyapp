@@ -22,6 +22,11 @@ future accountable ledger. The packet binds the finalized release set and exact 
 within 30 days, declares separated review roles and re-review triggers, and is permanently non-authorizing.
 It stores no reviewer identity, decision, contact information, credential, or legal conclusion.
 
+ADR 0022 separates the ordinary Next.js Turbopack build check from the release-artifact compiler boundary.
+The Docker release uses the explicit Webpack path after observed intermittent static HTML/RSC drift, while
+the two-uncached-build manifest/config equality gate remains unchanged. Secret-safe public-output diagnostics
+improve failures without normalizing or accepting different bytes.
+
 ADR 0020 adds a read-only repository trust-observation boundary and a desired protected-promotion contract.
 Observed, unavailable and unproven controls remain distinct. The checked synthetic envelope binds numeric
 repository identity, active no-bypass branch rules, successful release evidence, split protected-environment

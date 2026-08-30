@@ -74,6 +74,21 @@ try {
     /proprietary/iu,
     "root proprietary license notice is missing",
   );
+  assert.equal(
+    packageManifest.scripts?.["build:release"],
+    "next build --webpack",
+    "release artifact must use the deterministic Webpack build boundary",
+  );
+  assert.match(
+    dockerfile,
+    /npm run build:release/u,
+    "Dockerfile must use the release-specific build boundary",
+  );
+  assert.doesNotMatch(
+    dockerfile,
+    /npm run build(?:\s|&)/u,
+    "Dockerfile must not use the default Turbopack build",
+  );
 
   run("git", ["archive", "--format=tar", `--output=${archive}`, "HEAD"]);
   for (const source of [sourceA, sourceB]) {

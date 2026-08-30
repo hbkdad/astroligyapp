@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:release": "next build --webpack",
     "build:feedback-worker": "node scripts/build-auth-email-feedback-worker.mjs",
     "start": "next start",
     "start:standalone": "node scripts/validate-runtime-config.mjs && node .next/standalone/server.js",

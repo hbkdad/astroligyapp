@@ -1,5 +1,22 @@
 # Security and privacy audit
 
+### Goal 92 release-reproducibility audit
+
+- **Assets and actors.** Protected assets are the exact source-to-image mapping, Server Actions build secret,
+  public static content, release evidence and future promotion subject. Actors are the application builder,
+  CI runner, evidence verifier and future promoter.
+- **Fail-closed compiler boundary.** The release Dockerfile uses the explicit Next.js 16.3 Webpack command;
+  the gate rejects script/Dockerfile drift and still requires identical configuration IDs and OCI manifests
+  from two uncached builds. No retry, ignored layer, content rewrite or relaxed comparison is introduced.
+- **Diagnostic disclosure.** Raw OCI layouts remain disposable. Byte excerpts are limited to six public
+  root/timeline HTML/RSC files, reject the exact build secret and secret-like text, and replace long opaque
+  tokens with short hashes. Other files retain hash/path diagnostics only.
+- **Application determinism.** Timeline interpretation preparation time now derives from validated aggregate
+  provenance rather than the build wall clock. No user data, credential, reviewer identity, cloud setting or
+  production resource enters this boundary.
+- **Residual risk.** Webpack is slower and upstream Next.js reproducibility defects may evolve. Repeated local
+  and hosted exact-commit gates remain mandatory; a future compiler-path change requires new evidence.
+
 ### Goal 91 dependency-license review-packet audit
 
 - **Assets and actors.** Protected assets are exact dependency evidence, review scope, future legal

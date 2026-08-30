@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -11,6 +11,14 @@ const pathB = join(root, "b");
 const secret = "build-secret-that-must-never-enter-public-static-output";
 
 try {
+  const packageManifest = JSON.parse(readFileSync("package.json", "utf8"));
+  const dockerfile = readFileSync("Dockerfile", "utf8");
+  assert.equal(
+    packageManifest.scripts["build:release"],
+    "next build --webpack",
+  );
+  assert.match(dockerfile, /npm run build:release/u);
+  assert.doesNotMatch(dockerfile, /npm run build(?:\s|&)/u);
   writeFileSync(pathA, `prefix alpha ${"a".repeat(48)} common`);
   writeFileSync(pathB, `prefix beta ${"b".repeat(48)} common`);
   const summary = summarizePublicStaticContentDiff({

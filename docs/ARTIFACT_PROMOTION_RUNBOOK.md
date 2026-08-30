@@ -33,6 +33,11 @@ The application gate uses one random in-memory Server Actions key for
 both builds and derives Next preview metadata from that key with separate HMAC contexts. The key and
 its hash are never written to the evidence directory or logs.
 
+The ordinary `npm run build` keeps Next.js 16.3's default Turbopack coverage. Release images use the explicit
+`npm run build:release` Webpack boundary selected in ADR 0022 after intermittent Turbopack prerender drift.
+Never replace the two-build comparison with retries. If manifests differ, the gate compares changed layers
+and may print only secret-screened, token-redacted excerpts for the public root/timeline static outputs.
+
 The gate then:
 
 1. checks OCI revision, creation time, license, platform, and non-root identity;
@@ -83,6 +88,9 @@ digest, npm lock file, requested Debian package version, BuildKit behavior, and 
 unchanged. The build is not hermetic: it resolves npm/Debian content and scanners update vulnerability
 data over the network. Save registry artifacts and attestations, not an assumption that upstream content
 will remain available forever. A changed build secret intentionally changes the artifact.
+
+The selected release compiler is also an input. ADR 0022 pins the release command to Next.js 16.3 Webpack;
+changing back to the default Turbopack path requires new repeated reproducibility evidence.
 
 An unresolved SPDX `NOASSERTION` is not permission to redistribute a package. The count remains visible
 in evidence and must be reviewed against the package source before external promotion. A structurally

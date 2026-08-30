@@ -12,6 +12,7 @@ import { DEFAULT_INTERPRETATION_LIBRARY } from "@/domain/interpretation/library"
 export const TIMELINE_INTERPRETATION_PROJECTION_VERSION = "1.0.0";
 
 export interface TimelineInterpretationOutput {
+  readonly preparedAt: string;
   readonly items: readonly RenderedInterpretationItem[];
   readonly unsupportedFactIds: readonly string[];
   readonly projectionVersion: string;
@@ -38,13 +39,14 @@ export function interpretTimelineFacts(
       libraryId: DEFAULT_INTERPRETATION_LIBRARY.id,
       libraryVersion: DEFAULT_INTERPRETATION_LIBRARY.version,
       locale: DEFAULT_INTERPRETATION_LIBRARY.locale,
-      preparedAt: new Date().toISOString(),
+      preparedAt: timeline.metadata.composedAt,
     },
   });
   const supportedIds = new Set(
     projections.map(({ sourceFactId }) => sourceFactId),
   );
   return deepFreeze({
+    preparedAt: output.preparedAt,
     items: output.items,
     unsupportedFactIds: timeline.facts
       .map(({ id }) => id)
