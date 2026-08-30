@@ -26,7 +26,9 @@ timestamp was not a deterministic fact and did not belong in a pure read-model p
 2. Add `npm run build:release` as exactly `next build --webpack` and require the production Dockerfile to use
    it. The artifact gate rejects a missing or changed release script and any fallback to the default build.
 3. Continue requiring two independent uncached OCI builds to have identical configuration IDs and manifest
-   digests. Do not ignore, normalize, or retry content drift.
+   digests. Do not ignore or retry content drift. Sort only the keys of Next's two semantically unordered app
+   route-map records after hosted evidence and the installed framework source identify compiler-completion
+   insertion order as their cause; normalize both root and standalone copies and no other unexplained output.
 4. Derive timeline interpretation `preparedAt` from the already validated aggregate `composedAt` rather than
    reading the wall clock during static rendering.
 5. On a mismatch, compare layers and emit bounded byte excerpts only for the six public root/timeline static
@@ -38,6 +40,9 @@ timestamp was not a deterministic fact and did not belong in a pure read-model p
   ordinary production build check retain Turbopack coverage.
 - Reproducibility evidence remains fail-closed and byte-for-byte. The diagnostic changes evidence quality,
   not the acceptance rule.
+- Next 16.3's Webpack `PagesManifestPlugin` iterates `compilation.entrypoints.values()` and writes
+  `app-paths-manifest.json` without sorting object keys. `app-path-routes-manifest.json` inherits that order.
+  Canonicalizing those two route maps changes no route value or application payload.
 - A future return to Turbopack requires repeated exact-commit Linux/BuildKit evidence and an ADR update; a
   successful retry alone is insufficient.
 - This decision does not publish, deploy, or change GitHub/AWS settings.

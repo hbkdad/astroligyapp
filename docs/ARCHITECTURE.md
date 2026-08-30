@@ -25,7 +25,9 @@ It stores no reviewer identity, decision, contact information, credential, or le
 ADR 0022 separates the ordinary Next.js Turbopack build check from the release-artifact compiler boundary.
 The Docker release uses the explicit Webpack path after observed intermittent static HTML/RSC drift, while
 the two-uncached-build manifest/config equality gate remains unchanged. Secret-safe public-output diagnostics
-improve failures without normalizing or accepting different bytes.
+improve failures without accepting different bytes. A post-build boundary sorts only the keys of Next 16.3's
+two semantically unordered app route maps after hosted evidence traced their drift to compiler-completion
+insertion order; route values, application payloads, static output and unknown manifests remain untouched.
 
 ADR 0020 adds a read-only repository trust-observation boundary and a desired protected-promotion contract.
 Observed, unavailable and unproven controls remain distinct. The checked synthetic envelope binds numeric

@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { summarizePublicStaticContentDiff } from "./lib/reproducibility-diagnostic.mjs";
+import { sortManifestRecord } from "./lib/next-build-normalization.mjs";
 
 const root = mkdtempSync(join(tmpdir(), "astroligyapp-repro-diagnostic-"));
 const pathA = join(root, "a");
@@ -13,12 +14,35 @@ const secret = "build-secret-that-must-never-enter-public-static-output";
 try {
   const packageManifest = JSON.parse(readFileSync("package.json", "utf8"));
   const dockerfile = readFileSync("Dockerfile", "utf8");
+  const normalizer = readFileSync("scripts/normalize-next-build.mjs", "utf8");
   assert.equal(
     packageManifest.scripts["build:release"],
     "next build --webpack",
   );
   assert.match(dockerfile, /npm run build:release/u);
   assert.doesNotMatch(dockerfile, /npm run build(?:\s|&)/u);
+  assert.deepEqual(
+    Object.keys(
+      sortManifestRecord({
+        "/timeline/page": "app/timeline/page.js",
+        "/page": "app/page.js",
+        "/account/page": "app/account/page.js",
+      }),
+    ),
+    ["/account/page", "/page", "/timeline/page"],
+  );
+  assert.throws(() => sortManifestRecord([]));
+  for (const path of [
+    ".next/app-path-routes-manifest.json",
+    ".next/server/app-paths-manifest.json",
+    ".next/standalone/.next/app-path-routes-manifest.json",
+    ".next/standalone/.next/server/app-paths-manifest.json",
+  ]) {
+    assert.match(
+      normalizer,
+      new RegExp(path.replaceAll(".", String.raw`\.`), "u"),
+    );
+  }
   writeFileSync(pathA, `prefix alpha ${"a".repeat(48)} common`);
   writeFileSync(pathB, `prefix beta ${"b".repeat(48)} common`);
   const summary = summarizePublicStaticContentDiff({
