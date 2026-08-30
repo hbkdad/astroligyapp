@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { readdirSync } from "node:fs";
+import { join, relative, resolve } from "node:path";
 import {
+  canonicalizeClientReferenceManifest,
   serializeEdgeServerReferenceManifest,
   sortManifestRecord,
 } from "./lib/next-build-normalization.mjs";
@@ -60,9 +62,49 @@ for (const directory of [".next/server", ".next/standalone/.next/server"]) {
   );
 }
 
+const clientManifestRoots = [
+  resolve(".next/server/app"),
+  resolve(".next/standalone/.next/server/app"),
+];
+const clientManifestSets = clientManifestRoots.map(
+  findClientReferenceManifests,
+);
+assert.ok(
+  clientManifestSets[0].length > 0,
+  "Next client manifests are missing",
+);
+assert.deepEqual(
+  clientManifestSets[0].map((path) => relative(clientManifestRoots[0], path)),
+  clientManifestSets[1].map((path) => relative(clientManifestRoots[1], path)),
+  "root and standalone client-reference manifest sets differ",
+);
+for (const paths of clientManifestSets) {
+  for (const path of paths) {
+    writeFileSync(
+      path,
+      canonicalizeClientReferenceManifest(readFileSync(path, "utf8")),
+    );
+  }
+}
+
 function derive(context, bytes) {
   return createHmac("sha256", key)
     .update(context)
     .digest("hex")
     .slice(0, bytes * 2);
+}
+
+function findClientReferenceManifests(directory) {
+  return readdirSync(directory, { withFileTypes: true })
+    .flatMap((entry) => {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        return findClientReferenceManifests(path);
+      }
+      return entry.isFile() &&
+        entry.name.endsWith("_client-reference-manifest.js")
+        ? [path]
+        : [];
+    })
+    .sort();
 }

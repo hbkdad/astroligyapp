@@ -38,9 +38,10 @@ The ordinary `npm run build` keeps Next.js 16.3's default Turbopack coverage. Re
 Never replace the two-build comparison with retries. If manifests differ, the gate compares changed layers
 and may print only secret-screened, token-redacted excerpts for the public root/timeline static outputs.
 The post-build step derives preview metadata from the protected build key and sorts only the keys of the app
-route maps and Server Action maps (including the JavaScript edge projection) in root and standalone output.
-Next 16.3 writes these semantically unordered records in compiler-completion/traversal order; no map value,
-static payload or other build output is normalized.
+route maps and client/server reference maps (including their JavaScript projections) in root and standalone
+output. Next 16.3 writes these semantically unordered records in compiler-completion/traversal order; no map
+value, static payload or other build output is normalized. The root and standalone per-route client-manifest
+sets must match exactly before either set is rewritten.
 
 The gate then:
 

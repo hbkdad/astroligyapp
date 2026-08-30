@@ -30,3 +30,24 @@ export function serializeEdgeServerReferenceManifest(manifest) {
   });
   return `self.__RSC_SERVER_MANIFEST=${JSON.stringify(JSON.stringify(normalized))}`;
 }
+
+export function canonicalizeClientReferenceManifest(source) {
+  const marker =
+    "globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST[";
+  assert.ok(
+    source.startsWith(marker) && source.endsWith(";"),
+    "unexpected Next client-reference manifest wrapper",
+  );
+  const assignmentEnd = source.indexOf("]=", marker.length);
+  assert.ok(assignmentEnd > marker.length, "client-reference route is missing");
+  const route = JSON.parse(source.slice(marker.length, assignmentEnd));
+  assert.equal(
+    typeof route,
+    "string",
+    "client-reference route must be a string",
+  );
+  const manifest = sortManifestRecord(
+    JSON.parse(source.slice(assignmentEnd + 2, -1)),
+  );
+  return `${marker}${JSON.stringify(route)}]=${JSON.stringify(manifest)};`;
+}

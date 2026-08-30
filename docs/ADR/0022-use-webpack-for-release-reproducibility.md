@@ -27,9 +27,9 @@ timestamp was not a deterministic fact and did not belong in a pure read-model p
    it. The artifact gate rejects a missing or changed release script and any fallback to the default build.
 3. Continue requiring two independent uncached OCI builds to have identical configuration IDs and manifest
    digests. Do not ignore or retry content drift. Sort only the keys of Next's semantically unordered app route
-   and Server Action map records after hosted/local evidence and installed framework source identify compiler
-   completion/traversal insertion order as their cause. Normalize root and standalone copies, including the
-   JavaScript edge projection of the Server Action JSON, and no other unexplained output.
+   and client/server reference map records after hosted/local evidence and installed framework source identify
+   compiler completion/traversal insertion order as their cause. Normalize root and standalone copies,
+   including the JavaScript projections, and no other unexplained output.
 4. Derive timeline interpretation `preparedAt` from the already validated aggregate `composedAt` rather than
    reading the wall clock during static rendering.
 5. On a mismatch, compare layers and emit bounded byte excerpts only for the six public root/timeline static
@@ -43,8 +43,9 @@ timestamp was not a deterministic fact and did not belong in a pure read-model p
   not the acceptance rule.
 - Next 16.3's Webpack `PagesManifestPlugin` iterates `compilation.entrypoints.values()` and writes
   `app-paths-manifest.json` without sorting object keys. `app-path-routes-manifest.json` inherits that order.
-  Its `FlightClientEntryPlugin` likewise serializes traversal-populated Server Action maps directly.
-  Canonicalizing these exact records and the Server Action JavaScript projection changes no value or payload.
+  Its `FlightClientEntryPlugin` and `FlightManifestPlugin` likewise serialize traversal-populated Server Action
+  and per-route client-reference maps directly. Canonicalizing these exact records and projections changes no
+  value or payload.
 - A future return to Turbopack requires repeated exact-commit Linux/BuildKit evidence and an ADR update; a
   successful retry alone is insufficient.
 - This decision does not publish, deploy, or change GitHub/AWS settings.

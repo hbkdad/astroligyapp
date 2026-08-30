@@ -5,6 +5,7 @@ import { join } from "node:path";
 
 import { summarizePublicStaticContentDiff } from "./lib/reproducibility-diagnostic.mjs";
 import {
+  canonicalizeClientReferenceManifest,
   serializeEdgeServerReferenceManifest,
   sortManifestRecord,
   sortManifestValue,
@@ -54,6 +55,15 @@ try {
     node: { actionB: { workers: { account: "1", timeline: "2" } } },
   });
   assert.doesNotMatch(edgeProjection, /private-build-key/u);
+  assert.equal(
+    canonicalizeClientReferenceManifest(
+      'globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/horoscope/[sign]/page"]={"ssrModuleMapping":{"2":{"*":{"name":"*"}},"1":{"*":{"name":"*"}}},"clientModules":{"z":{"id":2},"a":{"id":1}}};',
+    ),
+    'globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/horoscope/[sign]/page"]={"clientModules":{"a":{"id":1},"z":{"id":2}},"ssrModuleMapping":{"1":{"*":{"name":"*"}},"2":{"*":{"name":"*"}}}};',
+  );
+  assert.throws(() =>
+    canonicalizeClientReferenceManifest("globalThis.bad={}));"),
+  );
   for (const path of [
     ".next/app-path-routes-manifest.json",
     ".next/server/app-paths-manifest.json",
@@ -70,6 +80,7 @@ try {
     ".next/standalone/.next/server",
     "server-reference-manifest.json",
     "server-reference-manifest.js",
+    "_client-reference-manifest.js",
   ]) {
     assert.match(
       normalizer,
