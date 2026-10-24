@@ -29,6 +29,11 @@
   license bindings re-established. The high/critical threshold is clear. Four moderate development-only
   findings remain in Drizzle Kit's deprecated internal esbuild loader; npm's offered fix is an incompatible
   downgrade to `drizzle-kit@0.18.1`, so it is not an acceptable remediation.
+- **Post-upgrade reproducibility boundary.** The first exact-commit artifact run failed closed because Next
+  16.4.3 added a dedicated `server/preview-props.json` containing the same build-random preview credentials
+  already normalized in the prerender manifest. The normalizer now requires exactly the expected 32/64/64
+  hexadecimal fields in root and standalone copies before replacing only those values with separate
+  HMAC-derived values from the protected build key. Missing, extra or malformed fields are rejected.
 
 ### Goal 92 release-reproducibility audit
 

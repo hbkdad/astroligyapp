@@ -9,6 +9,7 @@ import {
   serializeEdgeServerReferenceManifest,
   sortManifestRecord,
   sortManifestValue,
+  validatePreviewProps,
 } from "./lib/next-build-normalization.mjs";
 
 const root = mkdtempSync(join(tmpdir(), "astroligyapp-repro-diagnostic-"));
@@ -55,6 +56,33 @@ try {
     node: { actionB: { workers: { account: "1", timeline: "2" } } },
   });
   assert.doesNotMatch(edgeProjection, /private-build-key/u);
+  assert.deepEqual(
+    validatePreviewProps({
+      previewModeId: "a".repeat(32),
+      previewModeSigningKey: "b".repeat(64),
+      previewModeEncryptionKey: "c".repeat(64),
+    }),
+    {
+      previewModeId: "a".repeat(32),
+      previewModeSigningKey: "b".repeat(64),
+      previewModeEncryptionKey: "c".repeat(64),
+    },
+  );
+  assert.throws(() =>
+    validatePreviewProps({
+      previewModeId: "not-hex",
+      previewModeSigningKey: "b".repeat(64),
+      previewModeEncryptionKey: "c".repeat(64),
+    }),
+  );
+  assert.throws(() =>
+    validatePreviewProps({
+      previewModeId: "a".repeat(32),
+      previewModeSigningKey: "b".repeat(64),
+      previewModeEncryptionKey: "c".repeat(64),
+      unexpected: "field",
+    }),
+  );
   assert.equal(
     canonicalizeClientReferenceManifest(
       'globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST["/horoscope/[sign]/page"]={"ssrModuleMapping":{"2":{"*":{"name":"*"}},"1":{"*":{"name":"*"}}},"clientModules":{"z":{"id":2},"a":{"id":1}}};',
@@ -69,6 +97,15 @@ try {
     ".next/server/app-paths-manifest.json",
     ".next/standalone/.next/app-path-routes-manifest.json",
     ".next/standalone/.next/server/app-paths-manifest.json",
+  ]) {
+    assert.match(
+      normalizer,
+      new RegExp(path.replaceAll(".", String.raw`\.`), "u"),
+    );
+  }
+  for (const path of [
+    ".next/server/preview-props.json",
+    ".next/standalone/.next/server/preview-props.json",
   ]) {
     assert.match(
       normalizer,

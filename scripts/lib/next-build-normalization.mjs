@@ -31,6 +31,18 @@ export function serializeEdgeServerReferenceManifest(manifest) {
   return `self.__RSC_SERVER_MANIFEST=${JSON.stringify(JSON.stringify(normalized))}`;
 }
 
+export function validatePreviewProps(preview) {
+  assert.deepEqual(
+    Object.keys(sortManifestRecord(preview)),
+    ["previewModeEncryptionKey", "previewModeId", "previewModeSigningKey"],
+    "unexpected Next preview-props shape",
+  );
+  assert.match(preview.previewModeId, /^[0-9a-f]{32}$/u);
+  assert.match(preview.previewModeSigningKey, /^[0-9a-f]{64}$/u);
+  assert.match(preview.previewModeEncryptionKey, /^[0-9a-f]{64}$/u);
+  return preview;
+}
+
 export function canonicalizeClientReferenceManifest(source) {
   const marker =
     "globalThis.__RSC_MANIFEST=(globalThis.__RSC_MANIFEST||{});globalThis.__RSC_MANIFEST[";

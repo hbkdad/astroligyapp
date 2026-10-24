@@ -7,6 +7,7 @@ import {
   canonicalizeClientReferenceManifest,
   serializeEdgeServerReferenceManifest,
   sortManifestRecord,
+  validatePreviewProps,
 } from "./lib/next-build-normalization.mjs";
 
 const keyPath = process.argv[2];
@@ -32,7 +33,19 @@ for (const path of [
   writeFileSync(manifestPath, JSON.stringify(manifest));
 }
 
-// Next 16.3's Webpack pages-manifest plugin records entries in compiler
+// Next 16.4 also emits the same random preview credentials as a dedicated
+// server file. Validate the exact framework-owned shape before replacing only
+// those three values with the already derived preview metadata.
+for (const path of [
+  ".next/server/preview-props.json",
+  ".next/standalone/.next/server/preview-props.json",
+]) {
+  const previewPath = resolve(path);
+  validatePreviewProps(JSON.parse(readFileSync(previewPath, "utf8")));
+  writeFileSync(previewPath, JSON.stringify(preview));
+}
+
+// Next 16's Webpack pages-manifest plugin records entries in compiler
 // completion order. The two route maps are semantically unordered, but that
 // insertion order can vary between otherwise identical builds. Canonicalize
 // only those explained route-map records before the standalone tree is copied.

@@ -4,6 +4,8 @@ Status: Accepted
 
 Date: 2026-08-30
 
+Amended: 2026-10-24 for Next.js 16.4.3 `preview-props.json`
+
 ## Context
 
 Goal 91 CI run `33266047047` built the application twice from the same archived commit, fixed deployment ID,
@@ -28,8 +30,11 @@ timestamp was not a deterministic fact and did not belong in a pure read-model p
 3. Continue requiring two independent uncached OCI builds to have identical configuration IDs and manifest
    digests. Do not ignore or retry content drift. Sort only the keys of Next's semantically unordered app route
    and client/server reference map records after hosted/local evidence and installed framework source identify
-   compiler completion/traversal insertion order as their cause. Normalize root and standalone copies,
-   including the JavaScript projections, and no other unexplained output.
+   compiler completion/traversal insertion order as their cause. Next.js 16.4.3 additionally emits the same
+   random preview credentials in `server/preview-props.json`; validate its exact three-field hexadecimal
+   shape and replace only those values with the preview metadata already derived from the protected build
+   key. Normalize root and standalone copies, including the JavaScript projections, and no other unexplained
+   output.
 4. Derive timeline interpretation `preparedAt` from the already validated aggregate `composedAt` rather than
    reading the wall clock during static rendering.
 5. On a mismatch, compare layers and emit bounded byte excerpts only for the six public root/timeline static
@@ -46,6 +51,9 @@ timestamp was not a deterministic fact and did not belong in a pure read-model p
   Its `FlightClientEntryPlugin` and `FlightManifestPlugin` likewise serialize traversal-populated Server Action
   and per-route client-reference maps directly. Canonicalizing these exact records and projections changes no
   value or payload.
+- Next 16.4.3's only observed post-upgrade drift was `server/preview-props.json`; both random 32/64/64-hex
+  copies correspond exactly to the preview values already normalized in `prerender-manifest.json`. The
+  normalizer rejects missing, extra, malformed or non-hex fields before writing the same HMAC-derived values.
 - A future return to Turbopack requires repeated exact-commit Linux/BuildKit evidence and an ADR update; a
   successful retry alone is insufficient.
 - This decision does not publish, deploy, or change GitHub/AWS settings.
