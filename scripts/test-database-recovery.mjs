@@ -227,7 +227,8 @@ function startPostgres(container, administrator, database) {
     `POSTGRES_PASSWORD=${localPassword}`,
     POSTGRES_IMAGE,
   ]);
-  for (let attempt = 0; attempt < 60; attempt += 1) {
+  let consecutiveReadyChecks = 0;
+  for (let attempt = 0; attempt < 120; attempt += 1) {
     const result = spawnSync("docker", [
       "exec",
       container,
@@ -237,9 +238,11 @@ function startPostgres(container, administrator, database) {
       "--dbname",
       database,
     ]);
-    if (result.status === 0) break;
-    if (attempt === 59)
-      throw new Error("disposable PostgreSQL did not become ready");
+    consecutiveReadyChecks =
+      result.status === 0 ? consecutiveReadyChecks + 1 : 0;
+    if (consecutiveReadyChecks >= 6) break;
+    if (attempt === 119)
+      throw new Error("disposable PostgreSQL did not remain ready");
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
   }
   const endpoint = capture("docker", ["port", container, "5432/tcp"]).trim();
