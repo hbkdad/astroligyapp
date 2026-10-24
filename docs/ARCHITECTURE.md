@@ -34,7 +34,7 @@ It stores no reviewer identity, decision, contact information, credential, or le
 ADR 0022 separates the ordinary Next.js Turbopack build check from the release-artifact compiler boundary.
 The Docker release uses the explicit Webpack path after observed intermittent static HTML/RSC drift, while
 the two-uncached-build manifest/config equality gate remains unchanged. Secret-safe public-output diagnostics
-improve failures without accepting different bytes. A post-build boundary sorts only the keys of Next 16.3's
+improve failures without accepting different bytes. A post-build boundary sorts only the keys of Next 16.4's
 semantically unordered app route and client/server reference maps after hosted/local evidence traced their
 drift to compiler-completion/traversal insertion order; values, application payloads, static output and
 unknown manifests remain untouched.
@@ -562,7 +562,7 @@ production security gates are recorded in `docs/SECURITY_PRIVACY_AUDIT.md`.
 
 ## Baseline decisions
 
-- Application: Next.js 16.3 App Router, React 19.2, strict TypeScript, and Tailwind CSS 4.
+- Application: Next.js 16.4 App Router, React 19.2, strict TypeScript, and Tailwind CSS 4.
 - Runtime: Node.js 24.15.0, pinned in `.nvmrc` and used in CI.
 - Testing: Vitest for deterministic unit/contract tests and JSDOM critical-workflow tests;
   Playwright CLI is the local real-browser inspection path. A production CI browser runner

@@ -29,8 +29,8 @@ and 5 worker manual records. The same dependency lock and runtime inputs remain 
 Four missing-text records have exact locked version/integrity bindings to immutable publisher commits and
 locally hash-checked publisher text:
 
-- `client-only` 0.0.1 is identified by the exact Next.js 16.3.0 source package manifest at commit
-  `d73f5622e226358dcef8cf7a8a373333ff265ae7` and bound to that commit's MIT text.
+- `client-only` 0.0.1 is identified by the exact Next.js 16.4.3 source package manifest at commit
+  `29bbeab09981148ade186e8599ecdede15abc281` and bound to that commit's MIT text.
 - the three AWS SDK packages are identified by exact manifests at tag commit
   `26b0eb790ff86399b7af7b74ce8c188f25512cc6`. The login manifest also traces its exact nested-client
   dependency. All three are bound to the publisher's Apache-2.0 text, whose normalized local SHA-256 is
@@ -49,7 +49,7 @@ satisfies ADR 0018.
 
 Authoritative sources used for the mechanical bindings:
 
-- [Next.js client-only manifest at the exact commit](https://raw.githubusercontent.com/vercel/next.js/d73f5622e226358dcef8cf7a8a373333ff265ae7/packages/next/src/compiled/client-only/package.json)
+- [Next.js client-only manifest at the exact commit](https://raw.githubusercontent.com/vercel/next.js/29bbeab09981148ade186e8599ecdede15abc281/packages/next/src/compiled/client-only/package.json)
 - [AWS credential-provider-http manifest at the exact commit](https://raw.githubusercontent.com/aws/aws-sdk-js-v3/26b0eb790ff86399b7af7b74ce8c188f25512cc6/packages-internal/credential-provider-http/package.json)
 - [AWS credential-provider-login manifest at the exact commit](https://raw.githubusercontent.com/aws/aws-sdk-js-v3/26b0eb790ff86399b7af7b74ce8c188f25512cc6/packages-internal/credential-provider-login/package.json)
 - [AWS SDK for JavaScript v3 license at the exact commit](https://raw.githubusercontent.com/aws/aws-sdk-js-v3/26b0eb790ff86399b7af7b74ce8c188f25512cc6/LICENSE)

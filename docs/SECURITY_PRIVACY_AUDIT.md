@@ -23,13 +23,19 @@
   cadence are non-authorizing planning assumptions. Logical recovery does not prove provider snapshots,
   PITR/WAL, encrypted or off-site storage, key recovery, production volumes, network policy, role provisioning,
   monitoring, cutover or accountable acceptance. Those remain production NO-GO gates.
+- **Release dependency result.** The exact-candidate release audit discovered newly published critical/high
+  advisories after the recovery checks. Next.js, its ESLint configuration, Vitest/coverage and compatible
+  transitive Sharp, Undici, Vite, Zod and source-map packages were advanced to patched releases and their
+  license bindings re-established. The high/critical threshold is clear. Four moderate development-only
+  findings remain in Drizzle Kit's deprecated internal esbuild loader; npm's offered fix is an incompatible
+  downgrade to `drizzle-kit@0.18.1`, so it is not an acceptable remediation.
 
 ### Goal 92 release-reproducibility audit
 
 - **Assets and actors.** Protected assets are the exact source-to-image mapping, Server Actions build secret,
   public static content, release evidence and future promotion subject. Actors are the application builder,
   CI runner, evidence verifier and future promoter.
-- **Fail-closed compiler boundary.** The release Dockerfile uses the explicit Next.js 16.3 Webpack command;
+- **Fail-closed compiler boundary.** The release Dockerfile uses the explicit Next.js 16 Webpack command;
   the gate rejects script/Dockerfile drift and still requires identical configuration IDs and OCI manifests
   from two uncached builds. No retry, ignored layer or relaxed comparison is introduced. Hosted failure
   evidence and installed framework source identified nondeterministic insertion order in semantically

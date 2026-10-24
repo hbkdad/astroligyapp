@@ -433,7 +433,7 @@ function runReviewedMaterialTests() {
       {
         SPDXID: "SPDXRef-Package-next-env",
         name: "@next/env",
-        versionInfo: "16.3.0",
+        versionInfo: "16.4.3",
         sourceInfo:
           "acquired package info from installed node module manifest file: /app/node_modules/@next/env/package.json",
         licenseDeclared: "MIT",
