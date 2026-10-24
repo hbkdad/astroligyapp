@@ -84,6 +84,11 @@ try {
     /npm run build:release/u,
     "Dockerfile must use the release-specific build boundary",
   );
+  assert.match(
+    dockerfile,
+    /NEXT_RELEASE_REPRODUCIBLE_BUILD=true/u,
+    "release image must serialize framework prerender workers",
+  );
   assert.doesNotMatch(
     dockerfile,
     /npm run build(?:\s|&)/u,

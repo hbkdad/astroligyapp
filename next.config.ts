@@ -10,6 +10,9 @@ import {
 
 const sharedCacheEnabled = process.env.NEXT_SHARED_CACHE_ENABLED === "true";
 const configuredDeploymentId = deploymentId(process.env.NEXT_DEPLOYMENT_ID);
+const releaseWorkerCount = releaseBuildWorkerCount(
+  process.env.NEXT_RELEASE_REPRODUCIBLE_BUILD,
+);
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -25,6 +28,9 @@ const nextConfig: NextConfig = {
         cacheMaxMemorySize: 0,
       }
     : {}),
+  ...(releaseWorkerCount === undefined
+    ? {}
+    : { experimental: { cpus: releaseWorkerCount } }),
   poweredByHeader: false,
   reactStrictMode: true,
   async headers() {
@@ -55,6 +61,16 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+export function releaseBuildWorkerCount(
+  value: string | undefined,
+): number | undefined {
+  if (value === undefined || value === "") return undefined;
+  if (value !== "true") {
+    throw new Error("NEXT_RELEASE_REPRODUCIBLE_BUILD must be true when set");
+  }
+  return 1;
+}
 
 function deploymentId(value: string | undefined): string | undefined {
   if (value === undefined || value === "") return undefined;

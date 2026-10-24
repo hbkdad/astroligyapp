@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import nextConfig from "../next.config";
+import nextConfig, { releaseBuildWorkerCount } from "../next.config";
 import {
   GLOBAL_BROWSER_SECURITY_HEADERS,
   PRIVATE_NO_STORE_HEADERS,
@@ -14,6 +14,15 @@ import { PADDLE_WEBHOOK_RESPONSE_HEADERS } from "@/server/paddle-webhook-http";
 import { PUBLIC_SHARE_RESPONSE_HEADERS } from "@/server/public-compatibility-share-route";
 
 describe("central HTTP security header policy", () => {
+  it("serializes only the explicit reproducible release build", () => {
+    expect(releaseBuildWorkerCount(undefined)).toBeUndefined();
+    expect(releaseBuildWorkerCount("")).toBeUndefined();
+    expect(releaseBuildWorkerCount("true")).toBe(1);
+    expect(() => releaseBuildWorkerCount("false")).toThrow(
+      "NEXT_RELEASE_REPRODUCIBLE_BUILD must be true when set",
+    );
+  });
+
   it("applies one conservative browser baseline to every framework response", async () => {
     const rules = await nextConfig.headers!();
     const global = rules.find((rule) => rule.source === "/:path*");

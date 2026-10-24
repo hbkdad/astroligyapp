@@ -34,6 +34,11 @@
   already normalized in the prerender manifest. The normalizer now requires exactly the expected 32/64/64
   hexadecimal fields in root and standalone copies before replacing only those values with separate
   HMAC-derived values from the protected build key. Missing, extra or malformed fields are rejected.
+- **Payload-order result.** A second failed exact-build comparison then isolated the prior asynchronous RSC
+  row-order race to the same six public root/timeline HTML/RSC outputs. Those payloads are not rewritten.
+  The release container now supplies an exact fail-closed marker that makes Next's typed static-export worker
+  count one; ordinary Turbopack checks retain default parallelism. Byte-identical image comparison remains
+  mandatory, so serialization cannot convert content drift into a pass.
 
 ### Goal 92 release-reproducibility audit
 

@@ -26,6 +26,7 @@ try {
     "next build --webpack",
   );
   assert.match(dockerfile, /npm run build:release/u);
+  assert.match(dockerfile, /NEXT_RELEASE_REPRODUCIBLE_BUILD=true/u);
   assert.doesNotMatch(dockerfile, /npm run build(?:\s|&)/u);
   assert.deepEqual(
     Object.keys(

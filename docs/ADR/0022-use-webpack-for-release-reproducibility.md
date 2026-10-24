@@ -35,9 +35,14 @@ timestamp was not a deterministic fact and did not belong in a pure read-model p
    shape and replace only those values with the preview metadata already derived from the protected build
    key. Normalize root and standalone copies, including the JavaScript projections, and no other unexplained
    output.
-4. Derive timeline interpretation `preparedAt` from the already validated aggregate `composedAt` rather than
+4. Set Next's typed `experimental.cpus` control to one only when the release-container build supplies the
+   fail-closed `NEXT_RELEASE_REPRODUCIBLE_BUILD=true` marker. Next 16.4.3's static export uses this value as
+   its worker count. Ordinary Turbopack builds leave the marker absent and retain framework-default
+   parallelism. This serializes RSC emission instead of rewriting or discarding differently ordered payload
+   rows.
+5. Derive timeline interpretation `preparedAt` from the already validated aggregate `composedAt` rather than
    reading the wall clock during static rendering.
-5. On a mismatch, compare layers and emit bounded byte excerpts only for the six public root/timeline static
+6. On a mismatch, compare layers and emit bounded byte excerpts only for the six public root/timeline static
    outputs. Reject the exact build secret and secret-like text, and hash long opaque tokens before logging.
 
 ## Consequences
@@ -54,6 +59,10 @@ timestamp was not a deterministic fact and did not belong in a pure read-model p
 - Next 16.4.3's only observed post-upgrade drift was `server/preview-props.json`; both random 32/64/64-hex
   copies correspond exactly to the preview values already normalized in `prerender-manifest.json`. The
   normalizer rejects missing, extra, malformed or non-hex fields before writing the same HMAC-derived values.
+- After the preview file was stabilized, the next exact-build comparison exposed the existing asynchronous
+  RSC row-order race in the six root/timeline HTML/RSC outputs. Because those are application payloads, they
+  are not post-processed. Release-only single-worker static export removes the scheduling input at the cost
+  of slower image builds; exact byte comparison remains the proof.
 - A future return to Turbopack requires repeated exact-commit Linux/BuildKit evidence and an ADR update; a
   successful retry alone is insufficient.
 - This decision does not publish, deploy, or change GitHub/AWS settings.

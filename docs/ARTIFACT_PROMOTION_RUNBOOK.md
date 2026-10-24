@@ -37,6 +37,9 @@ The ordinary `npm run build` keeps Next.js 16.4's default Turbopack coverage. Re
 `npm run build:release` Webpack boundary selected in ADR 0022 after intermittent Turbopack prerender drift.
 Never replace the two-build comparison with retries. If manifests differ, the gate compares changed layers
 and may print only secret-screened, token-redacted excerpts for the public root/timeline static outputs.
+The builder supplies `NEXT_RELEASE_REPRODUCIBLE_BUILD=true`; `next.config.ts` validates that exact marker and
+sets Next's static-export worker count to one. Ordinary builds omit the marker and retain parallel workers.
+This prevents asynchronous RSC row-order drift without rewriting HTML or RSC payloads.
 The post-build step derives preview metadata from the protected build key, writes it only into the exact
 validated preview fields of `prerender-manifest.json` and Next 16.4's dedicated `server/preview-props.json`,
 and sorts only the keys of the app route maps and client/server reference maps (including their JavaScript

@@ -15,6 +15,7 @@ ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
 ARG NEXT_DEPLOYMENT_ID
 ENV NEXT_DEPLOYMENT_ID=${NEXT_DEPLOYMENT_ID}
 ENV NEXT_SHARED_CACHE_ENABLED=true
+ENV NEXT_RELEASE_REPRODUCIBLE_BUILD=true
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 RUN --mount=type=secret,id=next_server_actions_encryption_key,required=true \
