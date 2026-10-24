@@ -83,8 +83,14 @@ Migration invariants:
 - provision LOGIN executors separately and grant only the documented NOLOGIN role memberships;
 - never use `drizzle-kit push` as a release path;
 - run both legacy-upgrade and latest-schema tests before promotion;
-- take and restore-verify a provider backup before production migration;
+- run `npm run test:database-recovery` for the credential-free logical contract, then take and independently
+  restore-verify a provider backup before production migration under `docs/DATABASE_RECOVERY_RUNBOOK.md`;
 - prefer a reviewed forward-fix. Restore is the disaster-recovery path, not an untested down script.
+
+ADR 0023 binds PostgreSQL 18, the sixteen-migration set, custom archive bytes and the exact fifteen-role
+NOLOGIN manifest, then verifies schema, migration, data, ownership, forced-RLS and two-owner isolation after
+a single-transaction restore. Its 15-minute RPO, 120-minute RTO, 14-day retention and 30-day test cadence are
+planning assumptions only; they do not satisfy the managed-provider gate below.
 
 ## HTTP and indexing surface
 
@@ -132,16 +138,16 @@ candidate, and unused credentials must not be provisioned speculatively.
 
 ## External dependencies and operational state
 
-| Dependency            | Current state                                                | Production gate                                                                                         |
-| --------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| Astronomy Engine      | Installed local calculation dependency                       | Preserve exact version/fixtures and provider metadata                                                   |
-| PostgreSQL            | RDS PostgreSQL 18 topology selected; disposable suite passes | Provision only after approval; network/IAM; pool sizing; PITR; backup/restore rehearsal                 |
-| Better Auth           | Installed, configured through strict server boundary         | Real HTTPS/proxy/cookie/email and two-account isolation tests                                           |
-| AWS SES/SNS/SQS       | Adapter and feedback contracts exist                         | Account, verified domain, DKIM/SPF/DMARC, IAM, queue consumer, alarms, suppression/retry exercise       |
-| Paddle                | Signed webhook contract exists                               | Account/products, endpoint, secrets, edge limits, replay/reconciliation, customer provisioning decision |
-| Notification delivery | Candidates remain `pending-provider`                         | Select provider/worker or keep user-facing delivery explicitly unavailable                              |
-| Hosting/CDN/WAF       | AWS Canada topology selected in ADR 0010; unprovisioned      | Approved account/budget/IaC; TLS/domain, limits, shared abuse, cache/header verification                |
-| Observability/on-call | No vendor/exporter/owner selected                            | Privacy-reviewed logs/errors/metrics, dashboards, alerts, escalation owner and retention                |
+| Dependency            | Current state                                                                             | Production gate                                                                                         |
+| --------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Astronomy Engine      | Installed local calculation dependency                                                    | Preserve exact version/fixtures and provider metadata                                                   |
+| PostgreSQL            | RDS PostgreSQL 18 topology selected; disposable migration and logical-restore suites pass | Provision only after approval; network/IAM; pool sizing; PITR/provider restore; RPO/RTO proof           |
+| Better Auth           | Installed, configured through strict server boundary                                      | Real HTTPS/proxy/cookie/email and two-account isolation tests                                           |
+| AWS SES/SNS/SQS       | Adapter and feedback contracts exist                                                      | Account, verified domain, DKIM/SPF/DMARC, IAM, queue consumer, alarms, suppression/retry exercise       |
+| Paddle                | Signed webhook contract exists                                                            | Account/products, endpoint, secrets, edge limits, replay/reconciliation, customer provisioning decision |
+| Notification delivery | Candidates remain `pending-provider`                                                      | Select provider/worker or keep user-facing delivery explicitly unavailable                              |
+| Hosting/CDN/WAF       | AWS Canada topology selected in ADR 0010; unprovisioned                                   | Approved account/budget/IaC; TLS/domain, limits, shared abuse, cache/header verification                |
+| Observability/on-call | No vendor/exporter/owner selected                                                         | Privacy-reviewed logs/errors/metrics, dashboards, alerts, escalation owner and retention                |
 
 ## Health, performance, and feature controls
 

@@ -1,5 +1,14 @@
 # Architecture
 
+## Database recovery boundary
+
+ADR 0023 establishes a provider-neutral PostgreSQL 18 logical-recovery contract. A digest-pinned,
+credential-free drill migrates and seeds an isolated source, captures a custom archive and separately
+validated role inventory, restores a fresh target in one transaction, and proves exact schema, migration,
+ownership, forced-RLS and two-owner isolation invariants. Raw globals SQL is inspection-only; only the exact
+NOLOGIN application-role allowlist may be synthesized. The policy and drill authorize no managed provider,
+production data access, backup retention, PITR claim, RPO/RTO claim or restore cutover.
+
 ## Runtime dependency-license evidence
 
 ADR 0017 adds a release-only license-evidence boundary outside both runtime images. The raw SPDX inventory

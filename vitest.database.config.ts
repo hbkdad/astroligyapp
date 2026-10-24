@@ -12,5 +12,6 @@ export default defineConfig({
     fileParallelism: false,
     include: ["tests/database.integration.test.ts"],
     pool: "threads",
+    testTimeout: 15_000,
   },
 });

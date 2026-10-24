@@ -34,8 +34,10 @@ production migration, DNS change, secret creation, or provider mutation.
 
 1. Confirm supported PostgreSQL version, regional placement, encryption, private networking,
    connection limits, statement/lock timeouts, monitoring, point-in-time recovery, and retention.
-2. Take a pre-migration backup and restore it into an isolated rehearsal database. Record times,
-   checksums/provider IDs, and the operator; never store connection strings in the evidence.
+2. Apply `docs/DATABASE_RECOVERY_RUNBOOK.md`. Before any real environment exists, run the credential-free
+   contract with `npm run test:database-recovery`. For a selected provider, take a pre-migration backup and
+   restore it into a new isolated rehearsal database. Record times, checksums/provider IDs, and the operator;
+   never store connection strings, archive contents, private rows, or credentials in the evidence.
 3. Against the restored rehearsal, run the legacy-upgrade path and then the complete latest-schema
    database suite. Verify RLS remains forced and two test owners cannot cross-read or mutate.
 4. Put writes into the selected maintenance/drain mode. Apply `npm run db:migrate` once with the
@@ -47,6 +49,10 @@ There are no down migrations. For an application-only failure, roll back to the 
 when its database contract is forward-compatible with every applied migration. Otherwise ship a
 reviewed forward-fix. Restore the pre-migration backup only under the disaster-recovery decision,
 after stopping writes and accounting for data created after the backup.
+
+The local PostgreSQL 18 logical drill proves repository schema, role and RLS recovery only. Provider PITR,
+WAL continuity, encrypted/immutable storage, key recovery, real-volume timing, network access, production
+role provisioning and the planned 15-minute RPO/120-minute RTO remain external stop conditions.
 
 ## 4. Configure external services
 

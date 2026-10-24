@@ -1,5 +1,29 @@
 # Security and privacy audit
 
+### Goal 93 database-recovery audit
+
+- **Assets and actors.** Protected assets are private tenant/authentication data, migration history, schema,
+  forced-RLS policies, role capability, backup integrity and future restore authority. Actors are the source
+  backup operator, recovery administrator, migration owner, constrained application roles, future incident
+  approver and hostile or mistaken archive producer.
+- **Trusted-input and credential boundary.** The drill uses only conspicuously synthetic two-owner data in
+  isolated digest-pinned PostgreSQL 18 containers. Its random local credential, archives, descriptors and
+  raw role inventory stay in the OS temporary directory and are removed. It accepts no database URL,
+  production endpoint, secret, private user value or provider credential and emits no row contents.
+- **Role and restore boundary.** Raw globals SQL is never executed. The contract validates the exact fifteen
+  NOLOGIN roles and rejects passwords, LOGIN, superuser, database/role creation, replication, RLS bypass,
+  unexpected/missing roles, target-admin memberships and application-owned restored objects. Restore uses
+  `--no-owner --exit-on-error --single-transaction` into a fresh target.
+- **Integrity and isolation result.** The descriptor binds archive bytes, PostgreSQL major, migration set and
+  role manifest. Verification requires exact deterministic schema and migration history, table/RLS counts,
+  constrained ownership, default-deny behavior, owner A/B read/write isolation, rejected cross-owner insert
+  and denied application access to `auth`. Contract tests reject sixteen unsafe policy, descriptor, archive,
+  version and privilege cases.
+- **Recovery policy and residual risk.** The 15-minute RPO, 120-minute RTO, 14-day retention and 30-day drill
+  cadence are non-authorizing planning assumptions. Logical recovery does not prove provider snapshots,
+  PITR/WAL, encrypted or off-site storage, key recovery, production volumes, network policy, role provisioning,
+  monitoring, cutover or accountable acceptance. Those remain production NO-GO gates.
+
 ### Goal 92 release-reproducibility audit
 
 - **Assets and actors.** Protected assets are the exact source-to-image mapping, Server Actions build secret,

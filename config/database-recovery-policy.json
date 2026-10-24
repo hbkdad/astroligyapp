@@ -1,0 +1,35 @@
+{
+  "schema": "astroligyapp.database-recovery-policy",
+  "version": 1,
+  "postgresMajor": 18,
+  "backupFormat": "custom",
+  "migrationCount": 16,
+  "latestMigration": "0015_serious_synch",
+  "expectedPublicTableCount": 25,
+  "expectedAuthTableCount": 4,
+  "expectedForcedRlsTableCount": 24,
+  "planningTargets": {
+    "rpoMinutes": 15,
+    "rtoMinutes": 120,
+    "retentionDays": 14,
+    "restoreTestFrequencyDays": 30,
+    "authorizing": false
+  },
+  "roles": [
+    { "name": "app_account_deletion", "inherit": true },
+    { "name": "app_account_deletion_owner", "inherit": false },
+    { "name": "app_auth_account_bootstrap", "inherit": true },
+    { "name": "app_auth_account_bootstrap_owner", "inherit": false },
+    { "name": "app_auth_account_owner", "inherit": false },
+    { "name": "app_auth_account_resolver", "inherit": true },
+    { "name": "app_auth_contact_owner", "inherit": false },
+    { "name": "app_auth_contact_resolver", "inherit": true },
+    { "name": "app_auth_email_feedback_consumer", "inherit": true },
+    { "name": "app_auth_email_runtime", "inherit": true },
+    { "name": "app_auth_runtime", "inherit": true },
+    { "name": "app_billing_resolver", "inherit": true },
+    { "name": "app_billing_resolver_owner", "inherit": false },
+    { "name": "app_share_reader", "inherit": true },
+    { "name": "app_user", "inherit": true }
+  ]
+}
