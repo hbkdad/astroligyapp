@@ -292,7 +292,7 @@ try {
     "--env",
     "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI=/v2/credentials/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
     "--env",
-    "AUTH_EMAIL_FEEDBACK_DATABASE_URL=postgresql://feedback:synthetic@postgres:5432/cosmic",
+    "AUTH_EMAIL_FEEDBACK_DATABASE_URL=postgresql://feedback_worker:synthetic@postgres:5432/cosmic",
     "--env",
     "AUTH_EMAIL_FEEDBACK_DATABASE_ALLOW_INSECURE_LOCAL=true",
     "--env",
