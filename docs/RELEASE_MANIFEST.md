@@ -41,7 +41,7 @@ digest equal to the current artifact. See ADR 0015.
 | Node.js              | 24.15.0 from `.nvmrc`            | CI and release operators use the pinned version                       |
 | npm                  | 11.12.1 from `packageManager`    | Install only with `npm ci` for a candidate                            |
 | Next.js / React      | 16.4.3 / 19.2.8                  | Standalone OCI image and two-instance local runtime verified          |
-| TypeScript / Vitest  | 5.9.3 / 4.1.10                   | Strict compilation and deterministic test gate                        |
+| TypeScript / Vitest  | 5.9.3 / 4.1.12                   | Strict compilation and deterministic test gate                        |
 | PostgreSQL           | 18 test baseline                 | RDS PostgreSQL 18 selected; instance/backup resources not provisioned |
 | Drizzle ORM / Kit    | 0.45.2 / 0.31.10                 | Checked-in forward migrations; no schema push                         |
 | Astronomy            | Astronomy Engine 2.1.19          | Local launch adapter behind `EphemerisProvider`                       |
@@ -80,7 +80,10 @@ compatible subscription/profile/notification upgrades.
 Migration invariants:
 
 - apply the immutable files in journal order with the migration owner only;
-- provision LOGIN executors separately and grant only the documented NOLOGIN role memberships;
+- execute the historical empty-database baseline only with the isolated bootstrap administrator required by
+  ADR 0024, then finalize ownership/default privileges and remove its application-role memberships;
+- provision the checked owner/migrator/runtime roles without embedded credentials, grant only the documented
+  NOLOGIN memberships and remove the migrator's temporary owner grant after every future migration;
 - never use `drizzle-kit push` as a release path;
 - run both legacy-upgrade and latest-schema tests before promotion;
 - run `npm run test:database-recovery` for the credential-free logical contract, then take and independently
@@ -91,6 +94,13 @@ ADR 0023 binds PostgreSQL 18, the sixteen-migration set, custom archive bytes an
 NOLOGIN manifest, then verifies schema, migration, data, ownership, forced-RLS and two-owner isolation after
 a single-transaction restore. Its 15-minute RPO, 120-minute RTO, 14-day retention and 30-day test cadence are
 planning assumptions only; they do not satisfy the managed-provider gate below.
+
+ADR 0024 binds the NOLOGIN database owner, bounded migrator and six task-specific runtime logins. The
+credential-free PostgreSQL 18 drill revokes database/default access from `PUBLIC`, applies the real baseline,
+preserves non-owner routine grants during ownership transfer, runs all 71 database tests, proves temporary
+owner-scoped future migration authority and cleanup, rejects injected membership drift, verifies role/GUC pool
+cleanup and accepts only a trusted `verify-full` chain. Managed RDS bootstrap, CA rotation, secret injection,
+failover and backup/PITR parity remain external NO-GO gates.
 
 ## HTTP and indexing surface
 
@@ -111,15 +121,15 @@ UTC date plus 30 lunar dates. Demo, account, API, and opaque-share URLs are excl
 No variable in this table may use a `NEXT_PUBLIC_` prefix. The application validators reject the
 documented secret families when exposed as public variables.
 
-| Group              | Variables                                                                                                                                                                          | Release requirement                                                                                    |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Core database      | `DATABASE_URL`                                                                                                                                                                     | Migration owner URL only for migration jobs; runtime URL must be least-privilege for its route         |
-| Public origin      | `PUBLIC_SITE_ORIGIN`, `PUBLIC_SITE_INDEXING_ENABLED`                                                                                                                               | Exact HTTPS origin; keep indexing `false` until canonical/TLS/search checks pass                       |
-| Auth databases     | `BETTER_AUTH_DATABASE_URL`, `AUTH_ACCOUNT_DATABASE_URL`, `AUTH_EMAIL_DATABASE_URL`, `AUTH_EMAIL_FEEDBACK_DATABASE_URL`                                                             | Separate LOGIN executors with only reviewed role memberships; TLS required                             |
-| Auth/session       | `BETTER_AUTH_SECRETS`, `BETTER_AUTH_BASE_URL`, `BETTER_AUTH_TRUSTED_ORIGINS`, `BETTER_AUTH_IP_HEADER`, `BETTER_AUTH_TRUSTED_PROXIES`                                               | Versioned secret rollover, exact origins, verified proxy chain, production secure cookies              |
-| Email idempotency  | `AUTH_EMAIL_IDEMPOTENCY_KEYS`, `AUTH_EMAIL_IDEMPOTENCY_LEASE_SECONDS`                                                                                                              | 32-byte base64url keys; retain prior keys through ledger retention                                     |
-| SES/email feedback | `SES_AUTH_EMAIL_REGION`, `SES_AUTH_EMAIL_FROM`, `SES_AUTH_EMAIL_CONFIGURATION_SET`, `SES_AUTH_EMAIL_FEEDBACK_TOPIC_ARN`, `SES_AUTH_EMAIL_IDENTITY_ARN`, `AUTH_EMAIL_FEEDBACK_KEYS` | ca-central-1 identity/DNS/IAM plus authenticated SNS/SQS ingestion worker                              |
-| Paddle             | `PADDLE_WEBHOOK_SECRET`, `PADDLE_PERSONAL_PRICE_REFERENCES`, `PADDLE_ADVANCED_PRICE_REFERENCES`                                                                                    | Exact notification secret and non-overlapping canonical live/test price IDs for the chosen environment |
+| Group              | Variables                                                                                                                                                                          | Release requirement                                                                                                |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Core database      | `DATABASE_URL`                                                                                                                                                                     | Application task uses exact `app_runtime_executor`; migration credential exists only in the isolated migration job |
+| Public origin      | `PUBLIC_SITE_ORIGIN`, `PUBLIC_SITE_INDEXING_ENABLED`                                                                                                                               | Exact HTTPS origin; keep indexing `false` until canonical/TLS/search checks pass                                   |
+| Auth databases     | `BETTER_AUTH_DATABASE_URL`, `AUTH_ACCOUNT_DATABASE_URL`, `AUTH_EMAIL_DATABASE_URL`, `AUTH_EMAIL_FEEDBACK_DATABASE_URL`                                                             | Exact auth HTTP/account/email/feedback LOGIN executors; worker task uses `feedback_worker`; `verify-full` required |
+| Auth/session       | `BETTER_AUTH_SECRETS`, `BETTER_AUTH_BASE_URL`, `BETTER_AUTH_TRUSTED_ORIGINS`, `BETTER_AUTH_IP_HEADER`, `BETTER_AUTH_TRUSTED_PROXIES`                                               | Versioned secret rollover, exact origins, verified proxy chain, production secure cookies                          |
+| Email idempotency  | `AUTH_EMAIL_IDEMPOTENCY_KEYS`, `AUTH_EMAIL_IDEMPOTENCY_LEASE_SECONDS`                                                                                                              | 32-byte base64url keys; retain prior keys through ledger retention                                                 |
+| SES/email feedback | `SES_AUTH_EMAIL_REGION`, `SES_AUTH_EMAIL_FROM`, `SES_AUTH_EMAIL_CONFIGURATION_SET`, `SES_AUTH_EMAIL_FEEDBACK_TOPIC_ARN`, `SES_AUTH_EMAIL_IDENTITY_ARN`, `AUTH_EMAIL_FEEDBACK_KEYS` | ca-central-1 identity/DNS/IAM plus authenticated SNS/SQS ingestion worker                                          |
+| Paddle             | `PADDLE_WEBHOOK_SECRET`, `PADDLE_PERSONAL_PRICE_REFERENCES`, `PADDLE_ADVANCED_PRICE_REFERENCES`                                                                                    | Exact notification secret and non-overlapping canonical live/test price IDs for the chosen environment             |
 
 `.env.example` is the redacted operator template. There is no required `AUTH_CONTACT_DATABASE_URL`:
 customer-contact resolution is not wired to a production checkout/provisioning entry point in this

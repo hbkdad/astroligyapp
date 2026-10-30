@@ -4,7 +4,20 @@ Last updated: 2026-10-30
 
 ## Current position
 
-Status: Goal 93 complete. ADR 0023 defines a provider-neutral PostgreSQL 18 recovery contract with explicit
+Status: Goal 94 complete. ADR 0024 defines separate bootstrap administrator, NOLOGIN owner, bounded migrator
+and six workflow-specific runtime logins with exact PostgreSQL 18 membership options, fail-closed default
+privileges, bounded timeouts and verified TLS. The secret-free disposable drill applies the real historical
+baseline, transfers ownership without changing non-owner grants, runs all 71 database tests, proves a future
+owner-scoped migration, removes injected membership drift, clears bootstrap/JIT authority, verifies pool
+cleanup and accepts only a trusted `verify-full` chain. Twenty-one unsafe policy/URL cases reject hidden
+fields, wrong authority, parser overrides, startup role options and weaker TLS. Exact commit `eccfedc` passed
+the complete local release gate with application manifest `sha256:b85fc885…362aaa` and worker manifest
+`sha256:ccae9868…715c59`; first-attempt hosted CI `41127336964` and credential-free release candidate
+`41127337154` also passed. The gate exposed and rejected a stale synthetic worker login on the prior commit;
+the fixture was corrected before acceptance. No provider account, credential, proxy, cloud resource,
+production database, deployment or user data was created or changed.
+
+Goal 93 remains complete. ADR 0023 defines a provider-neutral PostgreSQL 18 recovery contract with explicit
 RPO/RTO assumptions and failure boundaries. The credential-free disposable drill migrates and seeds a source,
 captures database and separately reviewed role-global evidence, restores into a fresh PostgreSQL 18 target, and
 proves all 16 migrations, schema, ownership, least privilege, forced RLS, data equality and two-owner isolation.
@@ -38,6 +51,23 @@ SDK/adapter, authenticated feedback worker, and suppression seam, but no account
 provisioned AWS infrastructure, live queue polling, or live delivery.
 
 ## Completed
+
+- [x] Goal 94: accept ADR 0024 and add a checked PostgreSQL 18 role policy for one isolated bootstrap
+      administrator, a NOLOGIN owner, a bounded migrator and six task-specific runtime logins. Revoke database
+      access and future owner-created object privileges from `PUBLIC`; reject unexpected memberships and
+      connection-string parser overrides; keep every password outside generated SQL and Git.
+- [x] Add the disposable role drill: apply the 16-migration historical baseline, preserve non-owner routine
+      grants while transferring ordinary ownership, run all 71 real database tests, prove a future migration
+      under temporary SET-only owner membership, then remove the grant and bootstrap memberships. Verify exact
+      attributes, membership options, ownership, default privileges, timeouts, pool role/GUC cleanup and an
+      accepted/rejected TLS chain. Reject 21 unsafe contract cases.
+- [x] Apply `database-migration`, `security-audit` and `release-check` to exact commit `eccfedc`: formatting,
+      lint, strict TypeScript, 108 files/1,354 tests twice, coverage, 33-route build, Drizzle, standard/recovery/
+      role PostgreSQL drills, dependency threshold, 8 OpenTofu tests, 304 policies, staging/CI/trust/license/
+      reproducibility contracts, Gitleaks, Trivy, SBOM, offline signatures and attestations passed. Application
+      and worker manifests are `sha256:b85fc885…362aaa` and `sha256:ccae9868…715c59`.
+- [x] Verify first-attempt hosted CI `41127336964` and credential-free release candidate `41127337154` for
+      exact commit `eccfedc`; neither is a deployment or production authorization.
 
 - [x] Goal 93: accept ADR 0023 and add a checked, provider-neutral recovery policy plus operator runbook for
       logical backup, separate role globals, restore ordering, RPO/RTO, retention, integrity and failure cases.
@@ -1099,23 +1129,25 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 94 — establish production PostgreSQL role provisioning and connection-safety contracts in a
-credential-free disposable environment without selecting or mutating a managed provider.
+Goal 95 — validate and encode the selected RDS PostgreSQL 18 managed-provider boundary without provisioning
+AWS resources, credentials or production data.
 
 Deliverables:
 
-1. Research PostgreSQL 18 role membership, ownership/default privileges, `SET ROLE`, row-security authority,
-   TLS verification and connection/statement/lock/idle-transaction limits from current primary documentation;
-   record the provider-neutral production role and connection model in an ADR.
-2. Add idempotent, secret-free provisioning contracts for separate owner, migrator and bounded runtime login/
-   executor roles. Runtime roles must not own objects, bypass RLS, create schema/roles/databases, grant
-   themselves authority, or execute migrations; migrations must not use runtime credentials.
-3. Exercise the contracts against disposable PostgreSQL 18: provision roles, migrate as the migration path,
-   run the real integration/isolation suite through the runtime memberships, prove transaction-local role/GUC
-   cleanup under pooling, and reject wrong membership, ownership, grants, TLS mode and timeout budgets.
-4. Apply `database-migration`, `security-audit` and `release-check`; document credential injection/rotation,
-   managed-provider and certificate-chain gaps. Do not provision cloud resources, select a proxy or touch
-   production.
+1. Research current AWS primary documentation for RDS PostgreSQL 18 bootstrap/admin capabilities, parameter
+   groups, TLS CA/DNS verification and rotation, Secrets Manager authentication/rotation, connection limits,
+   Multi-AZ failover and RDS Proxy session-pinning/initialization behavior. Reconcile it with ADRs 0010, 0023
+   and 0024; do not rely on planning assumptions as provider evidence.
+2. Decide whether direct RDS connections remain the first-release topology or a proxy can satisfy the proven
+   transaction-local role/GUC and pool-cleanup contract. Record the decision and explicit reconsideration
+   triggers in an ADR; do not select a proxy merely for convenience.
+3. Encode a credential-free RDS PostgreSQL 18 policy/IaC contract for exact engine/parameter family, private
+   networking, forced TLS, bounded connection headroom, encryption, backups/PITR, deletion/final-snapshot
+   protection, observability and task-specific secret mappings. Reject version drift, public reachability,
+   shared runtime/migration credentials and unsafe capacity/failover settings in mocked plans.
+4. Add a provider-parity rehearsal/runbook that binds the Goal 94 provisioning order, Goal 93 restore path,
+   AWS CA rotation, failover/reconnect, secret rotation and rollback evidence. Apply `database-migration`,
+   `security-audit` and `release-check`; leave live RDS execution as an explicit staging NO-GO gate.
 
 ## Phase queue
 
@@ -1138,7 +1170,7 @@ Deliverables:
 - All ephemeris access is provider-neutral from the first implementation.
 - Swiss Ephemeris is a candidate, not a selected dependency. Professional or AGPL licensing must be explicitly resolved before a public integration.
 - Product scoring is explainable, configurable, versioned, and explicitly non-scientific.
-- The executable baseline is a single Next.js 16.3 App Router application using React 19.2, strict TypeScript, Tailwind CSS 4, and the default Node.js runtime.
+- The executable baseline is a single Next.js 16.4.3 App Router application using React 19.2, strict TypeScript, Tailwind CSS 4, and the default Node.js runtime.
 - Use Vitest for deterministic unit/contract tests and GitHub Actions with Node 24 for CI.
 - Use Server Components for internal reads, Server Actions for first-party mutations, and Route Handlers for external/public HTTP boundaries.
 - Do not extract packages or services until an ADR 0002 extraction trigger is demonstrated.
@@ -1157,8 +1189,11 @@ Deliverables:
   exists, and all cloud mutations remain approval-gated. See ADR 0010.
 - Production requires at least two application tasks with durable Next.js cache/tag coordination,
   a stable Server Actions encryption key, immutable deployment identity, and a database connection
-  budget. RDS Proxy is not selected until transaction-local role and RLS behavior passes the real
-  migration/isolation suite.
+  budget. Goal 94 proves transaction-local role/GUC cleanup and RLS behavior against disposable PostgreSQL;
+  RDS Proxy remains unselected until its managed session-pinning and failover behavior is reconciled in Goal 95.
+- ADR 0024 separates the provider bootstrap administrator, NOLOGIN database owner, bounded future migrator
+  and six task-specific LOGIN roles. Runtime URLs require exact logins and `sslmode=verify-full`; parser-level
+  authority overrides and startup role options fail closed. No managed-provider parity is claimed.
 - The production artifact uses a digest-pinned Node 24.15.0 build image and Distroless no-OpenSSL
   Debian 13 runtime with an ephemeral BuildKit Server Actions secret, non-root direct Node execution,
   and strict deployment/cache/database capacity validation. The runtime image contains no package
@@ -1180,19 +1215,21 @@ Deliverables:
   ingress searches now use positional provider evaluations; mean-cycle age is
   not used as an event ephemeris. Public current-date routing is locally verified,
   while eventual production-host runtime and cache behavior remain release gates.
-- Managed database, payment-account, AI, monitoring, and deployment providers remain
+- RDS PostgreSQL 18 is selected architecturally but managed-provider bootstrap, CA rotation, failover and
+  secret-injection parity remain unproven. Payment-account, AI and live monitoring/deployment activation remain
   intentionally undecided. Amazon SES is selected only for authentication email.
 - Better Auth still requires live configured browser E2E and production recovery testing. The
   current per-process memory limiter requires a shared production control, and ingress must
   prove trusted client-IP rewriting. The SES SNS signature authenticator and
   regional queue infrastructure remain external gates. MFA and passkeys remain
   release-hardening decisions.
-- Production must provision the account-workflow LOGIN with only the three required NOLOGIN
-  memberships, TLS/pool limits, and monitoring. Multi-instance deployment must share a
+- Production must provision all six Goal 94 workflow logins with only their checked NOLOGIN memberships,
+  TLS/pool limits, default privileges and monitoring. Multi-instance deployment must share a
   rotated `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` and verify proxy host/origin behavior before
   the activation action is considered production-ready.
-- Production database role provisioning, TLS, pooling, migration timeouts,
-  backup/restore, and managed-provider parity remain release gates.
+- Credential-free database role provisioning, TLS rejection, pooling cleanup, migration timeouts and logical
+  restore are now locally proven. Exact RDS administrator parity, CA/DNS rotation, secret replacement,
+  Multi-AZ failover/reconnect and provider backup/PITR remain release gates.
 - Drizzle Kit has four moderate findings through a legacy esbuild development loader.
   Better Auth declares Drizzle Kit as an optional peer, so npm 11 now includes the same
   four findings in `--omit=dev` audit accounting even though `npm explain` locates the
@@ -1205,179 +1242,182 @@ Deliverables:
 
 ## Evidence log
 
-| Date       | Evidence                                           | Result                                                                                        |
-| ---------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| 2026-08-30 | Goal 92 exact-commit local release gate            | App `7e0f70…730532`; worker `d6aa0d…1b98b2`; exact dual builds and all gates passed           |
-| 2026-08-30 | Goal 92 hosted CI and release candidate            | First-attempt runs `33334297978` and `33334297928` passed exact commit `586f526`              |
-| 2026-08-29 | Goal 91 exact-commit release gate                  | App 14 manual/2 unresolved; worker 2 manual/0 unresolved; reproduction and scans passed       |
-| 2026-08-29 | Goal 91 dual OCI release set                       | Local app `5d0ee4…1ad8f`; worker `ea886d…791ea`; exact `38f96e3` source reproduced            |
-| 2026-08-29 | Goal 91 hosted evidence                            | Run `33266047163`; 16 retained files plus envelope downloaded and strictly verified           |
-| 2026-08-29 | Goal 91 hosted CI                                  | Run `33266047047`: attempt 1 static-output drift; unchanged attempt 2 passed                  |
-| 2026-08-29 | Goal 90 GitHub read-only trust snapshot            | Correct identity/token default; six absent/unproven promotion controls; deterministic NO-GO   |
-| 2026-08-29 | Goal 90 adversarial promotion contract             | 36 unsafe cases rejected; synthetic activation permanently denied                             |
-| 2026-08-29 | Goal 90 exact-commit release gate                  | 108 files/1,342 tests, build, coverage, 71 DB tests, IaC, scans, evidence, signatures passed  |
-| 2026-08-29 | Goal 90 dual OCI release set                       | App `02a670…8086f`; worker `623b8b…93e8`; exact `e2c5874` source reproduced                   |
-| 2026-08-29 | Goal 90 hosted workflows                           | CI `33264682462` and release candidate `33264682428` succeeded                                |
-| 2026-08-25 | Goal 87 exact-commit release gate                  | 108 files/1,342 tests, build, coverage, 71 DB tests, IaC, scans, evidence, signatures passed  |
-| 2026-08-25 | Goal 87 application/worker license evidence        | App 72 permitted/27 manual/2 unresolved; worker 31 permitted/5 manual/0 unresolved            |
-| 2026-08-25 | Goal 87 dual OCI release set                       | App `02c6b6…b0d4`; worker `02ebd6…80c2`; exact `5946307` source reproduced                    |
-| 2026-08-25 | Goal 87 release decision                           | Internal evidence GO; staging/apply/production/redistribution NO-GO                           |
-| 2026-08-25 | Goal 86 staging-approval adversarial gate          | 7 documentary/12 live gates passed; all 39 unsafe review/apply cases rejected                 |
-| 2026-08-25 | Goal 86 exact-commit release gate                  | 108 files/1,342 tests, build, coverage, 71 DB tests, IaC, scans, and signatures passed        |
-| 2026-08-25 | Goal 86 dual OCI release set                       | App `b60d50…efce6`; worker `480a14…67ac4`; exact `715027b` source reproduced                  |
-| 2026-08-25 | Goal 86 release decision                           | Internal candidate GO; staging/apply/production/redistribution NO-GO                          |
-| 2026-08-25 | Goal 85 exact-commit release gate                  | 108 files/1,342 tests, build, coverage, 71 DB tests, IaC, scans, and signatures passed        |
-| 2026-08-25 | Goal 85 dual OCI release set                       | App `151ce0…9c711`; worker `487bee…9627`; common source and independent rollback proved       |
-| 2026-08-25 | Goal 85 worker dependency evidence                 | 36 exact lockfile packages and 542 bundle inputs traced; runtime stayed evidence-free         |
-| 2026-08-25 | Goal 85 release decision                           | Internal candidate GO; external staging/production and redistribution NO-GO                   |
-| 2026-08-11 | PostgreSQL 18 migration-upgrade harness            | Legacy row/backfill, malformed cleanup, overlap write, and RLS-scoped reader passed           |
-| 2026-08-11 | `npm run test:database`                            | 16/16 persistence and share-security integration tests passed                                 |
-| 2026-08-12 | Better Auth 1.6.27 PostgreSQL runtime path         | Unverified signup, injected verification, sign-in, live session, and immediate revoke passed  |
-| 2026-08-12 | Goal 56 migration/security database gate           | Oldest schema upgraded cumulatively; 33/33 auth/persistence isolation tests passed            |
-| 2026-08-12 | Goal 56 full application gate                      | 52 files/869 tests, strict checks, and optimized build passed                                 |
-| 2026-08-12 | Goal 57 decision plus full application gate        | SES Canada Central selected; 52 files/869 tests, strict checks, and optimized build passed    |
-| 2026-08-12 | Goal 58 focused and PostgreSQL integration gates   | 53 focused checks plus cumulative upgrade and 33/33 database integration tests passed         |
-| 2026-08-12 | Goal 58 full application and coverage gates        | 53 files/905 tests/build passed; coverage 94.38% statements and 92.43% branches               |
-| 2026-08-12 | Goal 59 migration and PostgreSQL gate              | Oldest schema upgraded empty; 41/41 integration tests and least-privilege checks passed       |
-| 2026-08-12 | Goal 59 coverage gate                              | 54 files/921 tests passed; 94.25% statements, 92.16% branches, and 99.29% functions           |
-| 2026-08-12 | Goal 59 full application gate                      | Formatting, lint, strict TypeScript, 54 files/921 tests, and optimized build passed           |
-| 2026-08-12 | Goal 60 fake-client and coverage gates             | 32 focused cases; coverage 55 files/952 tests at 94.12% statements and 92.17% branches        |
-| 2026-08-12 | Goal 60 full application gate                      | Formatting, lint, strict TypeScript, 55 files/953 tests, and optimized build passed           |
-| 2026-08-12 | Goal 61 migration and PostgreSQL gate              | Oldest schema upgraded cumulatively; 49/49 concurrency, privacy, RLS, rollback tests passed   |
-| 2026-08-12 | Goal 61 focused and coverage gates                 | 29 focused cases; 56 files/982 tests at 93.44% statements and 91.53% branches passed          |
-| 2026-08-12 | Goal 61 full application gate                      | Formatting, lint, strict TypeScript, 56 files/982 tests, and optimized build passed           |
-| 2026-08-12 | Goal 62 migration and PostgreSQL gate              | Oldest schema upgraded cumulatively; 50/50 auth/bootstrap/isolation tests passed              |
-| 2026-08-12 | Goal 62 focused and coverage gates                 | 25 focused cases; 58 files/997 tests at 93.47% statements and 91.56% branches passed          |
-| 2026-08-12 | Goal 62 full application gate                      | Formatting, lint, strict TypeScript, 58 files/997 tests, and optimized build passed           |
-| 2026-08-12 | Goal 63 migration and PostgreSQL gate              | Oldest schema upgraded cumulatively; 55/55 deletion/retention/isolation tests passed          |
-| 2026-08-12 | Goal 63 focused and coverage gates                 | 49 focused cases; 60 files/1035 tests at 93.42% statements and 91.59% branches passed         |
-| 2026-08-12 | Goal 63 full application gate                      | Formatting, lint, strict TypeScript, 60 files/1035 tests, and optimized build passed          |
-| 2026-08-12 | Goal 64 PostgreSQL auth HTTP gate                  | 58/58 integration cases; signup/verify/signin/reset/revoke/rate-limit lifecycle passed        |
-| 2026-08-12 | Goal 64 focused and coverage gates                 | 73 focused cases; 62 files/1091 tests at 92.86% statements and 91.40% branches passed         |
-| 2026-08-12 | Goal 64 full application and built-route gates     | Strict checks/build passed; built route returned fixed secure 503 without runtime credentials |
-| 2026-08-11 | `npm run db:check`                                 | Drizzle schema, migration journal, and generated snapshot are consistent                      |
-| 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 562 tests, and optimized production build         |
-| 2026-08-11 | `npm run test:coverage`                            | 94.04% statements, 91.04% branches, 99.73% functions, and 95.13% lines                        |
-| 2026-08-11 | `npm audit --omit=dev`                             | Zero production dependency vulnerabilities                                                    |
-| 2026-08-11 | Public-share projection/token adversarial suite    | 7/7 redaction, tamper, entropy, digest, expiry, revocation, and failure tests passed          |
-| 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 561 tests, and optimized production build         |
-| 2026-08-11 | `npm run test:coverage`                            | 94.22% statements, 91.20% branches, 99.72% functions, and 95.32% lines                        |
-| 2026-08-11 | `npm audit --omit=dev`                             | Zero production dependency vulnerabilities                                                    |
-| 2026-08-11 | Compatibility presentation focused suite           | 56/56 mapping, semantic HTML, state, reconstruction, privacy, and failure tests passed        |
-| 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 554 tests, and optimized production build         |
-| 2026-08-11 | `ui-quality` compatibility browser gate            | Desktop/mobile/200% text, keyboard, touch targets, reduced motion, overflow, console passed   |
-| 2026-08-09 | Station-event focused/cross-layer suite            | 71/71 motion, provider, transit-window, source, trace, direction, and failure tests passed    |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 330 tests, and production build                   |
-| 2026-08-09 | `npm run test:coverage`                            | 95.64% statements, 92.07% branches, 100% functions, and 96.47% lines                          |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | `astro-validation` station gate                    | Direct/retrograde hand crossings refined within 1 second; direction/speed failures passed     |
-| 2026-08-09 | Independent Mercury station acceptance             | 6/6 2000 stations matched within fixed 1,800-second and 0.2-degree tolerances                 |
-| 2026-08-09 | Lunar-event focused/cross-layer suite              | 109/109 ingress, phase, lunar, zodiac, provider, trace, source, and failure tests passed      |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 314 tests, and production build                   |
-| 2026-08-09 | `npm run test:coverage`                            | 95.77% statements, 92.09% branches, 100% functions, and 96.48% lines                          |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | `lunar-validation` hand-boundary gate              | 12 ingresses and 4 primary phase anchors refined within 1 second; wrap/direction passed       |
-| 2026-08-09 | USNO API v4.0.1 phase acceptance                   | 4/4 January 2000 events through Astronomy Engine were within fixed 600-second tolerance       |
-| 2026-08-09 | Transit-event focused/cross-layer suite            | 54/54 search, transit, natal, zodiac, aspect, source, trace, and failure tests passed         |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 284 tests, and production build                   |
-| 2026-08-09 | `npm run test:coverage`                            | 95.79% statements, 91.83% branches, 100% functions, and 96.34% lines                          |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | `astro-validation` event-window gate               | Hand start/peak/end within 1 second; wrap/square boundaries and explicit failures passed      |
-| 2026-08-09 | Astronomy Engine/JPL-near event search             | J2000 instant bracketed; Venus-natal-Mars peak refined below 0.001 degrees                    |
-| 2026-08-09 | Natal-chart focused/cross-layer suite              | 89/89 read-model, geometry, source-tolerance, natal, house, zodiac, and aspect tests passed   |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 273 tests, and production build                   |
-| 2026-08-09 | `npm run test:coverage`                            | 96.27% statements, 92.45% branches, 100% functions, and 96.33% lines                          |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | `astro-validation` chart gate                      | JPL positions within 0.02 degrees; Swiss ASC/MC within 0.01 degrees; layout boundaries passed |
-| 2026-08-09 | `ui-quality` chart browser gate                    | Desktop/mobile, keyboard links, scroll tables, 200% text, reduced motion, and overflow passed |
-| 2026-08-09 | Optimized natal-chart production browser           | 200 response, zero console errors/warnings, zero external resources, and zero page overflow   |
-| 2026-08-09 | Initial top-level inventory                        | Two Markdown source prompts only; no Git metadata                                             |
-| 2026-08-09 | Official Codex guidance and repo skill validation  | Control paths confirmed; all eight skills passed `quick_validate.py`                          |
-| 2026-08-09 | Runtime inventory                                  | Node 24.15.0, npm 11.12.1, Git 2.54.0                                                         |
-| 2026-08-09 | Next.js official docs and npm registry             | Next 16.3.0 selected; project minimum Node raised to 20.19 for development-tool compatibility |
-| 2026-08-09 | Astrodienst live price page and June 2026 contract | CHF 700 unlimited professional path documented; no purchase or provider selection             |
-| 2026-08-09 | `npm run check`                                    | Passed Prettier, ESLint, strict TypeScript, 2 Vitest tests, and Next.js production build      |
-| 2026-08-09 | `npm run test:coverage`                            | Passed; baseline runtime/contract coverage report generated                                   |
-| 2026-08-09 | `npm audit --audit-level=high`                     | 0 vulnerabilities                                                                             |
-| 2026-08-09 | Production runtime smoke                           | `/` and `/api/health` returned 200; health used `Cache-Control: no-store`                     |
-| 2026-08-09 | `astro-validation` provider leak check             | No Swiss/provider-specific dependency or source coupling detected                             |
-| 2026-08-09 | `git init -b main`                                 | Empty root repository initialized on `main`; no commit created                                |
-| 2026-08-09 | Drizzle/pg primary-source and npm registry review  | Drizzle ORM 0.45.2, Kit 0.31.10, `pg` 8.23.0 selected; managed provider remains open          |
-| 2026-08-09 | `npm run db:check`                                 | Checked-in migration journal and snapshots are internally consistent                          |
-| 2026-08-09 | `npm run test:database`                            | PostgreSQL 18 migration passed; 7/7 constraint, index, cascade, and isolation tests passed    |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, ESLint, strict TypeScript, 2 unit/contract tests, and production build     |
-| 2026-08-09 | `npm run test:coverage`                            | Passed; scoped baseline application/domain coverage remains 100%                              |
-| 2026-08-09 | `npm audit --audit-level=high`                     | No high or critical findings; four accepted moderate Drizzle Kit development-tool findings    |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | Dashboard focused suite                            | 8/8 Goal 17 adapter, mapper, semantic, state, empty, and fail-closed UI tests passed          |
-| 2026-08-09 | UI cross-layer regression suite                    | 45/45 dashboard, renderer, projection, and reading tests passed                               |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 256 tests, and production build                   |
-| 2026-08-09 | `npm run test:coverage`                            | 95.94% statements, 91.91% branches, 100% functions, and 96.01% lines                          |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | `ui-quality` browser gate                          | Desktop/mobile visuals, keyboard, 200% text, reduced motion, and zero-overflow passed         |
-| 2026-08-09 | Optimized production browser                       | 200 response, local icon, nine resources, zero console errors or warnings                     |
-| 2026-08-09 | Daily-reading focused suite                        | 6/6 composition, ordering, coverage, version, and duplicate tests passed                      |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 246 tests, and production build                   |
-| 2026-08-09 | `npm run test:coverage`                            | 95.77% statements, 91.83% branches, 100% functions, and 95.71% lines                          |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | Category-engine focused suite                      | 13/13 formula, trace, bounds, schema, immutability, and failure tests passed                  |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 240 tests, and production build                   |
-| 2026-08-09 | `npm run test:coverage`                            | 95.92% statements, 92.18% branches, 100% functions, and 95.75% lines                          |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | Interpretation renderer focused suite              | 16/16 formatting, provenance, fallback, and fail-closed tests passed                          |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 227 tests, and production build                   |
-| 2026-08-09 | `npm run test:coverage`                            | 95.95% statements, 92.5% branches, 100% functions, and 95.78% lines                           |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | Interpretation focused suite                       | 14/14 projection, library, unsupported, and claim-safety tests passed                         |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 211 tests, and production build                   |
-| 2026-08-09 | `npm run test:coverage`                            | 95.75% statements, 92.32% branches, 100% functions, and 95.59% lines                          |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | Personal context focused suite                     | 6/6 composition, immutability, timezone, mismatch, ID, and numerology validation tests passed |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 197 tests, and production build                   |
-| 2026-08-09 | `npm run test:coverage`                            | 95.59% statements, 92.07% branches, 100% functions, and 95.42% lines                          |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | Personal lunar focused suite                       | 5/5 reuse, JPL phase, provenance, and malformed-snapshot tests passed                         |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 191 tests, and production build                   |
-| 2026-08-09 | `npm run test:coverage`                            | 95.01% statements, 90.68% branches, 100% functions, and 94.82% lines                          |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | `npx vitest run tests/transit-snapshot.test.ts`    | 9/9 transit snapshot tests passed; dual-source and failure cases covered                      |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 186 tests, and production build                   |
-| 2026-08-09 | `npm run test:coverage`                            | 94.84% statements, 90.44% branches, 100% functions, and 94.64% lines                          |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | JPL Horizons natal fixture capture                 | 10/10 Zollikon topocentric body rows stored with URLs, raw one-minute rows, UTC, and observer |
-| 2026-08-09 | `npx vitest run tests/natal-chart.test.ts`         | 9/9 composition, provenance, dual-source fixture, no-speed, and provider-failure tests passed |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 177 tests, and production build                   |
-| 2026-08-09 | `npm run test:coverage`                            | 94.24% statements, 89.27% branches, 100% functions, and 94.01% lines                          |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | Whole Sign focused deterministic suite             | 46/46 strategy, conformance, reference-angle, polar, and explicit-failure tests passed        |
-| 2026-08-09 | pysweph / Swiss Ephemeris 2.10.3.5 reference       | ASC and MC matched the published two-decimal values within the fixed 0.01 degree tolerance    |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 158 tests, and production build                   |
-| 2026-08-09 | `npm run test:coverage`                            | 93.2% statements, 88.09% branches, 100% functions, and 93.04% lines                           |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | JPL Horizons API 1.3 fixture capture               | 40 topocentric body/case results stored with request URLs and raw rows                        |
-| 2026-08-09 | Astronomy Engine 2.1.19 focused suite              | 14/14 conformance, JPL tolerance, capability, and failure tests passed                        |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 126 tests, and production build                   |
-| 2026-08-09 | `npm run test:coverage`                            | 93.04% statements, 88.09% branches, 100% functions, and 92.88% lines                          |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | `git commit` / `git push origin main`              | Foundation checkpoint `d224cc4` published to `origin/main`                                    |
-| 2026-08-09 | NASA Science and USNO lunar documentation          | Eight-phase sequence, longitude anchors, illumination meaning, and 29.53059-day mean sourced  |
-| 2026-08-09 | `npx vitest run tests/lunar-phase.test.ts`         | 23/23 focused lunar geometry tests passed                                                     |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, types, 56 tests, and production build                                |
-| 2026-08-09 | `npm run test:coverage`                            | 98.03% statements/lines, 92.3% branches, and 100% functions                                   |
-| 2026-08-09 | `npx vitest run tests/numerology.test.ts`          | 30/30 focused normalization, reduction, master-number, and cycle tests passed                 |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, types, 86 tests, and production build                                |
-| 2026-08-09 | `npm run test:coverage`                            | 98.78% statements, 94.68% branches, 100% functions, and 98.74% lines                          |
-| 2026-08-09 | GitHub repository orientation                      | Empty public `hbkdad/astroligyapp` configured as `origin`; authenticated as `hbkdad`; no push |
-| 2026-08-09 | Auth.js, Better Auth, and Clerk primary docs       | Provider selection deferred; server-verified active-session port recorded in ADR 0004         |
-| 2026-08-09 | `npm run test:database`                            | PostgreSQL 18 migration passed; 10/10 migration, isolation, auth, rollback, and pooling tests |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, ESLint, strict TypeScript, 33 tests, and Next.js production build          |
-| 2026-08-09 | `npm run test:coverage`                            | 97.77% statements/lines, 90.9% branches, and 100% functions in scoped application/domain code |
-| 2026-08-09 | `astro-validation` zodiac/aspect suite             | Exact boundaries, wraparound, symmetry, orb edges, closest match, and motion phases passed    |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
-| 2026-08-09 | `astro-validation` ephemeris conformance suite     | 26/26 focused request, output, metadata, failure, and no-fallback tests passed                |
-| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 112 tests, and production build                   |
-| 2026-08-09 | `npm run test:coverage`                            | 92.38% statements, 87.61% branches, 100% functions, and 92.2% lines                           |
-| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                       |
+| Date       | Evidence                                           | Result                                                                                          |
+| ---------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 2026-10-30 | Goal 94 exact-commit local release gate            | App `b85fc8…362aaa`; worker `ccae98…715c59`; role/recovery/artifact gates and scans passed      |
+| 2026-10-30 | Goal 94 hosted CI and release candidate            | First-attempt runs `41127336964` and `41127337154` passed exact commit `eccfedc`                |
+| 2026-10-30 | Goal 94 PostgreSQL 18 role drill                   | 21 unsafe cases, 6 logins, 71 DB tests, default ACL/pool cleanup and TLS trust/rejection passed |
+| 2026-08-30 | Goal 92 exact-commit local release gate            | App `7e0f70…730532`; worker `d6aa0d…1b98b2`; exact dual builds and all gates passed             |
+| 2026-08-30 | Goal 92 hosted CI and release candidate            | First-attempt runs `33334297978` and `33334297928` passed exact commit `586f526`                |
+| 2026-08-29 | Goal 91 exact-commit release gate                  | App 14 manual/2 unresolved; worker 2 manual/0 unresolved; reproduction and scans passed         |
+| 2026-08-29 | Goal 91 dual OCI release set                       | Local app `5d0ee4…1ad8f`; worker `ea886d…791ea`; exact `38f96e3` source reproduced              |
+| 2026-08-29 | Goal 91 hosted evidence                            | Run `33266047163`; 16 retained files plus envelope downloaded and strictly verified             |
+| 2026-08-29 | Goal 91 hosted CI                                  | Run `33266047047`: attempt 1 static-output drift; unchanged attempt 2 passed                    |
+| 2026-08-29 | Goal 90 GitHub read-only trust snapshot            | Correct identity/token default; six absent/unproven promotion controls; deterministic NO-GO     |
+| 2026-08-29 | Goal 90 adversarial promotion contract             | 36 unsafe cases rejected; synthetic activation permanently denied                               |
+| 2026-08-29 | Goal 90 exact-commit release gate                  | 108 files/1,342 tests, build, coverage, 71 DB tests, IaC, scans, evidence, signatures passed    |
+| 2026-08-29 | Goal 90 dual OCI release set                       | App `02a670…8086f`; worker `623b8b…93e8`; exact `e2c5874` source reproduced                     |
+| 2026-08-29 | Goal 90 hosted workflows                           | CI `33264682462` and release candidate `33264682428` succeeded                                  |
+| 2026-08-25 | Goal 87 exact-commit release gate                  | 108 files/1,342 tests, build, coverage, 71 DB tests, IaC, scans, evidence, signatures passed    |
+| 2026-08-25 | Goal 87 application/worker license evidence        | App 72 permitted/27 manual/2 unresolved; worker 31 permitted/5 manual/0 unresolved              |
+| 2026-08-25 | Goal 87 dual OCI release set                       | App `02c6b6…b0d4`; worker `02ebd6…80c2`; exact `5946307` source reproduced                      |
+| 2026-08-25 | Goal 87 release decision                           | Internal evidence GO; staging/apply/production/redistribution NO-GO                             |
+| 2026-08-25 | Goal 86 staging-approval adversarial gate          | 7 documentary/12 live gates passed; all 39 unsafe review/apply cases rejected                   |
+| 2026-08-25 | Goal 86 exact-commit release gate                  | 108 files/1,342 tests, build, coverage, 71 DB tests, IaC, scans, and signatures passed          |
+| 2026-08-25 | Goal 86 dual OCI release set                       | App `b60d50…efce6`; worker `480a14…67ac4`; exact `715027b` source reproduced                    |
+| 2026-08-25 | Goal 86 release decision                           | Internal candidate GO; staging/apply/production/redistribution NO-GO                            |
+| 2026-08-25 | Goal 85 exact-commit release gate                  | 108 files/1,342 tests, build, coverage, 71 DB tests, IaC, scans, and signatures passed          |
+| 2026-08-25 | Goal 85 dual OCI release set                       | App `151ce0…9c711`; worker `487bee…9627`; common source and independent rollback proved         |
+| 2026-08-25 | Goal 85 worker dependency evidence                 | 36 exact lockfile packages and 542 bundle inputs traced; runtime stayed evidence-free           |
+| 2026-08-25 | Goal 85 release decision                           | Internal candidate GO; external staging/production and redistribution NO-GO                     |
+| 2026-08-11 | PostgreSQL 18 migration-upgrade harness            | Legacy row/backfill, malformed cleanup, overlap write, and RLS-scoped reader passed             |
+| 2026-08-11 | `npm run test:database`                            | 16/16 persistence and share-security integration tests passed                                   |
+| 2026-08-12 | Better Auth 1.6.27 PostgreSQL runtime path         | Unverified signup, injected verification, sign-in, live session, and immediate revoke passed    |
+| 2026-08-12 | Goal 56 migration/security database gate           | Oldest schema upgraded cumulatively; 33/33 auth/persistence isolation tests passed              |
+| 2026-08-12 | Goal 56 full application gate                      | 52 files/869 tests, strict checks, and optimized build passed                                   |
+| 2026-08-12 | Goal 57 decision plus full application gate        | SES Canada Central selected; 52 files/869 tests, strict checks, and optimized build passed      |
+| 2026-08-12 | Goal 58 focused and PostgreSQL integration gates   | 53 focused checks plus cumulative upgrade and 33/33 database integration tests passed           |
+| 2026-08-12 | Goal 58 full application and coverage gates        | 53 files/905 tests/build passed; coverage 94.38% statements and 92.43% branches                 |
+| 2026-08-12 | Goal 59 migration and PostgreSQL gate              | Oldest schema upgraded empty; 41/41 integration tests and least-privilege checks passed         |
+| 2026-08-12 | Goal 59 coverage gate                              | 54 files/921 tests passed; 94.25% statements, 92.16% branches, and 99.29% functions             |
+| 2026-08-12 | Goal 59 full application gate                      | Formatting, lint, strict TypeScript, 54 files/921 tests, and optimized build passed             |
+| 2026-08-12 | Goal 60 fake-client and coverage gates             | 32 focused cases; coverage 55 files/952 tests at 94.12% statements and 92.17% branches          |
+| 2026-08-12 | Goal 60 full application gate                      | Formatting, lint, strict TypeScript, 55 files/953 tests, and optimized build passed             |
+| 2026-08-12 | Goal 61 migration and PostgreSQL gate              | Oldest schema upgraded cumulatively; 49/49 concurrency, privacy, RLS, rollback tests passed     |
+| 2026-08-12 | Goal 61 focused and coverage gates                 | 29 focused cases; 56 files/982 tests at 93.44% statements and 91.53% branches passed            |
+| 2026-08-12 | Goal 61 full application gate                      | Formatting, lint, strict TypeScript, 56 files/982 tests, and optimized build passed             |
+| 2026-08-12 | Goal 62 migration and PostgreSQL gate              | Oldest schema upgraded cumulatively; 50/50 auth/bootstrap/isolation tests passed                |
+| 2026-08-12 | Goal 62 focused and coverage gates                 | 25 focused cases; 58 files/997 tests at 93.47% statements and 91.56% branches passed            |
+| 2026-08-12 | Goal 62 full application gate                      | Formatting, lint, strict TypeScript, 58 files/997 tests, and optimized build passed             |
+| 2026-08-12 | Goal 63 migration and PostgreSQL gate              | Oldest schema upgraded cumulatively; 55/55 deletion/retention/isolation tests passed            |
+| 2026-08-12 | Goal 63 focused and coverage gates                 | 49 focused cases; 60 files/1035 tests at 93.42% statements and 91.59% branches passed           |
+| 2026-08-12 | Goal 63 full application gate                      | Formatting, lint, strict TypeScript, 60 files/1035 tests, and optimized build passed            |
+| 2026-08-12 | Goal 64 PostgreSQL auth HTTP gate                  | 58/58 integration cases; signup/verify/signin/reset/revoke/rate-limit lifecycle passed          |
+| 2026-08-12 | Goal 64 focused and coverage gates                 | 73 focused cases; 62 files/1091 tests at 92.86% statements and 91.40% branches passed           |
+| 2026-08-12 | Goal 64 full application and built-route gates     | Strict checks/build passed; built route returned fixed secure 503 without runtime credentials   |
+| 2026-08-11 | `npm run db:check`                                 | Drizzle schema, migration journal, and generated snapshot are consistent                        |
+| 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 562 tests, and optimized production build           |
+| 2026-08-11 | `npm run test:coverage`                            | 94.04% statements, 91.04% branches, 99.73% functions, and 95.13% lines                          |
+| 2026-08-11 | `npm audit --omit=dev`                             | Zero production dependency vulnerabilities                                                      |
+| 2026-08-11 | Public-share projection/token adversarial suite    | 7/7 redaction, tamper, entropy, digest, expiry, revocation, and failure tests passed            |
+| 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 561 tests, and optimized production build           |
+| 2026-08-11 | `npm run test:coverage`                            | 94.22% statements, 91.20% branches, 99.72% functions, and 95.32% lines                          |
+| 2026-08-11 | `npm audit --omit=dev`                             | Zero production dependency vulnerabilities                                                      |
+| 2026-08-11 | Compatibility presentation focused suite           | 56/56 mapping, semantic HTML, state, reconstruction, privacy, and failure tests passed          |
+| 2026-08-11 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 554 tests, and optimized production build           |
+| 2026-08-11 | `ui-quality` compatibility browser gate            | Desktop/mobile/200% text, keyboard, touch targets, reduced motion, overflow, console passed     |
+| 2026-08-09 | Station-event focused/cross-layer suite            | 71/71 motion, provider, transit-window, source, trace, direction, and failure tests passed      |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 330 tests, and production build                     |
+| 2026-08-09 | `npm run test:coverage`                            | 95.64% statements, 92.07% branches, 100% functions, and 96.47% lines                            |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | `astro-validation` station gate                    | Direct/retrograde hand crossings refined within 1 second; direction/speed failures passed       |
+| 2026-08-09 | Independent Mercury station acceptance             | 6/6 2000 stations matched within fixed 1,800-second and 0.2-degree tolerances                   |
+| 2026-08-09 | Lunar-event focused/cross-layer suite              | 109/109 ingress, phase, lunar, zodiac, provider, trace, source, and failure tests passed        |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 314 tests, and production build                     |
+| 2026-08-09 | `npm run test:coverage`                            | 95.77% statements, 92.09% branches, 100% functions, and 96.48% lines                            |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | `lunar-validation` hand-boundary gate              | 12 ingresses and 4 primary phase anchors refined within 1 second; wrap/direction passed         |
+| 2026-08-09 | USNO API v4.0.1 phase acceptance                   | 4/4 January 2000 events through Astronomy Engine were within fixed 600-second tolerance         |
+| 2026-08-09 | Transit-event focused/cross-layer suite            | 54/54 search, transit, natal, zodiac, aspect, source, trace, and failure tests passed           |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 284 tests, and production build                     |
+| 2026-08-09 | `npm run test:coverage`                            | 95.79% statements, 91.83% branches, 100% functions, and 96.34% lines                            |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | `astro-validation` event-window gate               | Hand start/peak/end within 1 second; wrap/square boundaries and explicit failures passed        |
+| 2026-08-09 | Astronomy Engine/JPL-near event search             | J2000 instant bracketed; Venus-natal-Mars peak refined below 0.001 degrees                      |
+| 2026-08-09 | Natal-chart focused/cross-layer suite              | 89/89 read-model, geometry, source-tolerance, natal, house, zodiac, and aspect tests passed     |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 273 tests, and production build                     |
+| 2026-08-09 | `npm run test:coverage`                            | 96.27% statements, 92.45% branches, 100% functions, and 96.33% lines                            |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | `astro-validation` chart gate                      | JPL positions within 0.02 degrees; Swiss ASC/MC within 0.01 degrees; layout boundaries passed   |
+| 2026-08-09 | `ui-quality` chart browser gate                    | Desktop/mobile, keyboard links, scroll tables, 200% text, reduced motion, and overflow passed   |
+| 2026-08-09 | Optimized natal-chart production browser           | 200 response, zero console errors/warnings, zero external resources, and zero page overflow     |
+| 2026-08-09 | Initial top-level inventory                        | Two Markdown source prompts only; no Git metadata                                               |
+| 2026-08-09 | Official Codex guidance and repo skill validation  | Control paths confirmed; all eight skills passed `quick_validate.py`                            |
+| 2026-08-09 | Runtime inventory                                  | Node 24.15.0, npm 11.12.1, Git 2.54.0                                                           |
+| 2026-08-09 | Next.js official docs and npm registry             | Next 16.3.0 selected; project minimum Node raised to 20.19 for development-tool compatibility   |
+| 2026-08-09 | Astrodienst live price page and June 2026 contract | CHF 700 unlimited professional path documented; no purchase or provider selection               |
+| 2026-08-09 | `npm run check`                                    | Passed Prettier, ESLint, strict TypeScript, 2 Vitest tests, and Next.js production build        |
+| 2026-08-09 | `npm run test:coverage`                            | Passed; baseline runtime/contract coverage report generated                                     |
+| 2026-08-09 | `npm audit --audit-level=high`                     | 0 vulnerabilities                                                                               |
+| 2026-08-09 | Production runtime smoke                           | `/` and `/api/health` returned 200; health used `Cache-Control: no-store`                       |
+| 2026-08-09 | `astro-validation` provider leak check             | No Swiss/provider-specific dependency or source coupling detected                               |
+| 2026-08-09 | `git init -b main`                                 | Empty root repository initialized on `main`; no commit created                                  |
+| 2026-08-09 | Drizzle/pg primary-source and npm registry review  | Drizzle ORM 0.45.2, Kit 0.31.10, `pg` 8.23.0 selected; managed provider remains open            |
+| 2026-08-09 | `npm run db:check`                                 | Checked-in migration journal and snapshots are internally consistent                            |
+| 2026-08-09 | `npm run test:database`                            | PostgreSQL 18 migration passed; 7/7 constraint, index, cascade, and isolation tests passed      |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, ESLint, strict TypeScript, 2 unit/contract tests, and production build       |
+| 2026-08-09 | `npm run test:coverage`                            | Passed; scoped baseline application/domain coverage remains 100%                                |
+| 2026-08-09 | `npm audit --audit-level=high`                     | No high or critical findings; four accepted moderate Drizzle Kit development-tool findings      |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | Dashboard focused suite                            | 8/8 Goal 17 adapter, mapper, semantic, state, empty, and fail-closed UI tests passed            |
+| 2026-08-09 | UI cross-layer regression suite                    | 45/45 dashboard, renderer, projection, and reading tests passed                                 |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 256 tests, and production build                     |
+| 2026-08-09 | `npm run test:coverage`                            | 95.94% statements, 91.91% branches, 100% functions, and 96.01% lines                            |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | `ui-quality` browser gate                          | Desktop/mobile visuals, keyboard, 200% text, reduced motion, and zero-overflow passed           |
+| 2026-08-09 | Optimized production browser                       | 200 response, local icon, nine resources, zero console errors or warnings                       |
+| 2026-08-09 | Daily-reading focused suite                        | 6/6 composition, ordering, coverage, version, and duplicate tests passed                        |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 246 tests, and production build                     |
+| 2026-08-09 | `npm run test:coverage`                            | 95.77% statements, 91.83% branches, 100% functions, and 95.71% lines                            |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | Category-engine focused suite                      | 13/13 formula, trace, bounds, schema, immutability, and failure tests passed                    |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 240 tests, and production build                     |
+| 2026-08-09 | `npm run test:coverage`                            | 95.92% statements, 92.18% branches, 100% functions, and 95.75% lines                            |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | Interpretation renderer focused suite              | 16/16 formatting, provenance, fallback, and fail-closed tests passed                            |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 227 tests, and production build                     |
+| 2026-08-09 | `npm run test:coverage`                            | 95.95% statements, 92.5% branches, 100% functions, and 95.78% lines                             |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | Interpretation focused suite                       | 14/14 projection, library, unsupported, and claim-safety tests passed                           |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 211 tests, and production build                     |
+| 2026-08-09 | `npm run test:coverage`                            | 95.75% statements, 92.32% branches, 100% functions, and 95.59% lines                            |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | Personal context focused suite                     | 6/6 composition, immutability, timezone, mismatch, ID, and numerology validation tests passed   |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 197 tests, and production build                     |
+| 2026-08-09 | `npm run test:coverage`                            | 95.59% statements, 92.07% branches, 100% functions, and 95.42% lines                            |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | Personal lunar focused suite                       | 5/5 reuse, JPL phase, provenance, and malformed-snapshot tests passed                           |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 191 tests, and production build                     |
+| 2026-08-09 | `npm run test:coverage`                            | 95.01% statements, 90.68% branches, 100% functions, and 94.82% lines                            |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | `npx vitest run tests/transit-snapshot.test.ts`    | 9/9 transit snapshot tests passed; dual-source and failure cases covered                        |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 186 tests, and production build                     |
+| 2026-08-09 | `npm run test:coverage`                            | 94.84% statements, 90.44% branches, 100% functions, and 94.64% lines                            |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | JPL Horizons natal fixture capture                 | 10/10 Zollikon topocentric body rows stored with URLs, raw one-minute rows, UTC, and observer   |
+| 2026-08-09 | `npx vitest run tests/natal-chart.test.ts`         | 9/9 composition, provenance, dual-source fixture, no-speed, and provider-failure tests passed   |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 177 tests, and production build                     |
+| 2026-08-09 | `npm run test:coverage`                            | 94.24% statements, 89.27% branches, 100% functions, and 94.01% lines                            |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | Whole Sign focused deterministic suite             | 46/46 strategy, conformance, reference-angle, polar, and explicit-failure tests passed          |
+| 2026-08-09 | pysweph / Swiss Ephemeris 2.10.3.5 reference       | ASC and MC matched the published two-decimal values within the fixed 0.01 degree tolerance      |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 158 tests, and production build                     |
+| 2026-08-09 | `npm run test:coverage`                            | 93.2% statements, 88.09% branches, 100% functions, and 93.04% lines                             |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | JPL Horizons API 1.3 fixture capture               | 40 topocentric body/case results stored with request URLs and raw rows                          |
+| 2026-08-09 | Astronomy Engine 2.1.19 focused suite              | 14/14 conformance, JPL tolerance, capability, and failure tests passed                          |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 126 tests, and production build                     |
+| 2026-08-09 | `npm run test:coverage`                            | 93.04% statements, 88.09% branches, 100% functions, and 92.88% lines                            |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | `git commit` / `git push origin main`              | Foundation checkpoint `d224cc4` published to `origin/main`                                      |
+| 2026-08-09 | NASA Science and USNO lunar documentation          | Eight-phase sequence, longitude anchors, illumination meaning, and 29.53059-day mean sourced    |
+| 2026-08-09 | `npx vitest run tests/lunar-phase.test.ts`         | 23/23 focused lunar geometry tests passed                                                       |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, types, 56 tests, and production build                                  |
+| 2026-08-09 | `npm run test:coverage`                            | 98.03% statements/lines, 92.3% branches, and 100% functions                                     |
+| 2026-08-09 | `npx vitest run tests/numerology.test.ts`          | 30/30 focused normalization, reduction, master-number, and cycle tests passed                   |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, types, 86 tests, and production build                                  |
+| 2026-08-09 | `npm run test:coverage`                            | 98.78% statements, 94.68% branches, 100% functions, and 98.74% lines                            |
+| 2026-08-09 | GitHub repository orientation                      | Empty public `hbkdad/astroligyapp` configured as `origin`; authenticated as `hbkdad`; no push   |
+| 2026-08-09 | Auth.js, Better Auth, and Clerk primary docs       | Provider selection deferred; server-verified active-session port recorded in ADR 0004           |
+| 2026-08-09 | `npm run test:database`                            | PostgreSQL 18 migration passed; 10/10 migration, isolation, auth, rollback, and pooling tests   |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, ESLint, strict TypeScript, 33 tests, and Next.js production build            |
+| 2026-08-09 | `npm run test:coverage`                            | 97.77% statements/lines, 90.9% branches, and 100% functions in scoped application/domain code   |
+| 2026-08-09 | `astro-validation` zodiac/aspect suite             | Exact boundaries, wraparound, symmetry, orb edges, closest match, and motion phases passed      |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
+| 2026-08-09 | `astro-validation` ephemeris conformance suite     | 26/26 focused request, output, metadata, failure, and no-fallback tests passed                  |
+| 2026-08-09 | `npm run check`                                    | Passed formatting, lint, strict TypeScript, 112 tests, and production build                     |
+| 2026-08-09 | `npm run test:coverage`                            | 92.38% statements, 87.61% branches, 100% functions, and 92.2% lines                             |
+| 2026-08-09 | `npm audit --omit=dev`                             | 0 production dependency vulnerabilities                                                         |
 
 ## Goal 7 astro-validation record
 
