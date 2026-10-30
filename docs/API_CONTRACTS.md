@@ -247,7 +247,7 @@ The versioned result is restricted to `ready`, `authenticate`, `reject`, `retry`
 missing/invalid contact and contact-source outage, account failure, provisioning
 failure, and reconciliation remain distinguishable without returning subject,
 session, owner, email, provider, customer, exception, or entitlement data. No route,
-Server Action or contact storage is selected by this contract. The Better Auth 1.6.27
+Server Action or contact storage is selected by this contract. The Better Auth 1.7.14
 adapter now validates a live database session with a ten-minute billing freshness
 limit. Execute-only database functions then resolve the active internal account and
 one current verified email; raw auth rows, password/token fields, cookie claims, and

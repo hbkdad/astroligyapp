@@ -27,7 +27,7 @@ the launch ephemeris boundary, and the natal engine now composes validated
 placements, houses, and aspects with complete calculation provenance. Bounded
 transit, lunar, station, and explicit numerology events can now be composed into
 one immutable timeline-fact aggregate. Paddle is selected only for verified
-subscription-event ingestion. Better Auth 1.6.27 is installed with four isolated auth
+subscription-event ingestion. Better Auth 1.7.14 is installed with four isolated auth
 tables, strict server configuration, database sessions, and execute-only account and
 contact lookups plus a hardened public email/password HTTP boundary. No live billing
 account, production data, managed database/auth infrastructure, AI, general notification delivery, location-resolution,

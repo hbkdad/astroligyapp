@@ -1,8 +1,8 @@
 # Better Auth HTTP surface review
 
-Reviewed version: Better Auth 1.6.27
+Reviewed version: Better Auth 1.7.14
 
-Review date: 2026-08-12
+Review date: 2026-10-30
 Public base path: `/api/auth`
 
 ## Review basis

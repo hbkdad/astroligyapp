@@ -136,7 +136,7 @@ tests/
   the only launch strategy; unsupported systems fail explicitly. See ADR 0006.
 - `SessionVerifier`: provider-neutral server verification returning explicit
   active, unauthenticated, expired, revoked, or invalid session state.
-- Better Auth adapter: exact 1.6.27 uses four Drizzle-owned tables in the isolated
+- Better Auth adapter: exact 1.7.14 uses four Drizzle-owned tables in the isolated
   `auth` schema, database sessions only, and a ten-minute recent-session requirement
   for billing work. Separate execute-only account/contact roles keep application and
   billing code away from auth rows, tokens, hashes, and verification records.
@@ -584,7 +584,7 @@ production security gates are recorded in `docs/SECURITY_PRIVACY_AUDIT.md`.
 - Persistence: PostgreSQL 18 contract, Drizzle ORM/Kit, `pg`, checked-in SQL
   migrations, forced row-level security, and real disposable PostgreSQL tests.
   See ADR 0003.
-- Authentication: exact Better Auth 1.6.27 installed for self-hosted database sessions
+- Authentication: exact Better Auth 1.7.14 installed for self-hosted database sessions
   in an isolated PostgreSQL schema. Protected work remains behind `SessionVerifier`;
   trusted billing email is read live only from the verified auth user row through
   execute-only roles. The minimal public route and account entry/recovery UI are exposed;

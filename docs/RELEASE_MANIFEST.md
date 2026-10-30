@@ -45,7 +45,7 @@ digest equal to the current artifact. See ADR 0015.
 | PostgreSQL           | 18 test baseline                 | RDS PostgreSQL 18 selected; instance/backup resources not provisioned |
 | Drizzle ORM / Kit    | 0.45.2 / 0.31.10                 | Checked-in forward migrations; no schema push                         |
 | Astronomy            | Astronomy Engine 2.1.19          | Local launch adapter behind `EphemerisProvider`                       |
-| Authentication       | Better Auth 1.6.27               | PostgreSQL sessions and verified email/password only                  |
+| Authentication       | Better Auth 1.7.14               | PostgreSQL sessions and verified email/password only                  |
 | Billing ingress      | Paddle SDK 3.10.0                | Signed webhook adapter only; no live account or checkout              |
 | Authentication email | AWS SES v2 SDK 3.1108.0          | Adapter selected; infrastructure and credentials absent               |
 | Shared cache client  | Redis 6.2.1                      | Valkey protocol boundary; no managed cache provisioned                |
