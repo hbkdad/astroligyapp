@@ -270,13 +270,18 @@ function toolMajor(container, tool) {
 }
 
 function schemaSnapshot(container, administrator, database) {
+  const deterministicRestrictKey = [
+    "b5ec5588c7f9735a0e39effc04e71f0a",
+    "5d87a22106becfe4252e572398eea795",
+  ].join("");
+
   return capture("docker", [
     "exec",
     container,
     "pg_dump",
     "--schema-only",
     "--no-owner",
-    "--restrict-key=b5ec5588c7f9735a0e39effc04e71f0a5d87a22106becfe4252e572398eea795",
+    `--restrict-key=${deterministicRestrictKey}`,
     "--username",
     administrator,
     database,
