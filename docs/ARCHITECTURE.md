@@ -1,5 +1,15 @@
 # Architecture
 
+## Production database authority boundary
+
+ADR 0024 separates the one-time historical bootstrap administrator, the NOLOGIN database owner, the bounded
+future migrator, and six workflow-specific runtime logins. Exact PostgreSQL 18 membership options prevent
+runtime logins from administering roles or accumulating unrelated privileges. All production URLs require the
+expected login and `sslmode=verify-full`; timeout defaults attach to LOGIN roles because `SET ROLE` does not
+reapply them. The disposable drill runs the real 71-test database suite, transfers ownership without broad
+reassignment, proves future migration DDL and transaction-local pool cleanup, and rejects an untrusted TLS
+chain. Managed-provider bootstrap parity, secret injection, certificate rotation and any proxy remain NO-GO.
+
 ## Database recovery boundary
 
 ADR 0023 establishes a provider-neutral PostgreSQL 18 logical-recovery contract. A digest-pinned,
@@ -582,8 +592,8 @@ production security gates are recorded in `docs/SECURITY_PRIVACY_AUDIT.md`.
   filesystem caching preserves packaged pre-rendered pages; runtime writes are external, validated,
   bounded, and digest-keyed. See `docs/RUNTIME_DEPLOYMENT_CONTRACT.md`.
 - Persistence: PostgreSQL 18 contract, Drizzle ORM/Kit, `pg`, checked-in SQL
-  migrations, forced row-level security, and real disposable PostgreSQL tests.
-  See ADR 0003.
+  migrations, forced row-level security, separated owner/migrator/runtime roles, verified production TLS,
+  bounded login defaults, and real disposable PostgreSQL tests. See ADR 0003 and ADR 0024.
 - Authentication: exact Better Auth 1.7.14 installed for self-hosted database sessions
   in an isolated PostgreSQL schema. Protected work remains behind `SessionVerifier`;
   trusted billing email is read live only from the verified auth user row through

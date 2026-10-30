@@ -1,5 +1,3 @@
-import { isIP } from "node:net";
-
 const deploymentId = required("NEXT_DEPLOYMENT_ID", 7, 128);
 if (!/^[A-Za-z0-9][A-Za-z0-9._-]+$/.test(deploymentId))
   invalid("NEXT_DEPLOYMENT_ID");
@@ -54,6 +52,18 @@ if (taskMaximum * poolSlotsPerTask + databaseReserve > databaseMaximum) {
   );
 }
 
+const allowInsecureLocalDatabase =
+  process.env.DATABASE_ALLOW_INSECURE_LOCAL === "true";
+for (const [name, login] of [
+  ["DATABASE_URL", "app_runtime_executor"],
+  ["BETTER_AUTH_DATABASE_URL", "auth_http_executor"],
+  ["AUTH_ACCOUNT_DATABASE_URL", "auth_account_executor"],
+  ["AUTH_EMAIL_DATABASE_URL", "auth_email_executor"],
+  ["AUTH_EMAIL_FEEDBACK_DATABASE_URL", "auth_feedback_executor"],
+]) {
+  databaseUrl(name, login, allowInsecureLocalDatabase);
+}
+
 console.log("runtime configuration valid");
 
 function required(name, minimum, maximum) {
@@ -79,4 +89,52 @@ function integer(name, minimum, maximum) {
   if (!Number.isSafeInteger(parsed) || parsed < minimum || parsed > maximum)
     invalid(name);
   return parsed;
+}
+
+function databaseUrl(name, expectedLogin, allowInsecureLocal) {
+  let url;
+  try {
+    url = new URL(required(name, 20, 2048));
+  } catch {
+    invalid(name);
+  }
+  const localHost = isLocalDatabaseHost(url.hostname);
+  const sslModes = url.searchParams.getAll("sslmode");
+  const verified = sslModes.length === 1 && sslModes[0] === "verify-full";
+  const explicitlyLocal =
+    allowInsecureLocal && localHost && sslModes.length === 0;
+  if (
+    url.protocol !== "postgresql:" ||
+    decodeURIComponent(url.username) !== expectedLogin ||
+    url.password.length === 0 ||
+    url.hostname.length === 0 ||
+    url.pathname.length < 2 ||
+    url.hash.length > 0 ||
+    (!verified && !explicitlyLocal)
+  )
+    invalid(name);
+  rejectDatabaseUrlOverrides(name, url);
+}
+
+function rejectDatabaseUrlOverrides(name, url) {
+  for (const forbidden of [
+    "database",
+    "db",
+    "host",
+    "options",
+    "password",
+    "port",
+    "user",
+  ])
+    if (url.searchParams.has(forbidden)) invalid(name);
+}
+
+function isLocalDatabaseHost(hostname) {
+  return (
+    hostname === "localhost" ||
+    hostname === "postgres" ||
+    hostname === "::1" ||
+    hostname === "[::1]" ||
+    /^127(?:\.[0-9]{1,3}){3}$/u.test(hostname)
+  );
 }

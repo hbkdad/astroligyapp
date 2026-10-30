@@ -23,6 +23,8 @@
     "test:database": "node scripts/test-database.mjs",
     "test:database-recovery:contract": "node scripts/test-database-recovery-contract.mjs",
     "test:database-recovery": "npm run test:database-recovery:contract && node scripts/test-database-recovery.mjs",
+    "test:database-roles:contract": "node scripts/test-database-role-contract.mjs",
+    "test:database-roles": "npm run test:database-roles:contract && node scripts/test-database-roles.mjs",
     "test:runtime": "node scripts/test-runtime-container.mjs",
     "scan:runtime": "node scripts/scan-runtime-image.mjs",
     "test:artifact": "node scripts/test-release-artifact.mjs",
@@ -46,7 +48,7 @@
     "db:check": "drizzle-kit check",
     "db:migrate": "drizzle-kit migrate",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build",
-    "release:check": "npm run check && npm run test:coverage && npm run db:check && npm run test:database && npm run test:database-recovery && npm audit --omit=dev --audit-level=high && npm run test:infrastructure && npm run test:staging-approval && npm run test:ci-release-evidence && npm run test:github-trust-readiness && npm run test:license-review-packet && npm run test:reproducibility-diagnostic && npm run test:release-set && npm run test:release-artifacts"
+    "release:check": "npm run check && npm run test:coverage && npm run db:check && npm run test:database && npm run test:database-recovery && npm run test:database-roles && npm audit --omit=dev --audit-level=high && npm run test:infrastructure && npm run test:staging-approval && npm run test:ci-release-evidence && npm run test:github-trust-readiness && npm run test:license-review-packet && npm run test:reproducibility-diagnostic && npm run test:release-set && npm run test:release-artifacts"
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "3.1108.0",

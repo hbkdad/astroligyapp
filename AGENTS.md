@@ -36,7 +36,7 @@
 ## Required verification
 
 - Use npm for this baseline. Run `npm install` after dependency changes and preserve `package-lock.json`.
-- Current commands: `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:coverage`, `npm run db:check`, `npm run test:database`, `npm run build`, and the application gate `npm run check`.
+- Current commands: `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run test:coverage`, `npm run db:check`, `npm run test:database`, `npm run test:database-recovery`, `npm run test:database-roles`, `npm run build`, and the application gate `npm run check`.
 - Generate checked-in migrations with `npm run db:generate`; never use schema push as the normal migration path. Inspect generated SQL and run the disposable PostgreSQL test before accepting it.
 - Run the repository's real lint, typecheck, unit, integration, end-to-end, and production-build commands in proportion to the change.
 - For calculation changes, invoke the relevant validation skill and record fixture sources, tolerances, versions, and exact commands.

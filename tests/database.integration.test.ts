@@ -85,11 +85,16 @@ import {
 } from "@/domain/entitlements/subscription-transitions";
 
 const connectionString = process.env.TEST_DATABASE_URL;
+const databaseAdministratorRole =
+  process.env.TEST_DATABASE_ADMIN_ROLE ?? "cosmic";
 
 if (!connectionString) {
   throw new Error(
     "TEST_DATABASE_URL is required for database integration tests",
   );
+}
+if (!/^[a-z][a-z0-9_]{2,62}$/u.test(databaseAdministratorRole)) {
+  throw new Error("TEST_DATABASE_ADMIN_ROLE is invalid");
 }
 
 const pool = new Pool({ connectionString });
@@ -1445,8 +1450,8 @@ describe("verified-session account deletion lifecycle", () => {
       deleted: false,
       profiles: "1",
       auth_users: "1",
-      current_role: "cosmic",
-      current_user: "cosmic",
+      current_role: databaseAdministratorRole,
+      current_user: databaseAdministratorRole,
     });
     await pool.query(`delete from auth."user" where id = $1`, [
       fixture.subject,
@@ -1815,7 +1820,7 @@ describe("compatibility report persistence and public share boundary", () => {
                 as share_identity`,
     );
     expect(state.rows[0]).toEqual({
-      current_user: "cosmic",
+      current_user: databaseAdministratorRole,
       request_identity: null,
       share_identity: null,
     });
@@ -3882,7 +3887,7 @@ describe("two-owner row isolation", () => {
               (select count(*) from profile where display_name = 'Rollback marker')::text as rollback_rows`,
     );
     expect(state.rows[0]).toEqual({
-      current_user: "cosmic",
+      current_user: databaseAdministratorRole,
       request_identity: null,
       rollback_rows: "0",
     });

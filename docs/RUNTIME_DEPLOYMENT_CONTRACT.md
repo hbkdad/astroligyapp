@@ -57,6 +57,9 @@ a dedicated build target and are never copied into the final runtime stage.
 - cache prefix, connection timeout, and entry TTL are bounded and reject malformed configuration.
 - `APP_TASK_MAX_COUNT`, `DATABASE_MAX_CONNECTIONS`, and `DATABASE_RESERVED_CONNECTIONS` must prove
   `task maximum * 32 current pool slots + reserve <= database maximum` before startup.
+- `DATABASE_URL` and the four authentication database URLs must use the exact ADR 0024 workflow login
+  and `sslmode=verify-full`. Only explicit local test topology may set
+  `DATABASE_ALLOW_INSECURE_LOCAL=true`; it is invalid for a remote hostname.
 
 The 32-slot figure is the current application-task worst-case sum: Better Auth 8, account 4, authentication
 email 4, feedback 4, Paddle 8, and public compatibility share 4. It is deliberately conservative;
@@ -120,7 +123,8 @@ Final Goal 80 evidence:
 ## Remaining production gates
 
 This is not staging evidence. The test does not prove CloudFront/ALB source restrictions, TLS Valkey,
-RDS failover, real transaction pools under load, old/new image routing, ECR scanning, signed artifact
+RDS failover, managed-provider baseline migration parity, production CA/DNS rotation, real transaction
+pools under load, old/new image routing, ECR scanning, signed artifact
 promotion, current AWS limits, or live alarms. The health endpoint remains shallow liveness. The first
 AWS-like environment must add readiness outside this route and repeat the two-instance, proxy/cookie,
 RLS, cache loss, rolling revision, and restore tests before any external GO decision.

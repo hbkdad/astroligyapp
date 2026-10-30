@@ -20,8 +20,9 @@ production migration, DNS change, secret creation, or provider mutation.
 
 1. Create environment secrets through the selected platform's secret manager from `.env.example`.
    Never paste values into tickets, chat, logs, shell history, browser variables, or build artifacts.
-2. Confirm database URLs use TLS and distinct LOGIN executors. The migration URL is unavailable to
-   the application runtime. Verify role membership against the checked-in SQL.
+2. Apply `docs/DATABASE_ROLE_PROVISIONING_RUNBOOK.md`. Confirm every database URL uses its exact distinct
+   LOGIN executor and `sslmode=verify-full`; the migration URL is unavailable to application tasks. Verify
+   attributes, membership options, ownership and login timeouts against the checked policy.
 3. Confirm the auth base URL and trusted origins are exact HTTPS origins with no path/query/fragment.
    Trust forwarded IP headers only from the selected proxy addresses.
 4. Verify descending secret/key versions, uniqueness, entropy, rollover retention, and emergency
@@ -40,8 +41,11 @@ production migration, DNS change, secret creation, or provider mutation.
    never store connection strings, archive contents, private rows, or credentials in the evidence.
 3. Against the restored rehearsal, run the legacy-upgrade path and then the complete latest-schema
    database suite. Verify RLS remains forced and two test owners cannot cross-read or mutate.
-4. Put writes into the selected maintenance/drain mode. Apply `npm run db:migrate` once with the
-   migration owner. Inspect migration history and application/database errors before restoring traffic.
+4. Put writes into the selected maintenance/drain mode. For the historical empty-database baseline, use the
+   isolated provider bootstrap administrator required by ADR 0024 and immediately finalize ownership/ACLs.
+   For every later migration, temporarily grant the bounded migrator SET-only access to the NOLOGIN owner,
+   apply `npm run db:migrate` once, then revoke that membership. Inspect migration history and errors before
+   restoring traffic.
 5. Run schema/RLS/auth/billing/email/notification smoke checks with synthetic accounts. A partial
    migration, unexpected lock, role drift, or failed isolation check stops promotion.
 
@@ -52,7 +56,8 @@ after stopping writes and accounting for data created after the backup.
 
 The local PostgreSQL 18 logical drill proves repository schema, role and RLS recovery only. Provider PITR,
 WAL continuity, encrypted/immutable storage, key recovery, real-volume timing, network access, production
-role provisioning and the planned 15-minute RPO/120-minute RTO remain external stop conditions.
+managed-provider bootstrap parity, secret/certificate rotation and the planned 15-minute RPO/120-minute RTO
+remain external stop conditions.
 
 ## 4. Configure external services
 

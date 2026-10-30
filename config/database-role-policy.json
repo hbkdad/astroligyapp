@@ -1,0 +1,81 @@
+{
+  "schema": "astroligyapp.database-role-policy",
+  "version": 1,
+  "postgresMajor": 18,
+  "database": "cosmic",
+  "tlsMode": "verify-full",
+  "credentialProvisioning": "external-secret-manager",
+  "ownerRole": "app_database_owner",
+  "migratorRole": "app_database_migrator",
+  "migrator": {
+    "connectionLimit": 2,
+    "statementTimeoutMs": 600000,
+    "lockTimeoutMs": 5000,
+    "idleInTransactionTimeoutMs": 30000,
+    "transactionTimeoutMs": 900000
+  },
+  "runtimeLogins": [
+    {
+      "name": "app_runtime_executor",
+      "connectionLimit": 12,
+      "memberships": [
+        { "role": "app_billing_resolver", "inherit": false, "set": true },
+        { "role": "app_share_reader", "inherit": false, "set": true },
+        { "role": "app_user", "inherit": false, "set": true }
+      ]
+    },
+    {
+      "name": "auth_account_executor",
+      "connectionLimit": 4,
+      "memberships": [
+        { "role": "app_account_deletion", "inherit": false, "set": true },
+        { "role": "app_auth_account_bootstrap", "inherit": false, "set": true },
+        { "role": "app_auth_account_resolver", "inherit": false, "set": true },
+        { "role": "app_auth_contact_resolver", "inherit": false, "set": true },
+        { "role": "app_user", "inherit": false, "set": true }
+      ]
+    },
+    {
+      "name": "auth_email_executor",
+      "connectionLimit": 4,
+      "memberships": [
+        { "role": "app_auth_email_runtime", "inherit": false, "set": true }
+      ]
+    },
+    {
+      "name": "auth_feedback_executor",
+      "connectionLimit": 4,
+      "memberships": [
+        {
+          "role": "app_auth_email_feedback_consumer",
+          "inherit": false,
+          "set": true
+        }
+      ]
+    },
+    {
+      "name": "auth_http_executor",
+      "connectionLimit": 8,
+      "memberships": [
+        { "role": "app_auth_runtime", "inherit": true, "set": false }
+      ]
+    },
+    {
+      "name": "feedback_worker",
+      "connectionLimit": 4,
+      "memberships": [
+        {
+          "role": "app_auth_email_feedback_consumer",
+          "inherit": false,
+          "set": true
+        }
+      ]
+    }
+  ],
+  "runtime": {
+    "statementTimeoutMs": 15000,
+    "lockTimeoutMs": 2000,
+    "idleInTransactionTimeoutMs": 10000,
+    "transactionTimeoutMs": 60000
+  }
+}

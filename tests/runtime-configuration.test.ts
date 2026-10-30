@@ -13,6 +13,16 @@ const validEnvironment = Object.freeze({
   APP_TASK_MAX_COUNT: "2",
   DATABASE_MAX_CONNECTIONS: "100",
   DATABASE_RESERVED_CONNECTIONS: "20",
+  DATABASE_ALLOW_INSECURE_LOCAL: "true",
+  DATABASE_URL: "postgresql://app_runtime_executor:local@127.0.0.1:5432/cosmic",
+  BETTER_AUTH_DATABASE_URL:
+    "postgresql://auth_http_executor:local@127.0.0.1:5432/cosmic",
+  AUTH_ACCOUNT_DATABASE_URL:
+    "postgresql://auth_account_executor:local@127.0.0.1:5432/cosmic",
+  AUTH_EMAIL_DATABASE_URL:
+    "postgresql://auth_email_executor:local@127.0.0.1:5432/cosmic",
+  AUTH_EMAIL_FEEDBACK_DATABASE_URL:
+    "postgresql://auth_feedback_executor:local@127.0.0.1:5432/cosmic",
 });
 
 describe("production runtime configuration", () => {
@@ -39,6 +49,50 @@ describe("production runtime configuration", () => {
     ],
     ["unbounded task count", { APP_TASK_MAX_COUNT: "21" }],
     ["exceeded database budget", { APP_TASK_MAX_COUNT: "3" }],
+    [
+      "wrong database login",
+      {
+        DATABASE_URL: "postgresql://wrong_executor:local@127.0.0.1:5432/cosmic",
+      },
+    ],
+    [
+      "non-verifying remote database TLS",
+      {
+        DATABASE_URL:
+          "postgresql://app_runtime_executor:local@database.example:5432/cosmic?sslmode=require",
+      },
+    ],
+    [
+      "insecure public IP database",
+      {
+        DATABASE_URL:
+          "postgresql://app_runtime_executor:local@203.0.113.8:5432/cosmic",
+      },
+    ],
+    [
+      "duplicate database TLS mode",
+      {
+        DATABASE_ALLOW_INSECURE_LOCAL: "false",
+        DATABASE_URL:
+          "postgresql://app_runtime_executor:local@database.example:5432/cosmic?sslmode=verify-full&sslmode=verify-full",
+      },
+    ],
+    [
+      "database login query override",
+      {
+        DATABASE_ALLOW_INSECURE_LOCAL: "false",
+        DATABASE_URL:
+          "postgresql://app_runtime_executor:local@database.example:5432/cosmic?sslmode=verify-full&user=wrong_executor",
+      },
+    ],
+    [
+      "database startup role option",
+      {
+        DATABASE_ALLOW_INSECURE_LOCAL: "false",
+        DATABASE_URL:
+          "postgresql://app_runtime_executor:local@database.example:5432/cosmic?sslmode=verify-full&options=-c%20role%3Dapp_user",
+      },
+    ],
   ])("rejects %s", (_label, overrides) => {
     const result = validate({ ...validEnvironment, ...overrides });
 

@@ -1,5 +1,3 @@
-import { isIP } from "node:net";
-
 import { Pool } from "pg";
 
 import type { AuthenticationEmailFeedbackWorkerCycle } from "./authentication-email-feedback-worker";
@@ -81,8 +79,8 @@ export function loadAuthenticationEmailFeedbackServiceConfiguration(
     invalid();
   }
   if (
-    (url.protocol !== "postgresql:" && url.protocol !== "postgres:") ||
-    url.username.length === 0 ||
+    url.protocol !== "postgresql:" ||
+    decodeURIComponent(url.username) !== "feedback_worker" ||
     url.password.length === 0 ||
     url.hostname.length === 0 ||
     url.pathname.length < 2 ||
@@ -91,21 +89,39 @@ export function loadAuthenticationEmailFeedbackServiceConfiguration(
     invalid();
   const localInsecure =
     environment.AUTH_EMAIL_FEEDBACK_DATABASE_ALLOW_INSECURE_LOCAL === "true";
-  const localHost =
-    url.hostname === "localhost" ||
-    url.hostname === "postgres" ||
-    isIP(url.hostname) !== 0;
+  const localHost = isLocalDatabaseHost(url.hostname);
+  const sslModes = url.searchParams.getAll("sslmode");
   if (
-    url.searchParams.get("sslmode") !== "verify-full" &&
-    !(localInsecure && localHost && url.searchParams.get("sslmode") === null)
+    !(sslModes.length === 1 && sslModes[0] === "verify-full") &&
+    !(localInsecure && localHost && sslModes.length === 0)
   )
     invalid();
+  for (const forbidden of [
+    "database",
+    "db",
+    "host",
+    "options",
+    "password",
+    "port",
+    "user",
+  ])
+    if (url.searchParams.has(forbidden)) invalid();
 
   return Object.freeze({
     version: "1.0.0",
     databaseUrl: value,
     maximumDatabaseConnections: MAXIMUM_DATABASE_CONNECTIONS,
   });
+}
+
+function isLocalDatabaseHost(hostname: string): boolean {
+  return (
+    hostname === "localhost" ||
+    hostname === "postgres" ||
+    hostname === "::1" ||
+    hostname === "[::1]" ||
+    /^127(?:\.[0-9]{1,3}){3}$/u.test(hostname)
+  );
 }
 
 export function createAuthenticationEmailFeedbackServicePool(

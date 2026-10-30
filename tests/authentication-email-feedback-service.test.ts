@@ -8,7 +8,7 @@ import {
 } from "@/server/authentication-email-feedback-service";
 
 const SECURE_DATABASE =
-  "postgresql://feedback:private@database.example:5432/cosmic?sslmode=verify-full";
+  "postgresql://feedback_worker:private@database.example:5432/cosmic?sslmode=verify-full";
 
 function configuration() {
   return loadAuthenticationEmailFeedbackServiceConfiguration({
@@ -48,14 +48,14 @@ describe("authentication email feedback service", () => {
     expect(
       loadAuthenticationEmailFeedbackServiceConfiguration({
         AUTH_EMAIL_FEEDBACK_DATABASE_URL:
-          "postgresql://feedback:private@postgres:5432/cosmic",
+          "postgresql://feedback_worker:private@postgres:5432/cosmic",
         AUTH_EMAIL_FEEDBACK_DATABASE_ALLOW_INSECURE_LOCAL: "true",
       }),
     ).toMatchObject({ maximumDatabaseConnections: 4 });
     expect(() =>
       loadAuthenticationEmailFeedbackServiceConfiguration({
         AUTH_EMAIL_FEEDBACK_DATABASE_URL:
-          "postgresql://feedback:private@database.example:5432/cosmic",
+          "postgresql://feedback_worker:private@database.example:5432/cosmic",
         AUTH_EMAIL_FEEDBACK_DATABASE_ALLOW_INSECURE_LOCAL: "true",
       }),
     ).toThrow("Invalid authentication email feedback service input");
@@ -101,7 +101,28 @@ describe("authentication email feedback service", () => {
     { AUTH_EMAIL_FEEDBACK_DATABASE_URL: "private" },
     {
       AUTH_EMAIL_FEEDBACK_DATABASE_URL:
-        "postgresql://feedback:private@database.example:5432/cosmic?sslmode=require",
+        "postgresql://feedback_worker:private@database.example:5432/cosmic?sslmode=require",
+    },
+    {
+      AUTH_EMAIL_FEEDBACK_DATABASE_URL:
+        "postgresql://wrong:private@database.example:5432/cosmic?sslmode=verify-full",
+    },
+    {
+      AUTH_EMAIL_FEEDBACK_DATABASE_URL:
+        "postgresql://feedback_worker:private@203.0.113.8:5432/cosmic",
+      AUTH_EMAIL_FEEDBACK_DATABASE_ALLOW_INSECURE_LOCAL: "true",
+    },
+    {
+      AUTH_EMAIL_FEEDBACK_DATABASE_URL:
+        "postgresql://feedback_worker:private@database.example:5432/cosmic?sslmode=verify-full&sslmode=verify-full",
+    },
+    {
+      AUTH_EMAIL_FEEDBACK_DATABASE_URL:
+        "postgresql://feedback_worker:private@database.example:5432/cosmic?sslmode=verify-full&user=wrong",
+    },
+    {
+      AUTH_EMAIL_FEEDBACK_DATABASE_URL:
+        "postgresql://feedback_worker:private@database.example:5432/cosmic?sslmode=verify-full&options=-c%20role%3Dapp_user",
     },
     {
       AUTH_EMAIL_FEEDBACK_DATABASE_URL: SECURE_DATABASE,
