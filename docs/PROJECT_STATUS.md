@@ -1,20 +1,21 @@
 # Project status
 
-Last updated: 2026-08-30
+Last updated: 2026-10-30
 
 ## Current position
 
-Status: Goal 92 complete. ADR 0022 separates the ordinary Next.js 16.3 Turbopack check from an explicit
-Webpack release compiler. Secret-safe OCI diagnostics proved that the original intermittent root/timeline
-static drift was a framework build-order defect, then exposed unordered app-route and client/server-reference
-maps serialized directly from compiler completion/traversal order. The post-build boundary canonicalizes keys
-only in those exact semantically unordered records and their JavaScript projections, requires matching root
-and standalone per-route sets, and leaves values, static HTML/RSC, bundles and unknown output untouched. The
-two-independent-uncached-build byte/config/manifest equality gate remains unchanged and fail-closed. Exact
-commit `586f526` passed the complete local release gate and first-attempt hosted CI `33334297978` plus
-credential-free release candidate `33334297928`. No retry acceptance, secret export, publication, deployment,
-setting, cloud resource, production system or user data was created or changed. External redistribution
-remains NO-GO with 16 manual reviews and 2 unresolved assertions.
+Status: Goal 93 complete. ADR 0023 defines a provider-neutral PostgreSQL 18 recovery contract with explicit
+RPO/RTO assumptions and failure boundaries. The credential-free disposable drill migrates and seeds a source,
+captures database and separately reviewed role-global evidence, restores into a fresh PostgreSQL 18 target, and
+proves all 16 migrations, schema, ownership, least privilege, forced RLS, data equality and two-owner isolation.
+Sixteen unsafe contract cases reject incomplete, mixed-version, tampered, over-privileged and cross-tenant
+evidence. Exact commit `c7be58f` passed the complete local release gate and first-attempt hosted CI
+`41078214997` plus credential-free release candidate `41078215019`. Better Auth was upgraded from 1.6.27 to
+1.7.14 when the gate correctly rejected newly published critical/high advisories; the reviewed 1.7 migration
+requires no schema change for the enabled email/password-only surface. No retry acceptance, secret export,
+backup retention, publication, deployment, setting, cloud resource, managed provider, production system or
+user data was created or changed. External redistribution remains NO-GO with 31 manual reviews and 6 unresolved
+application assertions.
 
 The project now has the portable application baseline plus a PostgreSQL 18
 contract, Drizzle ORM/Kit, a typed 25-table public schema plus four isolated auth
@@ -37,6 +38,25 @@ SDK/adapter, authenticated feedback worker, and suppression seam, but no account
 provisioned AWS infrastructure, live queue polling, or live delivery.
 
 ## Completed
+
+- [x] Goal 93: accept ADR 0023 and add a checked, provider-neutral recovery policy plus operator runbook for
+      logical backup, separate role globals, restore ordering, RPO/RTO, retention, integrity and failure cases.
+- [x] Add the disposable PostgreSQL 18 recovery drill: migrate 16 checked-in migrations, seed synthetic auth
+      and two-owner private data, back up/restore into a fresh instance, then prove schema, migration history,
+      row counts, content, ownership, grants, forced RLS, runtime denial and cross-tenant isolation. Require six
+      consecutive readiness checks so the official image's bootstrap/final-postmaster transition cannot race.
+- [x] Reject 16 incomplete, mixed-version, tampered, stale, over-privileged and tenant-isolation cases; keep
+      generated archives, role material, credentials and private/production data out of Git and routine logs.
+- [x] Upgrade exact Better Auth 1.6.27 to 1.7.14 after newly published OAuth authentication-bypass and adapter
+      advisories failed the high/critical production threshold. Official migration guidance, existing account
+      uniqueness, `db:generate` with no schema change, 97 focused auth tests and 71 database tests passed.
+- [x] Apply `database-migration`, `security-audit` and `release-check` to exact commit `c7be58f`: formatting,
+      lint, strict TypeScript, 108 files/1,343 tests twice, 33-route build, coverage, Drizzle, 71 PostgreSQL
+      integration tests, recovery drill, dependency threshold, 8 OpenTofu tests, 304 policies, staging/CI/trust/
+      license/reproducibility contracts, Gitleaks, Trivy, SBOM, offline signatures and attestations passed. The
+      application/worker manifests are `sha256:1c44c88…21bacc` and `sha256:a662cd78…2c5c0f`.
+- [x] Verify first-attempt hosted CI `41078214997` and credential-free release candidate `41078215019` for
+      exact commit `c7be58f`; neither was rerun or treated as production authorization.
 
 - [x] Goal 92: preserve the Goal 91 failure, add secret-safe changed-layer/file diagnostics, and reject any
       attempt to weaken clean-tree, two-build, image-ID or OCI-manifest equality.
@@ -1079,20 +1099,23 @@ None. Start only the next goal below.
 
 ## Next goal
 
-Goal 93 — establish a production-database recovery contract and execute a credential-free disposable
-backup/restore drill without selecting or mutating a managed provider.
+Goal 94 — establish production PostgreSQL role provisioning and connection-safety contracts in a
+credential-free disposable environment without selecting or mutating a managed provider.
 
 Deliverables:
 
-1. Research PostgreSQL 18 backup/restore, role/RLS ownership, checksums and recovery verification from current
-   primary documentation; record provider-neutral RPO/RTO assumptions and failure boundaries in an ADR.
-2. Add a credential-free disposable drill that migrates a source database, seeds synthetic tenant/auth data,
-   creates a logical backup with required globals/role metadata separated safely, restores into a fresh
-   PostgreSQL 18 instance, and proves schema/migration/data/ownership/RLS invariants.
-3. Reject incomplete, mixed-version, tampered, over-privileged and cross-tenant restore cases; keep secrets,
-   private user data, production endpoints and backup archives out of Git and routine logs.
-4. Apply `database-migration`, `security-audit` and `release-check`; document operational restore ordering,
-   verification and external managed-provider gaps. Do not provision cloud resources or touch production.
+1. Research PostgreSQL 18 role membership, ownership/default privileges, `SET ROLE`, row-security authority,
+   TLS verification and connection/statement/lock/idle-transaction limits from current primary documentation;
+   record the provider-neutral production role and connection model in an ADR.
+2. Add idempotent, secret-free provisioning contracts for separate owner, migrator and bounded runtime login/
+   executor roles. Runtime roles must not own objects, bypass RLS, create schema/roles/databases, grant
+   themselves authority, or execute migrations; migrations must not use runtime credentials.
+3. Exercise the contracts against disposable PostgreSQL 18: provision roles, migrate as the migration path,
+   run the real integration/isolation suite through the runtime memberships, prove transaction-local role/GUC
+   cleanup under pooling, and reject wrong membership, ownership, grants, TLS mode and timeout budgets.
+4. Apply `database-migration`, `security-audit` and `release-check`; document credential injection/rotation,
+   managed-provider and certificate-chain gaps. Do not provision cloud resources, select a proxy or touch
+   production.
 
 ## Phase queue
 
@@ -1121,7 +1144,7 @@ Deliverables:
 - Do not extract packages or services until an ADR 0002 extraction trigger is demonstrated.
 - Authentication providers adapt to `SessionVerifier`; cookie presence and
   browser-owned identities never authorize protected server work.
-- Exact Better Auth 1.6.27 implements the self-hosted email/password adapter using
+- Exact Better Auth 1.7.14 implements the self-hosted email/password adapter using
   database sessions and live verified-user contact lookup. Managed auth
   infrastructure, stateless/cached sessions, and duplicated billing-contact storage
   are not selected. See ADR 0008.
